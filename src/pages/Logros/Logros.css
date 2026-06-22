@@ -1,0 +1,78 @@
+.logros-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    width: 100%;
+}
+
+/* ── Grid ────────────────────────────────────────── */
+.logros-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-md);
+}
+
+/* ── Card ────────────────────────────────────────── */
+.logro-card {
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    cursor: default;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    aspect-ratio: 1;
+    justify-content: center;
+}
+
+.logro-card--unlocked {
+    background: var(--color-primary-light);
+    border: 2px solid rgba(58,158,82,0.25);
+    box-shadow: var(--shadow-sm);
+}
+
+.logro-card--unlocked:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.logro-card--locked {
+    background: #9ca3af;
+    border: 2px solid #6b7280;
+}
+
+/* ── Badge SVG ───────────────────────────────────── */
+.logro-badge-svg {
+    width: 80%;
+    height: 80%;
+    max-width: 100px;
+    max-height: 100px;
+}
+
+/* ── Title (unlocked only) ───────────────────────── */
+.logro-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    text-align: center;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 900px) {
+    .logros-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 640px) {
+    .logros-grid { grid-template-columns: repeat(3, 1fr); }
+    .logro-badge-svg { max-width: 72px; max-height: 72px; }
+}
+
+@media (max-width: 400px) {
+    .logros-grid { grid-template-columns: repeat(2, 1fr); }
+}
