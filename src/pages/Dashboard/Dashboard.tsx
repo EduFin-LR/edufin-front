@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom'
-import { FaFire, FaPiggyBank } from 'react-icons/fa'
+import { FaPiggyBank } from 'react-icons/fa'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
 import edufinLogo from '../../assets/images/edufinLogo.png'
+import fuegoGif   from '../../assets/gifs/fuego.gif'
 import './Dashboard.css'
 
 // ── Mock data — reemplazar con llamadas al servicio cuando el backend esté listo ──
@@ -92,7 +93,7 @@ export default function Dashboard() {
                 {/* Stats */}
                 <div className="dash-stats">
                     <div className="stat-card stat-streak">
-                        <FaFire className="streak-icon" />
+                        <img src={fuegoGif} alt="fuego" className="streak-icon" />
                         <div>
                             <span className="stat-num">{USER.streakDays}</span>
                             <span className="stat-lbl">Racha de días</span>

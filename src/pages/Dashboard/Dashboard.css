@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-lg);
-    max-width: 960px;
+    width: 100%;
 }
 
 /* ── Header ──────────────────────────────────────── */
@@ -52,8 +52,9 @@
 .stat-streak { border-color: #fed7aa; }
 
 .streak-icon {
-    font-size: 36px;
-    color: #f97316;
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
     flex-shrink: 0;
 }
 

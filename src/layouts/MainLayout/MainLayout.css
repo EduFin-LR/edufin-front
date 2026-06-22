@@ -12,10 +12,7 @@
 }
 
 @media (max-width: 768px) {
-    .layout { flex-direction: column; }
-
     .content {
-        padding: var(--space-md);
-        padding-bottom: 80px;
+        padding: 70px var(--space-md) var(--space-xl);
     }
 }
