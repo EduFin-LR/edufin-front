@@ -6,8 +6,14 @@
 }
 
 /* ── Left panel ─────────────────────────────────────── */
+.contMain {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+}
+
 .auth-left {
-    width: 400px;
+    width: 500px;
     flex-shrink: 0;
     padding: var(--space-xl) var(--space-xl);
     display: flex;
@@ -16,10 +22,10 @@
 }
 
 .auth-logo-img {
-    width: 220px;
+    width: 290px;
+    margin: 0 auto;
     object-fit: contain;
     cursor: pointer;
-    margin-bottom: var(--space-xl);
 }
 
 .auth-form-wrapper {
@@ -31,35 +37,31 @@
 
 /* ── Right panel ─────────────────────────────────────── */
 .auth-right {
-    flex: 1;
-    background: var(--gradient-auth-panel);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    width: 50%;
+    flex-shrink: 0;
     overflow: hidden;
-    border-radius: var(--radius-xl) 0 0 var(--radius-xl);
 }
 
 .auth-character {
-    width: 85%;
-    max-width: 420px;
-    object-fit: contain;
-    mix-blend-mode: multiply;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
 }
 
 /* ── Responsive ───────────────────────────────────────── */
-@media (max-width: 700px) {
-    .auth-wrapper {
-        flex-direction: column;
+@media (max-width: 768px) {
+    .auth-right {
+        display: none;
     }
+
+    .contMain {
+        width: 100%;
+    }
+
     .auth-left {
         width: 100%;
         padding: var(--space-lg);
-    }
-    .auth-right {
-        min-height: 220px;
-        border-radius: 0 0 var(--radius-xl) var(--radius-xl);
     }
 }

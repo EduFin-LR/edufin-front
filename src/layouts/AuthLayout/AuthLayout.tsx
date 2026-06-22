@@ -12,21 +12,21 @@ export default function AuthLayout({ children }: Props) {
 
     return (
         <div className="auth-wrapper">
-            {/* ── Left panel: form ── */}
-            <div className="auth-left">
-                <img
-                    src={edufinLogo}
-                    alt="Edufin"
-                    className="auth-logo-img"
-                    onClick={() => navigate('/')}
-                />
+            <div className="contMain">
+                <div className="auth-left">
+                    <img
+                        src={edufinLogo}
+                        alt="Edufin"
+                        className="auth-logo-img"
+                        onClick={() => navigate('/')}
+                    />
 
-                <div className="auth-form-wrapper">
-                    {children}
+                    <div className="auth-form-wrapper">
+                        {children}
+                    </div>
                 </div>
             </div>
 
-            {/* ── Right panel: decorative ── */}
             <div className="auth-right">
                 <img
                     src={portadaInicio}
