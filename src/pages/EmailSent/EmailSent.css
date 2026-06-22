@@ -1,0 +1,67 @@
+.email-sent-page {
+    min-height: 100vh;
+    background: var(--gradient-auth-panel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+}
+
+.email-sent-card {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl) var(--space-xl);
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.email-sent-title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: 900;
+    color: var(--color-text);
+}
+
+.email-sent-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: var(--color-primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.email-sent-robot-icon {
+    font-size: 44px;
+    color: var(--color-primary);
+}
+
+.email-sent-badge {
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    padding: 4px 16px;
+    border-radius: var(--radius-full);
+    letter-spacing: 0.5px;
+}
+
+.email-sent-desc {
+    margin: 0;
+    font-size: var(--font-size-base);
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+.email-sent-btn {
+    max-width: 200px;
+    margin-top: var(--space-sm);
+}

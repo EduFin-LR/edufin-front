@@ -1,0 +1,70 @@
+.sidebar {
+    width: 220px;
+    height: 100vh;
+    background: var(--color-bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-avatar {
+    padding: var(--space-lg);
+    display: flex;
+    justify-content: center;
+}
+
+.sidebar-avatar img {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    background: var(--color-white);
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--space-md);
+}
+
+.sidebar-item {
+    border: none;
+    background: transparent;
+    color: var(--color-white);
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    padding: var(--space-md) var(--space-lg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    transition: background 0.2s ease;
+}
+
+.sidebar-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-item.active {
+    background: var(--color-sidebar-active);
+    color: var(--color-text);
+}
+
+.logout-btn {
+    margin-top: auto;
+    border: none;
+    background: transparent;
+    color: var(--color-white);
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}

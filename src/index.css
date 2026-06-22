@@ -1,0 +1,145 @@
+/* ─── Design Tokens ─────────────────────────────────────────── */
+:root {
+  /* Colors */
+  --color-primary:        #3a9e52;
+  --color-primary-dark:   #2a7a3e;
+  --color-primary-light:  #dff0e4;
+  --color-primary-hover:  #2fa043;
+
+  --color-bg-app:         #eef8f4;
+  --color-bg-sidebar:     #2fa043;
+  --color-sidebar-active: #dff0e4;
+
+  --color-white:          #ffffff;
+  --color-text:           #1a1a1a;
+  --color-text-muted:     #6b7280;
+  --color-border:         #d1d5db;
+  --color-error:          #e53935;
+  --color-success:        #43a047;
+
+  /* Auth panel gradient */
+  --gradient-auth-panel:  linear-gradient(180deg, #c3e8f5 0%, #9dd4a8 55%, #6cbd5a 100%);
+
+  /* Radii */
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-xl:   32px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.10);
+  --shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.14);
+
+  /* Typography */
+  --font-base:  'Segoe UI', system-ui, sans-serif;
+  --font-size-sm:   13px;
+  --font-size-base: 15px;
+  --font-size-md:   17px;
+  --font-size-lg:   22px;
+  --font-size-xl:   28px;
+
+  /* Spacing */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  40px;
+}
+
+/* ─── Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-base);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg-app);
+}
+
+/* ─── Global Utilities ───────────────────────────────────────── */
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: 12px var(--space-lg);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 4px 12px rgba(58, 158, 82, 0.35);
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+  box-shadow: 0 6px 16px rgba(58, 158, 82, 0.45);
+}
+
+.btn-secondary {
+  background: var(--color-white);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--color-primary-light);
+}
+
+/* Inputs */
+.input-field {
+  width: 100%;
+  padding: 11px var(--space-md);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-family: var(--font-base);
+  color: var(--color-text);
+  background: var(--color-white);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-field::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input-field:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(58, 158, 82, 0.15);
+}
+
+/* Link text */
+.link-text {
+  background: none;
+  border: none;
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-text:hover {
+  color: var(--color-primary);
+}
