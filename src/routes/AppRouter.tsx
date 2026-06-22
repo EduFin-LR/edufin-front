@@ -9,6 +9,7 @@ import Learning       from '../pages/Learning/Learning'
 import Quiz           from '../pages/Quiz/Quiz'
 import Profile        from '../pages/Profile/Profile'
 import Ranking        from '../pages/Ranking/Ranking'
+import Logros         from '../pages/Logros/Logros'
 
 export default function AppRouter() {
     return (
@@ -22,6 +23,7 @@ export default function AppRouter() {
 
                 {/* App */}
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/logros"    element={<Logros />} />
                 <Route path="/learning"  element={<Learning />} />
                 <Route path="/quiz"      element={<Quiz />} />
                 <Route path="/ranking"   element={<Ranking />} />

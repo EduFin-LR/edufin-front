@@ -1,65 +1,46 @@
 import './Sidebar.css'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { FaHome, FaTrophy, FaUser, FaSignOutAlt, FaMedal } from 'react-icons/fa'
 
-import { FaHome } from 'react-icons/fa'
-import { FaTrophy } from 'react-icons/fa'
-import { FaUser } from 'react-icons/fa'
+const avatarBoy = new URL('../../assets/images/perfilNiño (1).png', import.meta.url).href
+
+const MENU = [
+    { label: 'Inicio',   path: '/dashboard',  icon: <FaHome /> },
+    { label: 'Logros',   path: '/logros',      icon: <FaMedal /> },
+    { label: 'Perfil',   path: '/profile',     icon: <FaUser /> },
+    { label: 'Ranking',  path: '/ranking',     icon: <FaTrophy /> },
+]
 
 export default function Sidebar() {
-    const navigate = useNavigate()
-    const location = useLocation()
+    const navigate  = useNavigate()
+    const location  = useLocation()
 
-    const menuItems = [
-        {
-            label: 'Inicio',
-            path: '/dashboard',
-            icon: <FaHome />,
-        },
-        {
-            label: 'Logros',
-            path: '/achievements',
-            icon: <FaTrophy />,
-        },
-        {
-            label: 'Perfil',
-            path: '/profile',
-            icon: <FaUser />,
-        },
-        {
-            label: 'Ranking',
-            path: '/ranking',
-            icon: <FaHome />,
-        },
-    ]
+    const handleLogout = () => {
+        localStorage.removeItem('token')
+        navigate('/')
+    }
 
     return (
         <aside className="sidebar">
             <div className="sidebar-avatar">
-                <img
-                    src="https://i.pravatar.cc/150"
-                    alt="avatar"
-                />
+                <img src={avatarBoy} alt="avatar" />
             </div>
 
-            <div className="sidebar-menu">
-                {menuItems.map(item => (
+            <nav className="sidebar-menu">
+                {MENU.map(item => (
                     <button
                         key={item.path}
-                        className={`sidebar-item ${
-                            location.pathname === item.path
-                                ? 'active'
-                                : ''
-                        }`}
+                        className={`sidebar-item ${location.pathname === item.path ? 'active' : ''}`}
                         onClick={() => navigate(item.path)}
                     >
                         {item.icon}
                         <span>{item.label}</span>
                     </button>
                 ))}
-            </div>
+            </nav>
 
-            <button className="logout-btn">
-                <FaHome />
+            <button className="logout-btn" onClick={handleLogout}>
+                <FaSignOutAlt />
                 <span>Cerrar sesión</span>
             </button>
         </aside>

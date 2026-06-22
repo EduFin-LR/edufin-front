@@ -5,6 +5,17 @@
 
 .content {
     flex: 1;
+    min-width: 0;
     padding: var(--space-xl);
     background: var(--color-bg-app);
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .layout { flex-direction: column; }
+
+    .content {
+        padding: var(--space-md);
+        padding-bottom: 80px;
+    }
 }
