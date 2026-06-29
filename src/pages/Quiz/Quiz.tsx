@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     getLessonQuestions, startLesson, completeLesson, submitAttempt,
 } from '../../services/quizService'
-import { playCorrect, playWrong } from '../../utils/sounds'
+import { playCorrect, playWrong, playComplete } from '../../utils/sounds'
 import type { QuizQuestion, QuizOption, QuizCompleteResult } from '../../services/quizService'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import edufinLogo from '../../assets/images/edufinLogo.png'
@@ -317,6 +317,7 @@ export default function Quiz() {
             setResult({ correctAnswers: cor, incorrectAnswers: tot - cor, totalQuestions: tot, xpEarned: 100, passed: cor >= tot * 0.6 })
         } finally {
             setSubmitting(false)
+            playComplete()
             setScreen('result')
         }
     }

@@ -20,12 +20,20 @@ function playTone(frequency: number, duration: number, type: OscillatorType, gai
 }
 
 export function playCorrect() {
-    playTone(523, 0.12, 'sine', 0.4)   // C5
-    setTimeout(() => playTone(659, 0.12, 'sine', 0.4), 100) // E5
-    setTimeout(() => playTone(784, 0.22, 'sine', 0.4), 200) // G5
+    playTone(523, 0.12, 'sine', 0.4)
+    setTimeout(() => playTone(659, 0.12, 'sine', 0.4), 100)
+    setTimeout(() => playTone(784, 0.22, 'sine', 0.4), 200)
 }
 
 export function playWrong() {
     playTone(300, 0.15, 'square', 0.25)
     setTimeout(() => playTone(220, 0.3, 'square', 0.2), 130)
+}
+
+export function playComplete() {
+    // fanfarria ascendente
+    playTone(523, 0.1, 'sine', 0.4)
+    setTimeout(() => playTone(659, 0.1, 'sine', 0.4), 100)
+    setTimeout(() => playTone(784, 0.1, 'sine', 0.4), 200)
+    setTimeout(() => playTone(1047, 0.4, 'sine', 0.5), 300)
 }
