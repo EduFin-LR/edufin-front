@@ -3,6 +3,7 @@ import MainLayout from '../../layouts/MainLayout/MainLayout'
 import edufinLogo from '../../assets/images/edufinLogo.png'
 import { getMyAchievements } from '../../services/profileService'
 import type { Achievement } from '../../services/profileService'
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import './Logros.css'
 
 type TabType = 'todos' | 'desbloqueados' | 'bloqueados'
@@ -43,11 +44,12 @@ function AchievementCard({ a }: { a: Achievement }) {
 }
 
 export default function Logros() {
-    const [tab, setTab]   = useState<TabType>('todos')
-    const [list, setList] = useState<Achievement[]>([])
+    const [tab, setTab]     = useState<TabType>('todos')
+    const [list, setList]   = useState<Achievement[]>([])
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        getMyAchievements().then(r => setList(r.data)).catch(() => {})
+        getMyAchievements().then(r => setList(r.data)).catch(() => {}).finally(() => setLoading(false))
     }, [])
 
     const filtered =
@@ -57,6 +59,7 @@ export default function Logros() {
 
     return (
         <MainLayout>
+            <LoadingScreen visible={loading} message="Cargando logros…" />
             <div className="logros-page">
 
                 <header className="dash-header">
