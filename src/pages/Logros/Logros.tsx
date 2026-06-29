@@ -24,15 +24,13 @@ function AchievementCard({ a }: { a: Achievement }) {
                 />
                 {!a.isUnlocked && <div className="logro-lock-overlay">🔒</div>}
             </div>
-            <div className="logro-text">
-                <span className="logro-title">{a.name}</span>
-                <span className="logro-desc">{a.description}</span>
-                {a.isUnlocked && a.earnedAt && (
-                    <span className="logro-date">
-                        {new Date(a.earnedAt).toLocaleDateString('es-PE', { day:'2-digit', month:'short', year:'numeric' })}
-                    </span>
-                )}
-            </div>
+            <span className="logro-name">{a.name}</span>
+            <span className="logro-desc">{a.description}</span>
+            {a.isUnlocked && a.earnedAt && (
+                <span className="logro-date">
+                    {new Date(a.earnedAt).toLocaleDateString('es-PE', { day:'2-digit', month:'short', year:'numeric' })}
+                </span>
+            )}
         </div>
     )
 }
