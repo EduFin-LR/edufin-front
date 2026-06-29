@@ -150,9 +150,6 @@ export default function Learning() {
     const canvasHeight = 530
 
     const unlockedPath = buildPath(positions, 0, lastUnlockedIdx)
-    const lockedPath   = lastUnlockedIdx >= 0 && lastUnlockedIdx < lessons.length - 1
-        ? buildPath(positions, lastUnlockedIdx, lessons.length - 1)
-        : ''
 
     // stats del header
     const completed    = lessons.filter(l => l.status === 'COMPLETED').length
