@@ -7,6 +7,7 @@ export interface LeaderboardEntry {
     totalPoints:  number
     currentLevel: number
     streakDays:   number
+    gender?:      'MALE' | 'FEMALE' | null
 }
 
 export interface Achievement {

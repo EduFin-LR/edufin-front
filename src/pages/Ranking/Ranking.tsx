@@ -33,7 +33,7 @@ export default function Ranking() {
                     {list.map((entry, index) => {
                         const pos  = index + 1
                         const isMe = entry.userId === userId
-                        const avatar = index % 2 === 0 ? avatarBoy : avatarGirl
+                        const avatar = entry.gender === 'FEMALE' ? avatarGirl : avatarBoy
                         return (
                             <li key={entry.userId} className={`rank-row ${isMe ? 'rank-row--me' : ''}`}>
                                 <div className="rank-pos">
