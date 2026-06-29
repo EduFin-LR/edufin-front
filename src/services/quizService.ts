@@ -26,11 +26,20 @@ export interface QuizCompleteResult {
     passed:           boolean
 }
 
+export interface AttemptPayload {
+    questionId:       string
+    selectedOptionId: string
+    timeTakenSec:     number
+}
+
 export const getLessonQuestions = (lessonId: string) =>
     api.get<QuizQuestion[]>(`/lessons/${lessonId}/questions`)
 
 export const startLesson = (lessonId: string) =>
     api.post(`/attempts/lessons/${lessonId}/start`)
+
+export const submitAttempt = (payload: AttemptPayload) =>
+    api.post('/attempts', payload)
 
 export const completeLesson = (lessonId: string, timeSpentSec: number) =>
     api.post<QuizCompleteResult>(`/attempts/lessons/${lessonId}/complete`, { timeSpentSec })

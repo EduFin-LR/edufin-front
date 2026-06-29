@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    getLessonQuestions, startLesson, completeLesson,
+    getLessonQuestions, startLesson, completeLesson, submitAttempt,
 } from '../../services/quizService'
 import type { QuizQuestion, QuizOption, QuizCompleteResult } from '../../services/quizService'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
@@ -21,10 +21,18 @@ function getCategories(options: QuizOption[]) {
 
 // ── Multiple Choice ────────────────────────────────────────────────────────────
 function MultipleChoice({
-    question, onAnswer, disabled,
-}: { question: QuizQuestion; onAnswer: (_: string, correct: boolean) => void; disabled: boolean }) {
+    question, onAnswer, disabled, questionStartTime,
+}: { question: QuizQuestion; onAnswer: (_: string, correct: boolean) => void; disabled: boolean; questionStartTime: number }) {
     const [selected, setSelected] = useState<string | null>(null)
     useEffect(() => setSelected(null), [question.id])
+
+    const handleConfirm = () => {
+        if (!selected) return
+        const opt = question.options.find(o => o.id === selected)!
+        const timeTakenSec = Math.round((Date.now() - questionStartTime) / 1000)
+        submitAttempt({ questionId: question.id, selectedOptionId: selected, timeTakenSec }).catch(() => {})
+        onAnswer(selected, opt.isCorrect)
+    }
 
     return (
         <div className="quiz-mc">
@@ -45,10 +53,7 @@ function MultipleChoice({
             <button
                 className="btn btn-primary quiz-next-btn"
                 disabled={!selected || disabled}
-                onClick={() => {
-                    const opt = question.options.find(o => o.id === selected)!
-                    onAnswer(selected!, opt.isCorrect)
-                }}
+                onClick={handleConfirm}
             >
                 Confirmar
             </button>
@@ -58,8 +63,8 @@ function MultipleChoice({
 
 // ── Drag & Drop con framer-motion ──────────────────────────────────────────────
 function DragDrop({
-    question, onAnswer, disabled,
-}: { question: QuizQuestion; onAnswer: (correct: boolean) => void; disabled: boolean }) {
+    question, onAnswer, disabled, questionStartTime,
+}: { question: QuizQuestion; onAnswer: (correct: boolean) => void; disabled: boolean; questionStartTime: number }) {
     const categories = getCategories(question.options)
     const [placed, setPlaced] = useState<Record<string, string | null>>(
         () => Object.fromEntries(question.options.map(o => [o.id, null]))
@@ -73,11 +78,7 @@ function DragDrop({
     const unplaced = question.options.filter(o => placed[o.id] === null)
     const allPlaced = unplaced.length === 0
 
-    const handleDragEnd = (optId: string, event: MouseEvent | TouchEvent | PointerEvent) => {
-        const point = 'changedTouches' in event
-            ? { x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY }
-            : { x: (event as PointerEvent).clientX, y: (event as PointerEvent).clientY }
-
+    const handleDragEnd = (optId: string, point: { x: number; y: number }) => {
         for (const cat of categories) {
             const el = zoneRefs.current[cat]
             if (!el) continue
@@ -98,6 +99,13 @@ function DragDrop({
     }
 
     const handleConfirm = () => {
+        const timeTakenSec = Math.round((Date.now() - questionStartTime) / 1000)
+        // un attempt por cada opción colocada
+        question.options.forEach(o => {
+            if (placed[o.id] !== null) {
+                submitAttempt({ questionId: question.id, selectedOptionId: o.id, timeTakenSec }).catch(() => {})
+            }
+        })
         const allCorrect = question.options.every(o => placed[o.id] === o.matchCategory)
         onAnswer(allCorrect)
     }
@@ -119,11 +127,11 @@ function DragDrop({
                             key={opt.id}
                             className="dd-card"
                             drag={!disabled}
-                            dragSnapToOrigin
-                            dragElastic={0.2}
+                            dragElastic={0.15}
+                            dragMomentum={false}
                             whileDrag={{ scale: 1.06, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,0.18)', cursor: 'grabbing' }}
                             whileHover={{ scale: 1.03 }}
-                            onDragEnd={(_, info) => handleDragEnd(opt.id, info.point as any)}
+                            onDragEnd={(_, info) => handleDragEnd(opt.id, info.point)}
                             layout
                             exit={{ scale: 0.8, opacity: 0, transition: { duration: 0.2 } }}
                         >
@@ -271,8 +279,9 @@ export default function Quiz() {
     const [submitting, setSubmitting] = useState(false)
     const [result,     setResult]     = useState<QuizCompleteResult | null>(null)
     const [screen,     setScreen]     = useState<'quiz' | 'result'>('quiz')
-    const [correct,    setCorrect]    = useState(0)
-    const startTime = useRef(Date.now())
+    const [correct,       setCorrect]       = useState(0)
+    const startTime       = useRef(Date.now())
+    const questionStartAt = useRef(Date.now())
 
     useEffect(() => {
         if (!lessonId) return
@@ -294,6 +303,7 @@ export default function Quiz() {
 
     const handleNext = async () => {
         setFeedback(null)
+        questionStartAt.current = Date.now()
         if (!isLast) { setCurrent(c => c + 1); return }
         setSubmitting(true)
         const timeSpentSec = Math.round((Date.now() - startTime.current) / 1000)
@@ -337,10 +347,10 @@ export default function Quiz() {
                         transition={{ duration: 0.22 }}
                     >
                         {q?.questionType === 'MULTIPLE_CHOICE' && (
-                            <MultipleChoice question={q} onAnswer={(_, ok) => handleAnswer(ok)} disabled={!!feedback} />
+                            <MultipleChoice question={q} onAnswer={(_, ok) => handleAnswer(ok)} disabled={!!feedback} questionStartTime={questionStartAt.current} />
                         )}
                         {q?.questionType === 'DRAG_AND_DROP' && (
-                            <DragDrop question={q} onAnswer={handleAnswer} disabled={!!feedback} />
+                            <DragDrop question={q} onAnswer={handleAnswer} disabled={!!feedback} questionStartTime={questionStartAt.current} />
                         )}
                     </motion.div>
                 </AnimatePresence>
