@@ -1,12 +1,15 @@
 import './App.css'
 import { AuthProvider } from './context/AuthContext'
 import AppRouter from './routes/AppRouter'
+import SplashScreen from './components/SplashScreen/SplashScreen'
 
 function App() {
     return (
-        <AuthProvider>
-            <AppRouter />
-        </AuthProvider>
+        <SplashScreen>
+            <AuthProvider>
+                <AppRouter />
+            </AuthProvider>
+        </SplashScreen>
     )
 }
 
