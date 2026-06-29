@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBook, FaBrain, FaPlay, FaLock, FaClipboardList, FaCheck, FaArrowLeft, FaTimes, FaChevronDown } from 'react-icons/fa'
+import { FaBook, FaPlay, FaLock, FaClipboardList, FaCheck, FaArrowLeft, FaTimes, FaChevronDown } from 'react-icons/fa'
 import edufinLogo from '../../assets/images/edufinLogo.png'
 import progresoA  from '../../assets/images/ProgresoA.png'
 import { getTopicLessons } from '../../services/learningService'
