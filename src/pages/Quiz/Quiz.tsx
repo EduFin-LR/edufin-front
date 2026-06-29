@@ -227,6 +227,9 @@ function FeedbackBanner({ feedback, message, onNext, isLast }: {
                     {isLast ? 'Ver resultado' : 'Siguiente →'}
                 </button>
             </div>
+
+            {/* Spacer to balance the robot on the left */}
+            <div className="quiz-feedback-spacer" />
         </motion.div>
     )
 }
