@@ -284,6 +284,49 @@
 
 .course-btn--pending:hover { background: #374151; }
 
+/* ── Completed card ──────────────────────────────── */
+.course-card--completed {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border: 2px solid #86efac;
+    opacity: 0.9;
+}
+
+.course-card--completed .course-icon-wrap {
+    background: linear-gradient(135deg, #bbf7d0, #86efac);
+    position: relative;
+}
+
+.course-done-check {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.course-card--completed .course-bar-fill {
+    background: #16a34a;
+}
+
+.course-btn--completed {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 2px solid #86efac;
+    box-shadow: none;
+}
+
+.course-btn--completed:hover {
+    background: #dcfce7;
+}
+
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 900px) {
     .dash-stats {

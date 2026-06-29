@@ -22,13 +22,15 @@ function LevelBadge({ level }: { level: number }) {
 
 // ── Course card ───────────────────────────────────────────────────────────────
 function CourseCard({ course, onContinue }: { course: DashboardLearningPath; onContinue: () => void }) {
-    const pct       = course.progressPercentage
-    const isPending = course.status === 'LOCKED'
+    const pct         = course.progressPercentage
+    const isPending   = course.status === 'LOCKED'
+    const isCompleted = course.status === 'COMPLETED'
 
     return (
-        <div className={`course-card ${isPending ? 'course-card--pending' : ''}`}>
+        <div className={`course-card ${isPending ? 'course-card--pending' : ''} ${isCompleted ? 'course-card--completed' : ''}`}>
             <div className="course-icon-wrap">
                 <FaPiggyBank className="course-icon" />
+                {isCompleted && <span className="course-done-check">✓</span>}
             </div>
             <div className="course-body">
                 <h3 className="course-title">
@@ -42,10 +44,10 @@ function CourseCard({ course, onContinue }: { course: DashboardLearningPath; onC
                 {pct > 0 && <span className="course-pct">{pct}%</span>}
             </div>
             <button
-                className={`btn course-btn ${isPending ? 'course-btn--pending' : 'btn-primary'}`}
+                className={`btn course-btn ${isPending ? 'course-btn--pending' : isCompleted ? 'course-btn--completed' : 'btn-primary'}`}
                 onClick={onContinue}
             >
-                Continuar
+                {isCompleted ? 'Repasar' : 'Continuar'}
             </button>
         </div>
     )
@@ -70,6 +72,7 @@ export default function Dashboard() {
     const xpPct      = Math.min(100, Math.round((xp / xpMax) * 100))
     const active     = data?.learningPath.filter(c => c.status === 'IN_PROGRESS' || c.status === 'UNLOCKED') ?? []
     const pending    = data?.learningPath.filter(c => c.status === 'LOCKED')      ?? []
+    const completed  = data?.learningPath.filter(c => c.status === 'COMPLETED')   ?? []
 
     return (
         <MainLayout>
@@ -121,6 +124,16 @@ export default function Dashboard() {
                     <section className="dash-section">
                         <h2 className="dash-section-title">Pendiente</h2>
                         {pending.map(c => (
+                            <CourseCard key={c.topicId} course={c} onContinue={() => navigate(`/learning/${c.topicId}`)} />
+                        ))}
+                    </section>
+                )}
+
+                {/* Completed courses */}
+                {completed.length > 0 && (
+                    <section className="dash-section">
+                        <h2 className="dash-section-title">Completados 🎉</h2>
+                        {completed.map(c => (
                             <CourseCard key={c.topicId} course={c} onContinue={() => navigate(`/learning/${c.topicId}`)} />
                         ))}
                     </section>
