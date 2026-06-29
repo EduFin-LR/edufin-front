@@ -16,7 +16,19 @@ const TABS: { key: TabType; label: string }[] = [
 function AchievementCard({ a }: { a: Achievement }) {
     return (
         <div className={`logro-card ${a.isUnlocked ? 'logro-card--unlocked' : 'logro-card--locked'}`}>
-            <div className="logro-icon-wrap">
+            {/* Tooltip on hover */}
+            <div className="logro-tooltip">
+                <span className="logro-tooltip-name">{a.name}</span>
+                <span className="logro-tooltip-desc">{a.description}</span>
+                {a.isUnlocked && a.earnedAt && (
+                    <span className="logro-tooltip-date">
+                        {new Date(a.earnedAt).toLocaleDateString('es-PE', { day:'2-digit', month:'short', year:'numeric' })}
+                    </span>
+                )}
+            </div>
+
+            {/* Badge */}
+            <div className="logro-badge">
                 <img
                     src={a.iconUrl}
                     alt={a.name}
@@ -24,13 +36,8 @@ function AchievementCard({ a }: { a: Achievement }) {
                 />
                 {!a.isUnlocked && <div className="logro-lock-overlay">🔒</div>}
             </div>
+
             <span className="logro-name">{a.name}</span>
-            <span className="logro-desc">{a.description}</span>
-            {a.isUnlocked && a.earnedAt && (
-                <span className="logro-date">
-                    {new Date(a.earnedAt).toLocaleDateString('es-PE', { day:'2-digit', month:'short', year:'numeric' })}
-                </span>
-            )}
         </div>
     )
 }
