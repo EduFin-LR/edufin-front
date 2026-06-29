@@ -214,20 +214,22 @@ export default function Learning() {
                     <svg
                         className="map-svg"
                         viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
-                        style={{ width: canvasWidth, height: canvasHeight }}
                         xmlns="http://www.w3.org/2000/svg"
                     >
-                        {/* Unlocked path */}
+                        {/* Full background path (always visible) */}
+                        {positions.length > 1 && (() => {
+                            const fullPath = buildPath(positions, 0, positions.length - 1)
+                            return <>
+                                <path d={fullPath} fill="none" stroke="rgba(0,0,0,0.10)" strokeWidth="12" strokeLinecap="round"/>
+                                <path d={fullPath} fill="none" stroke="#d1d5db"           strokeWidth="8"  strokeDasharray="10 7" strokeLinecap="round"/>
+                            </>
+                        })()}
+
+                        {/* Unlocked path (green solid over grey) */}
                         {unlockedPath && <>
                             <path d={unlockedPath} fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="12" strokeLinecap="round"/>
                             <path d={unlockedPath} fill="none" stroke="#fff"              strokeWidth="10" strokeLinecap="round"/>
                             <path d={unlockedPath} fill="none" stroke="#2db84f"           strokeWidth="6"  strokeLinecap="round"/>
-                        </>}
-
-                        {/* Locked path */}
-                        {lockedPath && <>
-                            <path d={lockedPath} fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="8"  strokeLinecap="round"/>
-                            <path d={lockedPath} fill="none" stroke="#c4b5fd"           strokeWidth="5"  strokeDasharray="8 6" strokeLinecap="round"/>
                         </>}
                     </svg>
 
