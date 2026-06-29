@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
 import edufinLogo from '../../assets/images/edufinLogo.png'
@@ -6,6 +7,8 @@ import progresoA  from '../../assets/images/ProgresoA.png'
 import progresoB  from '../../assets/images/ProgresoB.png'
 import progresoC  from '../../assets/images/ProgresoC.png'
 import progresoD  from '../../assets/images/ProgresoD.png'
+import { getMyAchievements } from '../../services/profileService'
+import type { Achievement } from '../../services/profileService'
 import './Profile.css'
 
 const avatarBoy = new URL('../../assets/images/perfilNiño (1).png', import.meta.url).href
@@ -25,6 +28,11 @@ function LevelBadge({ level }: { level: number }) {
 
 export default function Profile() {
     const { profile, userInfo } = useAuth()
+    const [achievements, setAchievements] = useState<Achievement[]>([])
+
+    useEffect(() => {
+        getMyAchievements().then(r => setAchievements(r.data.filter(a => a.isUnlocked))).catch(() => {})
+    }, [])
 
     const name       = userInfo?.fullName ?? userInfo?.username ?? '…'
     const xp         = profile?.totalPoints  ?? 0
@@ -67,6 +75,20 @@ export default function Profile() {
                                 <span className="profile-stat-val">{streakDays} días</span>
                             </div>
                         </div>
+
+                        {/* Logros desbloqueados */}
+                        {achievements.length > 0 && (
+                            <div className="profile-logros">
+                                <h3 className="profile-logros-title">Logros obtenidos</h3>
+                                <div className="profile-logros-grid">
+                                    {achievements.map(a => (
+                                        <div key={a.id} className="profile-logro-item" title={a.name}>
+                                            <img src={a.iconUrl} alt={a.name} className="profile-logro-icon" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                 </div>
