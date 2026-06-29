@@ -42,16 +42,40 @@
     border: 2px solid #6b7280;
 }
 
-/* ── Badge SVG / PNG ─────────────────────────────── */
-.logro-badge-svg {
-    width: 80%;
-    height: 80%;
-    max-width: 100px;
-    max-height: 100px;
+/* ── Icon wrap ───────────────────────────────────── */
+.logro-icon-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.logro-badge-png {
+.logro-icon {
+    width: 100%;
+    height: 100%;
     object-fit: contain;
+}
+
+.logro-icon--locked {
+    filter: grayscale(1) opacity(0.4);
+}
+
+.logro-lock-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+/* ── Date ────────────────────────────────────────── */
+.logro-date {
+    font-size: 10px;
+    color: #6b7280;
+    text-align: center;
 }
 
 /* ── Title (unlocked only) ───────────────────────── */
