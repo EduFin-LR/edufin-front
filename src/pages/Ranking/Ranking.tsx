@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FaTrophy } from 'react-icons/fa'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import edufinLogo from '../../assets/images/edufinLogo.png'
 import { getLeaderboard } from '../../services/profileService'
 import type { LeaderboardEntry } from '../../services/profileService'
@@ -12,27 +13,25 @@ const avatarGirl = new URL('../../assets/images/perfilNiño (3).png', import.met
 
 export default function Ranking() {
     const { userId } = useAuth()
-    const [list, setList] = useState<LeaderboardEntry[]>([])
+    const [list, setList]       = useState<LeaderboardEntry[]>([])
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        getLeaderboard().then(r => setList(r.data)).catch(() => {})
+        getLeaderboard().then(r => setList(r.data)).catch(() => {}).finally(() => setLoading(false))
     }, [])
 
     return (
         <MainLayout>
+            <LoadingScreen visible={loading} message="Cargando ranking…" />
             <div className="rank-page">
-
-                {/* Header */}
                 <header className="dash-header">
                     <h1 className="rank-title">Ranking</h1>
                     <img src={edufinLogo} alt="Edufin" className="dash-logo" />
                 </header>
-
-                {/* List */}
                 <ul className="rank-list">
                     {list.map((entry, index) => {
-                        const pos  = index + 1
-                        const isMe = entry.userId === userId
+                        const pos    = index + 1
+                        const isMe   = entry.userId === userId
                         const avatar = entry.gender === 'FEMALE' ? avatarGirl : avatarBoy
                         return (
                             <li key={entry.userId} className={`rank-row ${isMe ? 'rank-row--me' : ''}`}>
@@ -49,7 +48,6 @@ export default function Ranking() {
                         )
                     })}
                 </ul>
-
             </div>
         </MainLayout>
     )

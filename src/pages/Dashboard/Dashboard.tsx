@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaPiggyBank } from 'react-icons/fa'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import edufinLogo from '../../assets/images/edufinLogo.png'
 import fuegoGif   from '../../assets/gifs/fuego.gif'
 import progresoA  from '../../assets/images/ProgresoA.png'
@@ -57,10 +58,11 @@ function CourseCard({ course, onContinue }: { course: DashboardLearningPath; onC
 export default function Dashboard() {
     const navigate = useNavigate()
     const [data, setData] = useState<DashboardResponse | null>(null)
+    const [loading, setLoading] = useState(true)
     const { profile } = useAuth()
 
     useEffect(() => {
-        getDashboard().then(res => setData(res.data)).catch(() => {})
+        getDashboard().then(res => setData(res.data)).catch(() => {}).finally(() => setLoading(false))
     }, [])
 
     const firstName  = data?.user.firstName                       ?? '…'
@@ -76,6 +78,7 @@ export default function Dashboard() {
 
     return (
         <MainLayout>
+            <LoadingScreen visible={loading} message="Cargando dashboard…" />
             <div className="dash">
 
                 {/* Header */}
