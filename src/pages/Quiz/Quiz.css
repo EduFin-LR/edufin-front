@@ -245,13 +245,20 @@
 .quiz-feedback {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    padding: 0 24px 20px;
+    padding: 12px 24px 20px;
+    display: flex;
+    justify-content: center;
+    z-index: 200;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+}
+
+.quiz-feedback-inner {
     display: flex;
     flex-direction: row;
     align-items: flex-end;
     gap: 16px;
-    z-index: 200;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+    width: 100%;
+    max-width: 700px;
 }
 
 .quiz-feedback--correct  { background: #dcfce7; border-top: 3px solid #22c55e; }

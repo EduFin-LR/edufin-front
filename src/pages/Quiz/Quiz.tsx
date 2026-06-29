@@ -206,30 +206,31 @@ function FeedbackBanner({ feedback, message, onNext, isLast }: {
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 30 }}
         >
-            {/* Robot animado */}
-            <AnimatePresence>
-                <motion.img
-                    key={feedback}
-                    src={ok ? robotCorrecto : robotIncorrecto}
-                    alt={ok ? 'robot correcto' : 'robot incorrecto'}
-                    className="quiz-feedback-robot"
-                    initial={{ x: ok ? -80 : 80, opacity: 0, rotate: ok ? -15 : 15 }}
-                    animate={{ x: 0, opacity: 1, rotate: 0 }}
-                    transition={{ type: 'spring', stiffness: 280, damping: 20, delay: 0.1 }}
-                />
-            </AnimatePresence>
+            <div className="quiz-feedback-inner">
+                {/* Robot animado */}
+                <AnimatePresence>
+                    <motion.img
+                        key={feedback}
+                        src={ok ? robotCorrecto : robotIncorrecto}
+                        alt={ok ? 'robot correcto' : 'robot incorrecto'}
+                        className="quiz-feedback-robot"
+                        initial={{ x: ok ? -80 : 80, opacity: 0, rotate: ok ? -15 : 15 }}
+                        animate={{ x: 0, opacity: 1, rotate: 0 }}
+                        transition={{ type: 'spring', stiffness: 280, damping: 20, delay: 0.1 }}
+                    />
+                </AnimatePresence>
 
-            <div className="quiz-feedback-content">
-                <div className="quiz-feedback-left">
-                    <p className="quiz-feedback-msg">{message}</p>
+                <div className="quiz-feedback-content">
+                    <div className="quiz-feedback-left">
+                        <p className="quiz-feedback-msg">{message}</p>
+                    </div>
+                    <button className="btn btn-primary quiz-feedback-btn" onClick={onNext}>
+                        {isLast ? 'Ver resultado' : 'Siguiente →'}
+                    </button>
                 </div>
-                <button className="btn btn-primary quiz-feedback-btn" onClick={onNext}>
-                    {isLast ? 'Ver resultado' : 'Siguiente →'}
-                </button>
-            </div>
 
-            {/* Spacer to balance the robot on the left */}
-            <div className="quiz-feedback-spacer" />
+                <div className="quiz-feedback-spacer" />
+            </div>
         </motion.div>
     )
 }
