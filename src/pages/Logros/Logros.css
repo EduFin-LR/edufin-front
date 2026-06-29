@@ -9,74 +9,153 @@
 .logros-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: var(--space-md);
+    gap: 20px;
 }
 
 /* ── Card ────────────────────────────────────────── */
 .logro-card {
-    border-radius: var(--radius-lg);
-    padding: var(--space-md);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-sm);
+    gap: 8px;
     cursor: default;
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-    aspect-ratio: 1;
+    position: relative;
+}
+
+/* ── Badge circle ────────────────────────────────── */
+.logro-badge {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.logro-card--unlocked {
-    background: var(--color-primary-light);
-    border: 2px solid rgba(58,158,82,0.25);
-    box-shadow: var(--shadow-sm);
+.logro-card--unlocked .logro-badge {
+    background: linear-gradient(145deg, #f0fdf4, #dcfce7);
+    border: 3px solid #86efac;
+    box-shadow: 0 4px 16px rgba(45,184,79,0.25);
 }
 
-.logro-card--unlocked:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
+.logro-card--locked .logro-badge {
+    background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
+    border: 3px dashed #d1d5db;
+    opacity: 0.6;
 }
 
-.logro-card--locked {
-    background: #9ca3af;
-    border: 2px solid #6b7280;
+.logro-card:hover .logro-badge {
+    transform: scale(1.1);
+    box-shadow: 0 8px 24px rgba(45,184,79,0.35);
 }
 
-/* ── Badge SVG / PNG ─────────────────────────────── */
-.logro-badge-svg {
-    width: 80%;
-    height: 80%;
-    max-width: 100px;
-    max-height: 100px;
+.logro-card--locked:hover .logro-badge {
+    transform: scale(1.05);
+    box-shadow: none;
 }
 
-.logro-badge-png {
+.logro-icon {
+    width: 52px;
+    height: 52px;
     object-fit: contain;
 }
 
-/* ── Title (unlocked only) ───────────────────────── */
-.logro-title {
+.logro-icon--locked {
+    filter: grayscale(1) opacity(0.35);
+}
+
+.logro-lock-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+}
+
+/* ── Name below badge ────────────────────────────── */
+.logro-name {
     font-size: 11px;
     font-weight: 700;
-    color: var(--color-primary-dark);
+    color: #374151;
     text-align: center;
     line-height: 1.2;
-    max-width: 100%;
+    max-width: 90px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.logro-card--locked .logro-name {
+    color: #9ca3af;
+}
+
+/* ── Hover tooltip ───────────────────────────────── */
+.logro-tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a2e1f;
+    color: #fff;
+    border-radius: 12px;
+    padding: 10px 14px;
+    width: 200px;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.logro-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1a2e1f;
+}
+
+.logro-card:hover .logro-tooltip {
+    opacity: 1;
+}
+
+.logro-tooltip-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.logro-tooltip-desc {
+    display: block;
+    font-size: 11px;
+    color: #d1fae5;
+    line-height: 1.4;
+}
+
+.logro-tooltip-date {
+    display: block;
+    font-size: 10px;
+    color: #6ee7b7;
+    margin-top: 6px;
+    font-weight: 600;
 }
 
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 900px) {
     .logros-grid { grid-template-columns: repeat(4, 1fr); }
 }
-
 @media (max-width: 640px) {
     .logros-grid { grid-template-columns: repeat(3, 1fr); }
-    .logro-badge-svg { max-width: 72px; max-height: 72px; }
+    .logro-badge { width: 72px; height: 72px; }
+    .logro-icon  { width: 42px; height: 42px; }
 }
-
 @media (max-width: 400px) {
     .logros-grid { grid-template-columns: repeat(2, 1fr); }
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../context/AuthContext'
 import { getDiagnosticQuestions, submitDiagnostic } from '../../services/assessmentService'
+import { playCorrect, playComplete } from '../../utils/sounds'
 import type { DiagnosticQuestion, DiagnosticAnswer, DiagnosticResultProfile } from '../../types/assessment'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import edufinLogo from '../../assets/images/edufinLogo.png'
@@ -49,6 +50,7 @@ export default function Diagnostic() {
         setStartedAt(Date.now())
 
         if (current + 1 < total) {
+            playCorrect()
             setCurrent(c => c + 1)
         } else {
             setLoading(true)
@@ -59,6 +61,7 @@ export default function Diagnostic() {
                 setResult(null)
             } finally {
                 setLoading(false)
+                playComplete()
                 setScreen('result')
             }
         }

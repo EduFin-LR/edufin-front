@@ -1,66 +1,45 @@
+import { useEffect, useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
 import edufinLogo from '../../assets/images/edufinLogo.png'
 import fuegoGif   from '../../assets/gifs/fuego.gif'
+import progresoA  from '../../assets/images/ProgresoA.png'
+import progresoB  from '../../assets/images/ProgresoB.png'
+import progresoC  from '../../assets/images/ProgresoC.png'
+import progresoD  from '../../assets/images/ProgresoD.png'
+import { getMyAchievements } from '../../services/profileService'
+import type { Achievement } from '../../services/profileService'
 import './Profile.css'
-
-// import { getProfile } from '../../services/profileService'
 
 const avatarBoy = new URL('../../assets/images/perfilNiño (1).png', import.meta.url).href
 
-const USER = {
-    name:       'Eduardo Jose',
-    joinedDate: 'Julio del 2026',
-    xp:         750,
-    level:      3,
-    streakDays: 7,
-}
-
-const UNLOCKED_LOGROS = [
-    { id:1, emoji:'⭐', color:{ dark:'#6420c8', mid:'#8c4ee8', ring:'#c0a0f8', center:'#ece0ff' }, title:'Level Up'       },
-    { id:2, emoji:'📖', color:{ dark:'#1756b8', mid:'#2e7ef5', ring:'#80b8fa', center:'#d0e8fe' }, title:'Primer capítulo' },
-]
-
 function LevelBadge({ level }: { level: number }) {
-    const p = level <= 5  ? { dark:'#1a8c3c', mid:'#2db84f', ring:'#80d99a', center:'#d4f5df' }
-            : level <= 15 ? { dark:'#1756b8', mid:'#2e7ef5', ring:'#80b8fa', center:'#d0e8fe' }
-            : level <= 25 ? { dark:'#6420c8', mid:'#8c4ee8', ring:'#c0a0f8', center:'#ece0ff' }
-            :               { dark:'#b86000', mid:'#e08800', ring:'#f8c840', center:'#fff0c0' }
-    const bumps = Array.from({ length: 8 }, (_, i) => {
-        const a = (i * Math.PI / 4) - Math.PI / 2
-        return { x: +(60 + 47 * Math.cos(a)).toFixed(2), y: +(60 + 47 * Math.sin(a)).toFixed(2) }
-    })
+    const img = level <= 5  ? progresoA
+              : level <= 15 ? progresoB
+              : level <= 25 ? progresoC
+              :               progresoD
     return (
-        <svg viewBox="0 0 120 120" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
-            {bumps.map((b, i) => <circle key={i} cx={b.x} cy={b.y} r="13" fill={p.dark} />)}
-            <circle cx="60" cy="60" r="45" fill={p.mid} />
-            <circle cx="60" cy="60" r="37" fill={p.ring} />
-            <circle cx="60" cy="60" r="28" fill={p.center} />
-            <text x="60" y="61" textAnchor="middle" dominantBaseline="middle"
-                fontFamily="Arial Black,Arial,sans-serif"
-                fontSize={level >= 10 ? 19 : 22} fontWeight="900" fill={p.dark}>
-                {level}
-            </text>
-        </svg>
-    )
-}
-
-function SmallBadge({ emoji, color }: { emoji: string; color: typeof UNLOCKED_LOGROS[0]['color'] }) {
-    const bumps = Array.from({ length: 8 }, (_, i) => {
-        const a = (i * Math.PI / 4) - Math.PI / 2
-        return { x: +(60 + 47 * Math.cos(a)).toFixed(2), y: +(60 + 47 * Math.sin(a)).toFixed(2) }
-    })
-    return (
-        <svg viewBox="0 0 120 120" width="72" height="72" xmlns="http://www.w3.org/2000/svg">
-            {bumps.map((b, i) => <circle key={i} cx={b.x} cy={b.y} r="13" fill={color.dark} />)}
-            <circle cx="60" cy="60" r="45" fill={color.mid} />
-            <circle cx="60" cy="60" r="37" fill={color.ring} />
-            <circle cx="60" cy="60" r="28" fill={color.center} />
-            <text x="60" y="68" textAnchor="middle" fontSize="26">{emoji}</text>
-        </svg>
+        <div className="level-badge-wrap">
+            <img src={img} alt="nivel" className="level-badge-img" />
+            <span className="level-badge-num">{level}</span>
+        </div>
     )
 }
 
 export default function Profile() {
+    const { profile, userInfo } = useAuth()
+    const [achievements, setAchievements] = useState<Achievement[]>([])
+
+    useEffect(() => {
+        getMyAchievements().then(r => setAchievements(r.data.filter(a => a.isUnlocked))).catch(() => {})
+    }, [])
+
+    const name       = userInfo?.fullName ?? userInfo?.username ?? '…'
+    const xp         = profile?.totalPoints  ?? 0
+    const level      = profile?.currentLevel ?? 1
+    const streakDays = profile?.streakDays   ?? 0
+    const avatar     = userInfo?.avatarUrl   ?? avatarBoy
+
     return (
         <MainLayout>
             <div className="profile-page">
@@ -76,37 +55,40 @@ export default function Profile() {
 
                     {/* Avatar */}
                     <div className="profile-avatar-wrap">
-                        <img src={avatarBoy} alt="avatar" className="profile-avatar" />
+                        <img src={avatar} alt="avatar" className="profile-avatar"
+                            onError={e => { (e.currentTarget as HTMLImageElement).src = avatarBoy }} />
                     </div>
 
                     {/* Info */}
                     <div className="profile-info">
-                        <h2 className="profile-name">{USER.name}</h2>
-                        <p className="profile-joined">Se unió en {USER.joinedDate}</p>
+                        <h2 className="profile-name">{name}</h2>
+                        {userInfo?.email && <p className="profile-joined">{userInfo.email}</p>}
 
                         {/* Stats */}
                         <div className="profile-stats">
                             <div className="profile-stat">
-                                <LevelBadge level={USER.level} />
-                                <span className="profile-stat-val">{USER.xp.toLocaleString()} exp</span>
+                                <LevelBadge level={level} />
+                                <span className="profile-stat-val">{xp.toLocaleString()} exp</span>
                             </div>
                             <div className="profile-stat">
                                 <img src={fuegoGif} alt="racha" className="profile-fire" />
-                                <span className="profile-stat-val">{USER.streakDays} días</span>
+                                <span className="profile-stat-val">{streakDays} días</span>
                             </div>
                         </div>
 
-                        {/* Logros */}
-                        <div className="profile-logros">
-                            <h3 className="profile-logros-title">Logros:</h3>
-                            <div className="profile-logros-grid">
-                                {UNLOCKED_LOGROS.map(l => (
-                                    <div key={l.id} className="profile-logro-item" title={l.title}>
-                                        <SmallBadge emoji={l.emoji} color={l.color} />
-                                    </div>
-                                ))}
+                        {/* Logros desbloqueados */}
+                        {achievements.length > 0 && (
+                            <div className="profile-logros">
+                                <h3 className="profile-logros-title">Logros obtenidos</h3>
+                                <div className="profile-logros-grid">
+                                    {achievements.map(a => (
+                                        <div key={a.id} className="profile-logro-item" title={a.name}>
+                                            <img src={a.iconUrl} alt={a.name} className="profile-logro-icon" />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                 </div>
