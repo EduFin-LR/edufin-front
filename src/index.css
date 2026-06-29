@@ -65,6 +65,12 @@ body {
   background: var(--color-bg-app);
 }
 
+/* ─── Progress bar stripe animation ─────────────────────────── */
+@keyframes progress-stripes {
+  from { background-position: 28px 0; }
+  to   { background-position: 0 0; }
+}
+
 /* ─── Global Utilities ───────────────────────────────────────── */
 
 /* Buttons */

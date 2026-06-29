@@ -1,34 +1,40 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthLayout from '../../layouts/AuthLayout/AuthLayout'
+import { signIn } from '../../services/authService'
+import { useAuth } from '../../context/AuthContext'
+import { ToastContainer } from '../../components/Toast/Toast'
+import type { ToastType } from '../../components/Toast/Toast'
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import './Login.css'
-
-// import { login } from '../../services/authService'
 
 export default function Login() {
     const navigate = useNavigate()
-    const [form, setForm] = useState({ username: '', password: '' })
-    const [error, setError] = useState('')
+    const { login } = useAuth()
+    const [form, setForm]       = useState({ username: '', password: '' })
     const [loading, setLoading] = useState(false)
+    const [toast, setToast]     = useState<{ message: string; type: ToastType } | null>(null)
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
-        setError('')
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!form.username || !form.password) {
-            setError('Completa todos los campos.')
+            setToast({ message: 'Completa todos los campos.', type: 'warning' })
             return
         }
         setLoading(true)
         try {
-            // const response = await login(form)
-            // localStorage.setItem('token', response.data.token)
-            navigate('/dashboard')
-        } catch {
-            setError('Usuario o contraseña incorrectos.')
+            const { data: auth } = await signIn({ username: form.username, password: form.password })
+            // stores credentials + fetches profile/userInfo via context
+            await login(auth.token, auth.id, auth.username)
+            setToast({ message: `¡Bienvenido, ${auth.username}!`, type: 'success' })
+            setTimeout(() => navigate('/dashboard'), 1000)
+        } catch (err: any) {
+            const msg = err?.response?.data?.message ?? 'Usuario o contraseña incorrectos.'
+            setToast({ message: msg, type: 'error' })
         } finally {
             setLoading(false)
         }
@@ -36,6 +42,9 @@ export default function Login() {
 
     return (
         <AuthLayout>
+            <LoadingScreen visible={loading} message="Iniciando sesión…" />
+            <ToastContainer toast={toast} onClose={() => setToast(null)} />
+
             <form className="auth-form" onSubmit={handleSubmit} noValidate>
                 <h2 className="auth-form-title">Iniciar sesión</h2>
 
@@ -49,7 +58,6 @@ export default function Login() {
                         onChange={handleChange}
                         autoComplete="username"
                     />
-
                     <input
                         className="input-field"
                         type="password"
@@ -61,30 +69,16 @@ export default function Login() {
                     />
                 </div>
 
-                {error && <p className="auth-error">{error}</p>}
-
                 <div className="auth-links">
-                    <button
-                        type="button"
-                        className="link-text"
-                        onClick={() => navigate('/register')}
-                    >
+                    <button type="button" className="link-text" onClick={() => navigate('/register')}>
                         ¿No tienes cuenta?
                     </button>
-                    <button
-                        type="button"
-                        className="link-text"
-                        onClick={() => navigate('/forgot-password')}
-                    >
+                    <button type="button" className="link-text" onClick={() => navigate('/forgot-password')}>
                         ¿Olvidaste tu contraseña?
                     </button>
                 </div>
 
-                <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={loading}
-                >
+                <button type="submit" className="btn btn-primary" disabled={loading}>
                     {loading ? 'Ingresando…' : 'Iniciar sesión'}
                 </button>
             </form>

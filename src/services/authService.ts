@@ -1,18 +1,15 @@
-// import api from './api'
-// import type { LoginPayload, RegisterPayload, AuthResponse } from '../types/auth'
-//
-// export const login = (payload: LoginPayload) =>
-//     api.post<AuthResponse>('/auth/login', payload)
-//
-// export const register = (payload: RegisterPayload) =>
-//     api.post<AuthResponse>('/auth/register', payload)
-//
-// export const forgotPassword = (email: string) =>
-//     api.post('/auth/forgot-password', { email })
-//
-// export const resetPassword = (token: string, newPassword: string) =>
-//     api.post('/auth/reset-password', { token, newPassword })
-//
-// export const logout = () => {
-//     localStorage.removeItem('token')
-// }
+import api from './api'
+import type { SignUpPayload, SignUpResponse, SignInPayload, SignInResponse } from '../types/auth'
+
+// POST /iam/auth/sign-up
+export const signUp = (payload: SignUpPayload) =>
+    api.post<SignUpResponse>('/iam/auth/sign-up', payload)
+
+// POST /iam/auth/sign-in
+export const signIn = (payload: SignInPayload) =>
+    api.post<SignInResponse>('/iam/auth/sign-in', payload)
+
+// ── Pendientes — descomentar cuando el backend los entregue ───────────────────
+// export const forgotPassword = (email: string)                   => api.post('/iam/auth/forgot-password', { email })
+// export const resetPassword  = (token: string, password: string) => api.post('/iam/auth/reset-password',  { token, password })
+// export const logout         = ()                                 => { localStorage.removeItem('token') }

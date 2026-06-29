@@ -1,0 +1,53 @@
+/* ── Overlay ──────────────────────────────────────── */
+.ls-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(10, 20, 15, 0.72);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Card ─────────────────────────────────────────── */
+.ls-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+/* ── Logo ─────────────────────────────────────────── */
+.ls-logo {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(45, 184, 79, 0.6));
+}
+
+/* ── Dots ─────────────────────────────────────────── */
+.ls-dots {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 28px;
+}
+
+.ls-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2db84f;
+    display: inline-block;
+}
+
+/* ── Message ──────────────────────────────────────── */
+.ls-message {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}

@@ -1,0 +1,448 @@
+/* ── Page ─────────────────────────────────────────── */
+.learning-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--color-bg);
+    overflow: hidden;
+}
+
+/* ── Header ──────────────────────────────────────── */
+.learning-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-md) var(--space-xl);
+    background: var(--color-white);
+    border-bottom: 1.5px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.learning-back {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: none;
+    border: none;
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    color: var(--color-primary);
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    transition: background 0.15s;
+}
+.learning-back:hover { background: var(--color-primary-light); }
+
+.learning-course-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex: 1;
+    min-width: 0;
+}
+
+.learning-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    background: #dbeafe;
+    flex-shrink: 0;
+}
+
+.learning-course-name {
+    margin: 0 0 4px;
+    font-size: var(--font-size-base);
+    font-weight: 900;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.learning-progress-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.learning-progress-bar {
+    width: 160px;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.learning-progress-fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: var(--radius-full);
+    transition: width 0.5s ease;
+}
+
+.learning-progress-pct {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary);
+    white-space: nowrap;
+}
+
+.learning-xp {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-shrink: 0;
+}
+
+.learning-level-wrap {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+.learning-level-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.learning-level-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 900;
+    color: #1a8c3c;
+    padding-bottom: 3px;
+    pointer-events: none;
+}
+
+.learning-xp-val {
+    font-size: var(--font-size-base);
+    font-weight: 900;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+/* ── Pulse ring animation ─────────────────────────── */
+@keyframes pulse-ring {
+    0%   { transform: scale(1);   opacity: 0.65; }
+    100% { transform: scale(1.9); opacity: 0;    }
+}
+
+/* ── Map viewport ─────────────────────────────────── */
+.map-viewport {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    cursor: grab;
+    background: #e8f7ec;
+}
+
+.map-canvas {
+    position: relative;
+    width: 1050px;
+    height: 530px;
+    margin: 40px auto;
+}
+
+/* ── Module banner ────────────────────────────────── */
+.map-module-banner {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(6px);
+    border: 1.5px solid rgba(45,184,79,0.25);
+    border-radius: var(--radius-full);
+    padding: 6px 20px 6px 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    z-index: 5;
+    pointer-events: none;
+}
+
+.map-module-chip {
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.map-module-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--color-text);
+}
+
+/* ── SVG path layer ───────────────────────────────── */
+.map-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* ── Node wrapper ─────────────────────────────────── */
+.map-node-wrap {
+    position: absolute;
+    width: 68px;
+    height: 68px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.map-node {
+    width: 68px;
+    height: 68px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    position: relative;
+    z-index: 2;
+    transition: box-shadow 0.2s;
+}
+
+.map-node--current {
+    border-width: 3px !important;
+    border-style: solid !important;
+}
+
+/* ── Pulse ring ───────────────────────────────────── */
+.node-pulse-ring {
+    position: absolute;
+    width: 68px;
+    height: 68px;
+    border-radius: var(--radius-full);
+    z-index: 1;
+    pointer-events: none;
+    animation: pulse-ring 1.6s ease-out infinite;
+}
+
+/* ── Arrow above current ──────────────────────────── */
+.node-arrow {
+    position: absolute;
+    top: -28px;
+    font-size: 16px;
+    color: #facc15;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    z-index: 4;
+}
+
+/* ── Checkmark overlay ───────────────────────────── */
+.node-check {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-full);
+    background: #16a34a;
+    border: 2.5px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #fff;
+    z-index: 3;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* ── Stars above node ─────────────────────────────── */
+.node-stars {
+    position: absolute;
+    top: -24px;
+    display: flex;
+    gap: 1px;
+    font-size: 11px;
+    line-height: 1;
+}
+
+/* ── Node number ──────────────────────────────────── */
+.node-num {
+    position: absolute;
+    bottom: -20px;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+/* ── Node label ───────────────────────────────────── */
+.node-label {
+    position: absolute;
+    bottom: -52px;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.3;
+    white-space: nowrap;
+    pointer-events: none;
+    background: rgba(255,255,255,0.8);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+/* ── Drag hint ────────────────────────────────────── */
+.map-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: var(--radius-full);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 20;
+    backdrop-filter: blur(4px);
+}
+
+/* ── Lesson modal ─────────────────────────────────── */
+.lesson-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0 var(--space-md) var(--space-xl);
+    backdrop-filter: blur(2px);
+}
+
+.lesson-modal {
+    background: var(--color-white);
+    border-radius: 28px 28px 20px 20px;
+    padding: var(--space-xl);
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+    position: relative;
+}
+
+.lesson-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #f3f4f6;
+    border: none;
+    font-size: 16px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--radius-full);
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+.lesson-modal-close:hover { background: #e5e7eb; }
+
+.lesson-modal-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: #fff;
+}
+
+.lesson-modal-body {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lesson-modal-title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: 900;
+    color: var(--color-text);
+}
+
+.lesson-modal-desc {
+    margin: 0;
+    font-size: var(--font-size-base);
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+.lesson-modal-badge {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.lesson-modal-btn {
+    width: 100%;
+    margin-top: var(--space-sm);
+    font-size: var(--font-size-md);
+    padding: 14px;
+}
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 768px) {
+    .learning-header {
+        padding: 8px 12px;
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+
+    .learning-back {
+        padding: 6px 8px;
+        font-size: 13px;
+        gap: 4px;
+    }
+
+    .learning-course-info { gap: 8px; min-width: 0; }
+
+    .learning-avatar { width: 34px; height: 34px; }
+
+    .learning-course-name { font-size: 12px; }
+
+    .learning-progress-bar { width: 70px; }
+
+    .learning-progress-pct { font-size: 11px; }
+
+    /* Hide XP on mobile — too cramped */
+    .learning-xp { display: none; }
+
+    .dash-logo { height: 32px; }
+
+    .map-canvas { margin: 12px auto; }
+
+    .map-module-banner { font-size: 11px; padding: 5px 14px 5px 6px; gap: 6px; }
+    .map-module-title  { font-size: 12px; }
+    .map-module-chip   { font-size: 10px; padding: 2px 8px; }
+}

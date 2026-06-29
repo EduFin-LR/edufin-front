@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { FaHome, FaTrophy, FaUser, FaSignOutAlt, FaMedal, FaBars, FaTimes } from 'react-icons/fa'
+import { useAuth } from '../../context/AuthContext'
 import './Sidebar.css'
 
 const avatarBoy = new URL('../../assets/images/perfilNiño (1).png', import.meta.url).href
@@ -21,8 +22,10 @@ function NavContent({ onClose }: { onClose?: () => void }) {
         onClose?.()
     }
 
+    const { logout } = useAuth()
+
     const handleLogout = () => {
-        localStorage.removeItem('token')
+        logout()
         navigate('/')
         onClose?.()
     }

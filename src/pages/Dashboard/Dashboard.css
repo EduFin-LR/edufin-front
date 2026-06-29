@@ -76,6 +76,34 @@
 /* Level */
 .stat-level { gap: var(--space-md); border-color: var(--color-primary-light); }
 
+.level-badge-wrap {
+    position: relative;
+    width: 58px;
+    height: 58px;
+    flex-shrink: 0;
+}
+
+.level-badge-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.level-badge-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 900;
+    color: #1a8c3c;
+    line-height: 1;
+    /* nudge slightly up to hit visual center of badge */
+    padding-bottom: 4px;
+    pointer-events: none;
+}
+
 .level-info {
     flex: 1;
     display: flex;
@@ -119,9 +147,16 @@
 
 .xp-bar-fill {
     height: 100%;
-    background: var(--color-primary);
+    background: repeating-linear-gradient(
+        -45deg,
+        #2db84f  0px,
+        #52d472 10px,
+        #2db84f 20px
+    );
+    background-size: 28px 28px;
     border-radius: var(--radius-full);
     transition: width 0.6s ease;
+    animation: progress-stripes 1s linear infinite;
 }
 
 /* ── Sections ────────────────────────────────────── */
@@ -189,6 +224,18 @@
 }
 
 .course-card--pending .course-title { color: #374151; }
+
+.course-ai-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--color-primary, #2db84f);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    vertical-align: middle;
+}
 
 .course-meta {
     margin: 0;
