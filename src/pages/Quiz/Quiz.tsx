@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     getLessonQuestions, startLesson, completeLesson, submitAttempt,
 } from '../../services/quizService'
+import { playCorrect, playWrong } from '../../utils/sounds'
 import type { QuizQuestion, QuizOption, QuizCompleteResult } from '../../services/quizService'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import edufinLogo from '../../assets/images/edufinLogo.png'
@@ -297,7 +298,7 @@ export default function Quiz() {
     const isLast = current === questions.length - 1
 
     const handleAnswer = (isCorrect: boolean) => {
-        if (isCorrect) setCorrect(c => c + 1)
+        if (isCorrect) { setCorrect(c => c + 1); playCorrect() } else { playWrong() }
         setFeedback(isCorrect ? 'correct' : 'incorrect')
     }
 
