@@ -7,8 +7,11 @@ import {
 import { playCorrect, playWrong, playComplete } from '../../utils/sounds'
 import type { QuizQuestion, QuizOption, QuizCompleteResult } from '../../services/quizService'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
-import edufinLogo from '../../assets/images/edufinLogo.png'
-import progresoA  from '../../assets/images/ProgresoA.png'
+import edufinLogo       from '../../assets/images/edufinLogo.png'
+import progresoA        from '../../assets/images/ProgresoA.png'
+import robotCorrecto    from '../../assets/images/robotCorrecto.png'
+import robotIncorrecto  from '../../assets/images/robotIncorrecto.png'
+import robotFeliz       from '../../assets/images/robotFeliz.png'
 import './Quiz.css'
 
 type FeedbackState = 'correct' | 'incorrect' | null
@@ -203,13 +206,27 @@ function FeedbackBanner({ feedback, message, onNext, isLast }: {
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 30 }}
         >
-            <div className="quiz-feedback-left">
-                <span className="quiz-feedback-icon">{ok ? '🎉' : '😅'}</span>
-                <p className="quiz-feedback-msg">{message}</p>
+            {/* Robot animado */}
+            <AnimatePresence>
+                <motion.img
+                    key={feedback}
+                    src={ok ? robotCorrecto : robotIncorrecto}
+                    alt={ok ? 'robot correcto' : 'robot incorrecto'}
+                    className="quiz-feedback-robot"
+                    initial={{ x: ok ? -80 : 80, opacity: 0, rotate: ok ? -15 : 15 }}
+                    animate={{ x: 0, opacity: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 280, damping: 20, delay: 0.1 }}
+                />
+            </AnimatePresence>
+
+            <div className="quiz-feedback-content">
+                <div className="quiz-feedback-left">
+                    <p className="quiz-feedback-msg">{message}</p>
+                </div>
+                <button className="btn btn-primary quiz-feedback-btn" onClick={onNext}>
+                    {isLast ? 'Ver resultado' : 'Siguiente →'}
+                </button>
             </div>
-            <button className="btn btn-primary quiz-feedback-btn" onClick={onNext}>
-                {isLast ? 'Ver resultado' : 'Siguiente →'}
-            </button>
         </motion.div>
     )
 }
@@ -220,6 +237,17 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
     return (
         <div className="quiz-result-page">
             <img src={edufinLogo} alt="Edufin" className="quiz-result-logo" />
+
+            {/* Robot feliz animado */}
+            <motion.img
+                src={robotFeliz}
+                alt="robot feliz"
+                className="quiz-result-robot"
+                initial={{ scale: 0.5, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.2 }}
+            />
+
             <motion.div
                 className="quiz-result-card"
                 initial={{ opacity: 0, y: 24 }}
@@ -227,7 +255,7 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
                 transition={{ duration: 0.4 }}
             >
                 <h1 className="quiz-result-title">
-                    {result?.passed ? '¡Lección completada! 🎉' : '¡Buen intento! 💪'}
+                    {result?.passed ? '¡Lección completada!' : '¡Buen intento!'}
                 </h1>
                 <p className="quiz-result-sub">Aquí está tu resultado</p>
 
