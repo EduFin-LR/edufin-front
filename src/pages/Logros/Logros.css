@@ -7,23 +7,21 @@
 
 /* ── Grid ────────────────────────────────────────── */
 .logros-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 /* ── Card ────────────────────────────────────────── */
 .logro-card {
     border-radius: var(--radius-lg);
-    padding: var(--space-md);
+    padding: 14px 16px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: var(--space-sm);
+    gap: 14px;
     cursor: default;
     transition: transform 0.18s ease, box-shadow 0.18s ease;
-    aspect-ratio: 1;
-    justify-content: center;
 }
 
 .logro-card--unlocked {
@@ -78,29 +76,34 @@
     text-align: center;
 }
 
-/* ── Title (unlocked only) ───────────────────────── */
+/* ── Text block ──────────────────────────────────── */
+.logro-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+}
+
 .logro-title {
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 700;
-    color: var(--color-primary-dark);
-    text-align: center;
+    color: var(--color-text);
     line-height: 1.2;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+}
+
+.logro-card--locked .logro-title {
+    color: #6b7280;
+}
+
+.logro-desc {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.4;
 }
 
 /* ── Responsive ──────────────────────────────────── */
-@media (max-width: 900px) {
-    .logros-grid { grid-template-columns: repeat(4, 1fr); }
-}
-
-@media (max-width: 640px) {
-    .logros-grid { grid-template-columns: repeat(3, 1fr); }
-    .logro-badge-svg { max-width: 72px; max-height: 72px; }
-}
-
-@media (max-width: 400px) {
-    .logros-grid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 480px) {
+    .logro-icon-wrap { width: 48px; height: 48px; }
+    .logro-title { font-size: 13px; }
 }
