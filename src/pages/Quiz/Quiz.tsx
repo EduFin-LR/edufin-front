@@ -1,6 +1,8 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
+import confetti from 'canvas-confetti'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { FaArrowLeft } from 'react-icons/fa'
 import {
     getLessonQuestions, startLesson, completeLesson, submitAttempt,
 } from '../../services/quizService'
@@ -21,6 +23,63 @@ function getCategories(options: QuizOption[]) {
     return options
         .map(o => o.matchCategory)
         .filter((c): c is string => !!c && !seen.has(c) && !!seen.add(c))
+}
+
+// ── Theory card ────────────────────────────────────────────────────────────────
+function highlightCaps(text: string) {
+    // Split by words fully in UPPERCASE (3+ chars) and wrap them
+    const parts = text.split(/(\b[A-ZÁÉÍÓÚÑÜ]{3,}\b)/)
+    return parts.map((part, i) =>
+        /^[A-ZÁÉÍÓÚÑÜ]{3,}$/.test(part)
+            ? <strong key={i} className="theory-keyword">{part}</strong>
+            : part
+    )
+}
+
+function TheoryCard({ text, questionId }: { text: string; questionId: string }) {
+    const [open, setOpen] = useState(true)
+    useEffect(() => setOpen(true), [questionId])
+
+    return (
+        <motion.div
+            className="theory-card"
+            layout
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+        >
+            <button className="theory-header" onClick={() => setOpen(o => !o)}>
+                <span className="theory-header-left">
+                    <span className="theory-bulb">💡</span>
+                    <span className="theory-title">Concepto clave</span>
+                </span>
+                <motion.span
+                    className="theory-chevron"
+                    animate={{ rotate: open ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                >▾</motion.span>
+            </button>
+
+            <AnimatePresence initial={false}>
+                {open && (
+                    <motion.div
+                        key="body"
+                        className="theory-body"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.28, ease: 'easeInOut' }}
+                        style={{ overflow: 'hidden' }}
+                    >
+                        <p className="theory-text">{highlightCaps(text)}</p>
+                        <button className="theory-dismiss" onClick={() => setOpen(false)}>
+                            Entendido, ir a la pregunta →
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    )
 }
 
 // ── Multiple Choice ────────────────────────────────────────────────────────────
@@ -73,7 +132,8 @@ function DragDrop({
     const [placed, setPlaced] = useState<Record<string, string | null>>(
         () => Object.fromEntries(question.options.map(o => [o.id, null]))
     )
-    const zoneRefs = useRef<Record<string, HTMLDivElement | null>>({})
+    const zoneRefs     = useRef<Record<string, HTMLDivElement | null>>({})
+    const containerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         setPlaced(Object.fromEntries(question.options.map(o => [o.id, null])))
@@ -82,15 +142,22 @@ function DragDrop({
     const unplaced = question.options.filter(o => placed[o.id] === null)
     const allPlaced = unplaced.length === 0
 
-    const handleDragEnd = (optId: string, point: { x: number; y: number }) => {
+    const handleDragEnd = (optId: string, event: MouseEvent | TouchEvent | PointerEvent) => {
+        // Use clientX/Y (viewport coords) to match getBoundingClientRect()
+        // info.point uses page coords (includes scroll) — that's why it drifts
+        let cx: number, cy: number
+        if ('changedTouches' in event && event.changedTouches.length > 0) {
+            cx = event.changedTouches[0].clientX
+            cy = event.changedTouches[0].clientY
+        } else {
+            cx = (event as PointerEvent).clientX
+            cy = (event as PointerEvent).clientY
+        }
         for (const cat of categories) {
             const el = zoneRefs.current[cat]
             if (!el) continue
             const rect = el.getBoundingClientRect()
-            if (
-                point.x >= rect.left && point.x <= rect.right &&
-                point.y >= rect.top  && point.y <= rect.bottom
-            ) {
+            if (cx >= rect.left && cx <= rect.right && cy >= rect.top && cy <= rect.bottom) {
                 setPlaced(prev => ({ ...prev, [optId]: cat }))
                 return
             }
@@ -119,7 +186,7 @@ function DragDrop({
     const zoneBorders = ['#86efac', '#fde047', '#fca5a5']
 
     return (
-        <div className="quiz-dd">
+        <div className="quiz-dd" ref={containerRef}>
             <p className="quiz-question-text">{question.questionText}</p>
             {question.hint && <p className="quiz-hint">💡 {question.hint}</p>}
 
@@ -131,11 +198,12 @@ function DragDrop({
                             key={opt.id}
                             className="dd-card"
                             drag={!disabled}
-                            dragElastic={0.15}
+                            dragConstraints={containerRef}
+                            dragElastic={0.05}
                             dragMomentum={false}
                             whileDrag={{ scale: 1.06, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,0.18)', cursor: 'grabbing' }}
                             whileHover={{ scale: 1.03 }}
-                            onDragEnd={(_, info) => handleDragEnd(opt.id, info.point)}
+                            onDragEnd={(event) => handleDragEnd(opt.id, event)}
                             layout
                             exit={{ scale: 0.8, opacity: 0, transition: { duration: 0.2 } }}
                         >
@@ -235,62 +303,135 @@ function FeedbackBanner({ feedback, message, onNext, isLast }: {
     )
 }
 
+// ── Animated counter ──────────────────────────────────────────────────────────
+function CountUp({ to, duration = 1.2, delay = 0 }: { to: number; duration?: number; delay?: number }) {
+    const [val, setVal] = useState(0)
+    useEffect(() => {
+        let start: number | null = null
+        let raf: number
+        const step = (ts: number) => {
+            if (!start) start = ts + delay * 1000
+            const elapsed = ts - start
+            if (elapsed < 0) { raf = requestAnimationFrame(step); return }
+            const progress = Math.min(elapsed / (duration * 1000), 1)
+            setVal(Math.round(progress * to))
+            if (progress < 1) raf = requestAnimationFrame(step)
+        }
+        raf = requestAnimationFrame(step)
+        return () => cancelAnimationFrame(raf)
+    }, [to, duration, delay])
+    return <>{val}</>
+}
+
 // ── Result screen ──────────────────────────────────────────────────────────────
 function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; onBack: () => void }) {
-    const pct = result ? Math.round((result.correctAnswers / result.totalQuestions) * 100) : 0
+    const pct      = result ? Math.round((result.correctAnswers / result.totalQuestions) * 100) : 0
+    const passed   = result?.passed ?? (pct >= 60)
+
+    const fireConfetti = useCallback(() => {
+        const burst = (origin: { x: number; y: number }, angle: number) =>
+            confetti({
+                particleCount: 80,
+                spread: 60,
+                angle,
+                origin,
+                colors: ['#2db84f', '#52d472', '#fbbf24', '#34d399', '#ffffff'],
+                shapes: ['star', 'circle'],
+                scalar: 1.1,
+            })
+        burst({ x: 0, y: 0.7 }, 60)
+        burst({ x: 1, y: 0.7 }, 120)
+        setTimeout(() => {
+            burst({ x: 0.1, y: 0.5 }, 70)
+            burst({ x: 0.9, y: 0.5 }, 110)
+        }, 350)
+    }, [])
+
+    useEffect(() => {
+        if (passed) {
+            const t = setTimeout(fireConfetti, 500)
+            return () => clearTimeout(t)
+        }
+    }, [passed, fireConfetti])
+    const totalXp  = result?.totalExperience ?? 0
+    const lessonXp = result?.lessonExperience ?? 0
+    const qXp      = result?.questionsExperience ?? 0
+
     return (
         <div className="quiz-result-page">
             <img src={edufinLogo} alt="Edufin" className="quiz-result-logo" />
 
-            {/* Robot feliz animado */}
+            {/* Robot feliz */}
             <motion.img
                 src={robotFeliz}
                 alt="robot feliz"
                 className="quiz-result-robot"
-                initial={{ scale: 0.5, opacity: 0, y: 20 }}
+                initial={{ scale: 0.3, opacity: 0, y: 30 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.2 }}
+                transition={{ type: 'spring', stiffness: 240, damping: 16, delay: 0.1 }}
             />
 
             <motion.div
                 className="quiz-result-card"
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 32 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.45, delay: 0.2 }}
             >
                 <h1 className="quiz-result-title">
-                    {result?.passed ? '¡Lección completada!' : '¡Buen intento!'}
+                    {passed ? '¡Lección completada!' : '¡Buen intento!'}
                 </h1>
                 <p className="quiz-result-sub">Aquí está tu resultado</p>
 
+                {/* Score circle */}
                 <div className="quiz-result-circle">
                     <svg viewBox="0 0 100 100">
                         <circle cx="50" cy="50" r="44" fill="none" stroke="#e5f7ea" strokeWidth="10"/>
-                        <circle cx="50" cy="50" r="44" fill="none" stroke="#2db84f" strokeWidth="10"
-                            strokeDasharray={`${pct * 2.76} 276`} strokeLinecap="round"
+                        <motion.circle
+                            cx="50" cy="50" r="44" fill="none"
+                            stroke={pct >= 60 ? '#2db84f' : '#f59e0b'}
+                            strokeWidth="10" strokeLinecap="round"
                             transform="rotate(-90 50 50)"
+                            initial={{ strokeDasharray: '0 276' }}
+                            animate={{ strokeDasharray: `${pct * 2.76} 276` }}
+                            transition={{ duration: 1.1, ease: 'easeOut', delay: 0.4 }}
                         />
                     </svg>
-                    <span className="quiz-result-pct">{pct}%</span>
+                    <span className="quiz-result-pct" style={{ color: pct >= 60 ? '#2db84f' : '#f59e0b' }}>
+                        {pct}%
+                    </span>
                 </div>
 
+                {/* Correct / Incorrect */}
                 <div className="quiz-result-stats">
-                    <div className="quiz-stat">
-                        <span className="quiz-stat-num quiz-stat-correct">{result?.correctAnswers ?? 0}</span>
+                    <motion.div className="quiz-stat" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.5 }}>
+                        <span className="quiz-stat-num quiz-stat-correct">
+                            <CountUp to={result?.correctAnswers ?? 0} delay={0.5} />
+                        </span>
                         <span className="quiz-stat-lbl">Correctas</span>
-                    </div>
-                    <div className="quiz-stat">
-                        <span className="quiz-stat-num quiz-stat-wrong">{result?.incorrectAnswers ?? 0}</span>
+                    </motion.div>
+                    <motion.div className="quiz-stat" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.6 }}>
+                        <span className="quiz-stat-num quiz-stat-wrong">
+                            <CountUp to={result?.incorrectAnswers ?? 0} delay={0.6} />
+                        </span>
                         <span className="quiz-stat-lbl">Incorrectas</span>
-                    </div>
-                    <div className="quiz-stat">
-                        <div className="quiz-stat-xp">
-                            <img src={progresoA} alt="xp" className="quiz-stat-xp-img" />
-                            <span className="quiz-stat-num quiz-stat-xpnum">+{result?.xpEarned ?? 0}</span>
-                        </div>
-                        <span className="quiz-stat-lbl">XP ganada</span>
-                    </div>
+                    </motion.div>
                 </div>
+
+                {/* XP breakdown */}
+                <motion.div
+                    className="quiz-xp-block"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.7, type: 'spring', stiffness: 260, damping: 20 }}
+                >
+                    <div className="quiz-xp-total">
+                        <img src={progresoA} alt="xp" className="quiz-xp-icon" />
+                        <span className="quiz-xp-total-num">
+                            +<CountUp to={totalXp} duration={1.4} delay={0.8} />
+                        </span>
+                        <span className="quiz-xp-total-lbl">XP ganada</span>
+                    </div>
+                </motion.div>
 
                 <button className="btn btn-primary quiz-result-btn" onClick={onBack}>
                     Volver a la ruta
@@ -346,7 +487,7 @@ export default function Quiz() {
         } catch {
             const tot = questions.length
             const cor = correct + (feedback === 'correct' ? 1 : 0)
-            setResult({ correctAnswers: cor, incorrectAnswers: tot - cor, totalQuestions: tot, xpEarned: 100, passed: cor >= tot * 0.6 })
+            setResult({ correctAnswers: cor, incorrectAnswers: tot - cor, totalQuestions: tot, lessonExperience: 0, questionsExperience: 0, totalExperience: 0, passed: cor >= tot * 0.6 })
         } finally {
             setSubmitting(false)
             playComplete()
@@ -362,7 +503,12 @@ export default function Quiz() {
         <>
             <LoadingScreen visible={loading || submitting} message={submitting ? 'Calculando resultados…' : 'Cargando lección…'} />
             <div className="quiz-page">
-                <img src={edufinLogo} alt="Edufin" className="quiz-logo" />
+                <div className="quiz-top-bar">
+                    <button className="quiz-back-btn" onClick={() => navigate(-1)}>
+                        <FaArrowLeft /> Salir
+                    </button>
+                    <img src={edufinLogo} alt="Edufin" className="quiz-logo" />
+                </div>
 
                 <div className="quiz-progress-wrap">
                     <span className="quiz-progress-label">Pregunta {current + 1} de {questions.length}</span>
@@ -380,6 +526,9 @@ export default function Quiz() {
                         exit={{ opacity: 0, x: -30 }}
                         transition={{ duration: 0.22 }}
                     >
+                        {q?.TheoryText && (
+                            <TheoryCard text={q.TheoryText} questionId={q.id} />
+                        )}
                         {q?.questionType === 'MULTIPLE_CHOICE' && (
                             <MultipleChoice question={q} onAnswer={(_, ok) => handleAnswer(ok)} disabled={!!feedback} questionStartTime={questionStartAt.current} />
                         )}
