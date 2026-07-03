@@ -130,6 +130,32 @@
     color: var(--color-primary-dark);
 }
 
+/* ── Level badge ─────────────────────────────────── */
+.rank-level-badge {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rank-level-img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.rank-level-num {
+    position: absolute;
+    font-size: 11px;
+    font-weight: 900;
+    color: var(--color-primary);
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    line-height: 1;
+}
+
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 640px) {
     .rank-row {

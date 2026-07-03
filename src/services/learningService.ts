@@ -6,7 +6,7 @@ export interface Lesson {
     content:     string
     videoUrl:    string
     lessonOrder: number
-    lessonType:  'QUIZ' | 'VIDEO' | 'READING'
+    lessonType:  'QUIZ' | 'VIDEO' | 'READING' | 'FINAL'
     status:      'UNLOCKED' | 'LOCKED' | 'COMPLETED'
 }
 

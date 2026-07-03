@@ -1,12 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBook, FaPlay, FaLock, FaClipboardList, FaCheck, FaArrowLeft, FaTimes, FaChevronDown } from 'react-icons/fa'
+import { FaBook, FaPlay, FaLock, FaClipboardList, FaCheck, FaArrowLeft, FaTimes, FaTrophy } from 'react-icons/fa'
+import robotFeliz from '../../assets/images/robotFeliz.png'
 import edufinLogo from '../../assets/images/edufinLogo.png'
 import progresoA  from '../../assets/images/ProgresoA.png'
 import { getTopicLessons } from '../../services/learningService'
 import type { TopicLessons, Lesson } from '../../services/learningService'
 import { useAuth } from '../../context/AuthContext'
+import { playHover } from '../../utils/sounds'
 import './Learning.css'
 
 const avatarBoy = new URL('../../assets/images/perfilNiño (1).png', import.meta.url).href
@@ -16,6 +18,7 @@ const NODE_COLORS = {
     QUIZ:    { bg:'#3b82f6', border:'#1d4ed8', glow:'rgba(59,130,246,0.45)', icon:'#fff' },
     VIDEO:   { bg:'#ec4899', border:'#be185d', glow:'rgba(236,72,153,0.45)', icon:'#fff' },
     READING: { bg:'#2db84f', border:'#1a8c3c', glow:'rgba(45,184,79,0.45)',  icon:'#fff' },
+    FINAL:   { bg:'#f59e0b', border:'#b45309', glow:'rgba(245,158,11,0.55)', icon:'#fff' },
     LOCKED:  { bg:'#d1d5db', border:'#9ca3af', glow:'rgba(156,163,175,0.2)', icon:'#9ca3af' },
 }
 
@@ -23,6 +26,7 @@ function NodeIcon({ type, locked }: { type: Lesson['lessonType']; locked: boolea
     if (locked) return <FaLock />
     if (type === 'QUIZ')    return <FaClipboardList />
     if (type === 'VIDEO')   return <FaPlay />
+    if (type === 'FINAL')   return <FaTrophy />
     return <FaBook />
 }
 
@@ -62,30 +66,35 @@ function MapNode({ lesson, pos, isCurrent, onClick }: {
 }) {
     const isLocked    = lesson.status === 'LOCKED'
     const isCompleted = lesson.status === 'COMPLETED'
+    const isFinal     = lesson.lessonType === 'FINAL'
     const colors      = isLocked ? NODE_COLORS.LOCKED : NODE_COLORS[lesson.lessonType] ?? NODE_COLORS.READING
+    const nodeSize    = isFinal ? 50 : 34
 
     const nodeStyle = isLocked
         ? { background: '#d1d5db', border: '3px dashed #9ca3af', boxShadow: 'none' }
         : {
-            background: colors.bg,
-            border: `3px solid ${colors.border}`,
+            background: isFinal
+                ? `radial-gradient(circle at 35% 35%, #fde68a, ${colors.bg} 70%)`
+                : colors.bg,
+            border: `${isFinal ? 4 : 3}px solid ${colors.border}`,
             boxShadow: `0 6px 20px ${colors.glow}, 0 2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3)`,
           }
 
     return (
         <div
-            className="map-node-wrap"
-            style={{ left: pos.x - 34, top: pos.y - 34 }}
+            className={`map-node-wrap ${isFinal ? 'map-node-wrap--final' : ''}`}
+            style={{ left: pos.x - nodeSize, top: pos.y - nodeSize }}
             onClick={() => onClick(lesson)}
         >
+            {/* Robot mascot on current node */}
             {isCurrent && (
-                <motion.div
-                    className="node-arrow"
-                    animate={{ y: [0, -6, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
-                >
-                    <FaChevronDown />
-                </motion.div>
+                <motion.img
+                    src={robotFeliz}
+                    alt="robot"
+                    className="node-robot"
+                    animate={{ y: [0, -7, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
+                />
             )}
 
             {isCurrent && (
@@ -93,13 +102,27 @@ function MapNode({ lesson, pos, isCurrent, onClick }: {
             )}
 
             <motion.div
-                className={`map-node ${isCurrent ? 'map-node--current' : ''}`}
+                className={`map-node ${isCurrent ? 'map-node--current' : ''} ${isFinal ? 'map-node--final' : ''} ${isLocked ? 'map-node--locked' : ''}`}
                 style={{ ...nodeStyle, color: colors.icon }}
+                onHoverStart={() => { if (!isLocked) playHover() }}
                 whileHover={{ scale: isLocked ? 1 : 1.12, y: isLocked ? 0 : -3 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                animate={isFinal && !isLocked ? { boxShadow: [
+                    `0 6px 20px ${colors.glow}`,
+                    `0 6px 40px rgba(245,158,11,0.8)`,
+                    `0 6px 20px ${colors.glow}`,
+                ]} : {}}
+                transition={{ type: 'spring', stiffness: 400, damping: 20, ...(isFinal && !isLocked ? { boxShadow: { repeat: Infinity, duration: 2, ease: 'easeInOut' } } : {}) }}
             >
                 <NodeIcon type={lesson.lessonType} locked={isLocked} />
             </motion.div>
+
+            {isFinal && !isLocked && (
+                <>
+                    <div className="node-final-label">🏆 Final</div>
+                    <div className="node-final-ring1" />
+                    <div className="node-final-ring2" />
+                </>
+            )}
 
             {isCompleted && (
                 <div className="node-check"><FaCheck /></div>
@@ -196,7 +219,12 @@ export default function Learning() {
                     className="map-canvas"
                     drag
                     dragMomentum={false}
-                    dragConstraints={{ left: -Math.max(0, canvasWidth - 600), right: 100, top: -200, bottom: 100 }}
+                    dragConstraints={{
+                        left:   -Math.max(0, canvasWidth  - (viewportRef.current?.clientWidth  ?? 600) + 80),
+                        right:  Math.min(300, (viewportRef.current?.clientWidth  ?? 600) * 0.4),
+                        top:    -Math.max(0, canvasHeight - (viewportRef.current?.clientHeight ?? 530) + 80),
+                        bottom: Math.min(200, (viewportRef.current?.clientHeight ?? 530) * 0.3),
+                    }}
                     style={{ scale, width: canvasWidth, height: canvasHeight }}
                     onDragStart={() => setHint(false)}
                     whileDrag={{ cursor: 'grabbing' }}
@@ -207,26 +235,32 @@ export default function Learning() {
                         <span className="map-module-title">{topic?.topicName ?? '…'}</span>
                     </div>
 
-                    {/* SVG paths */}
+                    {/* Sky decorations */}
+                    <span className="sky-deco" style={{ top: '8%',  left: '12%' }}>🪙</span>
+                    <span className="sky-deco" style={{ top: '14%', left: '55%' }}>⭐</span>
+                    <span className="sky-deco" style={{ top: '6%',  left: '80%' }}>🪙</span>
+                    <span className="sky-deco" style={{ top: '60%', left: '30%' }}>✨</span>
+                    <span className="sky-deco" style={{ top: '70%', left: '72%' }}>⭐</span>
+
+                    {/* SVG paths — game-map dotted style */}
                     <svg
                         className="map-svg"
                         viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
                         xmlns="http://www.w3.org/2000/svg"
                     >
-                        {/* Full background path (always visible) */}
+                        {/* Full path (locked — white semi-transparent dashes) */}
                         {positions.length > 1 && (() => {
                             const fullPath = buildPath(positions, 0, positions.length - 1)
                             return <>
-                                <path d={fullPath} fill="none" stroke="rgba(0,0,0,0.10)" strokeWidth="12" strokeLinecap="round"/>
-                                <path d={fullPath} fill="none" stroke="#d1d5db"           strokeWidth="8"  strokeDasharray="10 7" strokeLinecap="round"/>
+                                <path d={fullPath} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="10" strokeLinecap="round"/>
+                                <path d={fullPath} fill="none" stroke="rgba(255,255,255,0.70)" strokeWidth="6"  strokeLinecap="round" strokeDasharray="12 14"/>
                             </>
                         })()}
 
-                        {/* Unlocked path (green solid over grey) */}
+                        {/* Unlocked portion (green bright dashes) */}
                         {unlockedPath && <>
-                            <path d={unlockedPath} fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="12" strokeLinecap="round"/>
-                            <path d={unlockedPath} fill="none" stroke="#fff"              strokeWidth="10" strokeLinecap="round"/>
-                            <path d={unlockedPath} fill="none" stroke="#2db84f"           strokeWidth="6"  strokeLinecap="round"/>
+                            <path d={unlockedPath} fill="none" stroke="rgba(34,197,94,0.35)" strokeWidth="10" strokeLinecap="round"/>
+                            <path d={unlockedPath} fill="none" stroke="#4ade80"              strokeWidth="6"  strokeLinecap="round" strokeDasharray="12 14"/>
                         </>}
                     </svg>
 
@@ -253,41 +287,84 @@ export default function Learning() {
 
             {/* ── Lesson modal ── */}
             <AnimatePresence>
-                {selected && (
-                    <motion.div className="lesson-overlay" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setSelected(null)}>
+                {selected && (() => {
+                    const isVideo  = selected.lessonType === 'VIDEO' && !!selected.videoUrl
+                    const colors   = NODE_COLORS[selected.lessonType] ?? NODE_COLORS.READING
+                    const isLocked = selected.status === 'LOCKED'
+                    return (
                         <motion.div
-                            className="lesson-modal"
-                            initial={{ y: 80, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 80, opacity: 0 }}
-                            transition={{ type:'spring', stiffness:300, damping:28 }}
-                            onClick={e => e.stopPropagation()}
+                            className="lesson-overlay"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelected(null)}
                         >
-                            <button className="lesson-modal-close" onClick={() => setSelected(null)}><FaTimes /></button>
-                            <div className="lesson-modal-icon" style={{
-                                background: (NODE_COLORS[selected.lessonType] ?? NODE_COLORS.READING).bg,
-                                boxShadow:  `0 8px 24px ${(NODE_COLORS[selected.lessonType] ?? NODE_COLORS.READING).glow}`,
-                            }}>
-                                <NodeIcon type={selected.lessonType} locked={selected.status === 'LOCKED'} />
-                            </div>
-                            <div className="lesson-modal-body">
-                                <h3 className="lesson-modal-title">{selected.title}</h3>
-                                <p className="lesson-modal-desc">{selected.content}</p>
-                                {selected.status === 'COMPLETED' && <span className="lesson-modal-badge">✅ Completada</span>}
-                            </div>
-                            <button
-                                className={`btn ${selected.status === 'LOCKED' ? '' : 'btn-primary'} lesson-modal-btn`}
-                                disabled={selected.status === 'LOCKED'}
-                                style={selected.status === 'LOCKED' ? { background:'#9ca3af', color:'#fff', cursor:'not-allowed' } : {}}
-                                onClick={() => selected.status !== 'LOCKED' && navigate(`/quiz/${selected.id}`)}
+                            <motion.div
+                                className={`lesson-modal ${isVideo ? 'lesson-modal--video' : ''}`}
+                                initial={{ y: 80, opacity: 0, scale: 0.96 }}
+                                animate={{ y: 0,  opacity: 1, scale: 1    }}
+                                exit={{ y: 80, opacity: 0, scale: 0.96 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                                onClick={e => e.stopPropagation()}
                             >
-                                {selected.status === 'LOCKED'     ? '🔒 Bloqueada'
-                                : selected.status === 'COMPLETED' ? 'Repasar lección'
-                                :                                   'Iniciar lección'}
-                            </button>
+                                <button className="lesson-modal-close" onClick={() => setSelected(null)}><FaTimes /></button>
+
+                                {/* Video embed */}
+                                {isVideo && (
+                                    <motion.div
+                                        className="lesson-video-wrap"
+                                        initial={{ opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.18, duration: 0.4 }}
+                                    >
+                                        <iframe
+                                            className="lesson-video-iframe"
+                                            src={selected.videoUrl}
+                                            title={selected.title}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        />
+                                    </motion.div>
+                                )}
+
+                                {/* Icon (only for non-video) */}
+                                {!isVideo && (
+                                    <div className="lesson-modal-icon" style={{
+                                        background: colors.bg,
+                                        boxShadow:  `0 8px 24px ${colors.glow}`,
+                                    }}>
+                                        <NodeIcon type={selected.lessonType} locked={isLocked} />
+                                    </div>
+                                )}
+
+                                {/* Video type badge */}
+                                {isVideo && (
+                                    <div className="lesson-video-badge">
+                                        <span className="lesson-video-dot" />
+                                        Video
+                                    </div>
+                                )}
+
+                                <div className="lesson-modal-body">
+                                    <h3 className="lesson-modal-title">{selected.title}</h3>
+                                    <p className="lesson-modal-desc">{selected.content}</p>
+                                    {selected.status === 'COMPLETED' && <span className="lesson-modal-badge-done">✅ Completada</span>}
+                                </div>
+
+                                <button
+                                    className={`btn ${isLocked ? '' : 'btn-primary'} lesson-modal-btn`}
+                                    disabled={isLocked}
+                                    style={isLocked ? { background: '#9ca3af', color: '#fff', cursor: 'not-allowed' } : {}}
+                                    onClick={() => !isLocked && navigate(`/quiz/${selected.id}`)}
+                                >
+                                    {isLocked                        ? '🔒 Bloqueada'
+                                    : selected.status === 'COMPLETED' ? (isVideo ? '▶ Ver otra vez' : 'Repasar lección')
+                                    :                                   (isVideo ? '▶ Ver video'     : 'Iniciar lección')}
+                                </button>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
+                    )
+                })()}
             </AnimatePresence>
         </div>
     )

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { FaHome, FaTrophy, FaUser, FaSignOutAlt, FaMedal, FaBars, FaTimes } from 'react-icons/fa'
 import { useAuth } from '../../context/AuthContext'
+import { playNav } from '../../utils/sounds'
 import './Sidebar.css'
 
 const avatarBoy = new URL('../../assets/images/perfilNiño (1).png', import.meta.url).href
@@ -18,6 +19,7 @@ function NavContent({ onClose }: { onClose?: () => void }) {
     const location  = useLocation()
 
     const go = (path: string) => {
+        playNav()
         navigate(path)
         onClose?.()
     }

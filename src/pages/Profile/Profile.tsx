@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { getVolume, setVolume, getMuted, setMuted, playSelect } from '../../utils/sounds'
 import { useAuth } from '../../context/AuthContext'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
 import edufinLogo from '../../assets/images/edufinLogo.png'
@@ -31,6 +32,19 @@ export default function Profile() {
     const { profile, userInfo } = useAuth()
     const [achievements, setAchievements] = useState<Achievement[]>([])
     const [loading, setLoading] = useState(true)
+    const [volume, setVol]      = useState(() => getVolume())
+    const [muted,  setMut]      = useState(() => getMuted())
+
+    const handleVolume = useCallback((v: number) => {
+        setVol(v); setVolume(v)
+        if (v > 0 && muted) { setMut(false); setMuted(false) }
+    }, [muted])
+
+    const handleMute = useCallback(() => {
+        const next = !muted; setMut(next); setMuted(next)
+    }, [muted])
+
+    const handleTest = useCallback(() => { playSelect() }, [])
 
     useEffect(() => {
         getMyAchievements().then(r => setAchievements(r.data.filter(a => a.isUnlocked))).catch(() => {}).finally(() => setLoading(false))
@@ -94,8 +108,32 @@ export default function Profile() {
                         )}
                     </div>
 
+                </div>{/* end profile-body */}
+
+                {/* Sound settings */}
+                <div className="profile-sound-card">
+                    <h3 className="profile-sound-title">🔊 Sonido</h3>
+                    <div className="profile-sound-row">
+                        <button
+                            className={`profile-mute-btn ${muted ? 'profile-mute-btn--muted' : ''}`}
+                            onClick={handleMute}
+                            title={muted ? 'Activar sonido' : 'Silenciar'}
+                        >
+                            {muted ? '🔇' : '🔊'}
+                        </button>
+                        <input
+                            type="range"
+                            min={0} max={1} step={0.01}
+                            value={muted ? 0 : volume}
+                            onChange={e => handleVolume(parseFloat(e.target.value))}
+                            className="profile-volume-slider"
+                        />
+                        <span className="profile-volume-pct">{muted ? 0 : Math.round(volume * 100)}%</span>
+                        <button className="profile-sound-test" onClick={handleTest}>Probar</button>
+                    </div>
                 </div>
-            </div>
+
+            </div>{/* end profile-page */}
         </MainLayout>
     )
 }
