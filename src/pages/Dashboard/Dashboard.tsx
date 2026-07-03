@@ -1,21 +1,102 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaPiggyBank } from 'react-icons/fa'
+import { motion, AnimatePresence } from 'framer-motion'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import edufinLogo from '../../assets/images/edufinLogo.png'
 import fuegoGif   from '../../assets/gifs/fuego.gif'
 import progresoA  from '../../assets/images/ProgresoA.png'
+import progresoB  from '../../assets/images/ProgresoB.png'
+import progresoC  from '../../assets/images/ProgresoC.png'
+import progresoD  from '../../assets/images/ProgresoD.png'
 import { getDashboard } from '../../services/dashboardService'
 import { useAuth } from '../../context/AuthContext'
 import type { DashboardResponse, DashboardLearningPath } from '../../types/auth'
 import './Dashboard.css'
 
-// ── Level badge ───────────────────────────────────────────────────────────────
-function LevelBadge({ level }: { level: number }) {
+const LEVEL_TIERS = [
+    { img: progresoA, label: 'Iniciado',    minLevel: 1,  maxLevel: 5  },
+    { img: progresoB, label: 'Aprendiz',    minLevel: 6,  maxLevel: 15 },
+    { img: progresoC, label: 'Experto',     minLevel: 16, maxLevel: 25 },
+    { img: progresoD, label: 'Maestro',     minLevel: 26, maxLevel: 99 },
+]
+
+function tierIndex(level: number) {
+    return LEVEL_TIERS.findIndex((_, i) => {
+        const t = LEVEL_TIERS[i]
+        return level >= t.minLevel && level <= t.maxLevel
+    })
+}
+
+// ── Level road modal ──────────────────────────────────────────────────────────
+function LevelRoadModal({ level, onClose }: { level: number; onClose: () => void }) {
+    const current = tierIndex(level)
     return (
-        <div className="level-badge-wrap">
-            <img src={progresoA} alt="nivel" className="level-badge-img" />
+        <AnimatePresence>
+            <motion.div
+                className="lvl-modal-overlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+            >
+                <motion.div
+                    className="lvl-modal"
+                    initial={{ scale: 0.88, opacity: 0, y: 30 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.88, opacity: 0, y: 30 }}
+                    transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+                    onClick={e => e.stopPropagation()}
+                >
+                    <h2 className="lvl-modal-title">Tu camino de niveles</h2>
+                    <p className="lvl-modal-sub">Nivel actual: <strong>{level}</strong></p>
+
+                    <div className="lvl-road">
+                        {LEVEL_TIERS.map((tier, i) => {
+                            const unlocked = i <= current
+                            const isNow    = i === current
+                            return (
+                                <div key={tier.label} className="lvl-road-row">
+                                    {/* Connector line above (except first) */}
+                                    {i > 0 && (
+                                        <div className={`lvl-road-line ${unlocked ? 'lvl-road-line--done' : ''}`} />
+                                    )}
+
+                                    <div className={`lvl-node ${unlocked ? 'lvl-node--unlocked' : 'lvl-node--locked'} ${isNow ? 'lvl-node--current' : ''}`}>
+                                        <div className="lvl-node-badge">
+                                            <img
+                                                src={tier.img}
+                                                alt={tier.label}
+                                                className="lvl-node-img"
+                                                style={{ filter: unlocked ? 'none' : 'grayscale(1) brightness(0.5)' }}
+                                            />
+                                            {!unlocked && <span className="lvl-node-lock">🔒</span>}
+                                            {isNow && <span className="lvl-node-here">← Aquí</span>}
+                                        </div>
+                                        <div className="lvl-node-info">
+                                            <span className="lvl-node-label">{tier.label}</span>
+                                            <span className="lvl-node-range">Niveles {tier.minLevel}–{tier.maxLevel === 99 ? '∞' : tier.maxLevel}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                    <button className="btn btn-primary lvl-modal-close" onClick={onClose}>Cerrar</button>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    )
+}
+
+// ── Level badge ───────────────────────────────────────────────────────────────
+function LevelBadge({ level, onClick }: { level: number; onClick?: () => void }) {
+    const img = LEVEL_TIERS[tierIndex(level)]?.img ?? progresoA
+    return (
+        <div className="level-badge-wrap" onClick={onClick} style={{ cursor: onClick ? 'pointer' : undefined }}>
+            <img src={img} alt="nivel" className="level-badge-img" />
             <span className="level-badge-num">{level}</span>
         </div>
     )
@@ -59,6 +140,7 @@ export default function Dashboard() {
     const navigate = useNavigate()
     const [data, setData] = useState<DashboardResponse | null>(null)
     const [loading, setLoading] = useState(true)
+    const [showLevelModal, setShowLevelModal] = useState(false)
     const { profile } = useAuth()
 
     useEffect(() => {
@@ -79,6 +161,7 @@ export default function Dashboard() {
     return (
         <MainLayout>
             <LoadingScreen visible={loading} message="Cargando dashboard…" />
+            {showLevelModal && <LevelRoadModal level={level} onClose={() => setShowLevelModal(false)} />}
             <div className="dash">
 
                 {/* Header */}
@@ -98,7 +181,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="stat-card stat-level">
-                        <LevelBadge level={level} />
+                        <LevelBadge level={level} onClick={() => setShowLevelModal(true)} />
                         <div className="level-info">
                             <span className="level-title">Nivel {level}</span>
                             <div className="xp-row">
