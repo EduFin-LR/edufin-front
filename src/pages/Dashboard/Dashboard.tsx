@@ -71,12 +71,10 @@ function LevelRoadModal({ level, onClose }: { level: number; onClose: () => void
                                                 className="lvl-node-img"
                                                 style={{ filter: unlocked ? 'none' : 'grayscale(1) brightness(0.5)' }}
                                             />
-                                            {!unlocked && <span className="lvl-node-lock">🔒</span>}
-                                            {isNow && <span className="lvl-node-here">← Aquí</span>}
                                         </div>
                                         <div className="lvl-node-info">
                                             <span className="lvl-node-label">{tier.label}</span>
-                                            <span className="lvl-node-range">Niveles {tier.minLevel}–{tier.maxLevel === 99 ? '∞' : tier.maxLevel}</span>
+                                            <span className="lvl-node-range">Niveles {tier.minLevel} – {tier.maxLevel === 99 ? '30' : tier.maxLevel}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -180,8 +178,8 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="stat-card stat-level">
-                        <LevelBadge level={level} onClick={() => setShowLevelModal(true)} />
+                    <div className="stat-card stat-level" onClick={() => setShowLevelModal(true)} style={{ cursor: 'pointer' }}>
+                        <LevelBadge level={level} />
                         <div className="level-info">
                             <span className="level-title">Nivel {level}</span>
                             <div className="xp-row">
