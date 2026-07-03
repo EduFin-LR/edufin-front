@@ -354,8 +354,6 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
         }
     }, [passed, fireConfetti])
     const totalXp  = result?.totalExperience ?? 0
-    const lessonXp = result?.lessonExperience ?? 0
-    const qXp      = result?.questionsExperience ?? 0
 
     return (
         <div className="quiz-result-page">

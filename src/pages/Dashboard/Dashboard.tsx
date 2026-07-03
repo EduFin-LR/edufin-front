@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { playSelect } from '../../utils/sounds'
 import { useNavigate } from 'react-router-dom'
 import { FaPiggyBank, FaStar } from 'react-icons/fa'
@@ -16,7 +16,6 @@ import { useAuth } from '../../context/AuthContext'
 import type { DashboardResponse, DashboardLearningPath } from '../../types/auth'
 import './Dashboard.css'
 
-const avatarBoy = new URL('../../assets/images/perfilNiño (1).png', import.meta.url).href
 
 const LEVEL_TIERS = [
     { img: progresoA, label: 'Iniciado',  minLevel: 1,  maxLevel: 5  },
@@ -97,130 +96,6 @@ function LevelRoadModal({ level, onClose }: { level: number; onClose: () => void
                 </motion.div>
             </motion.div>
         </AnimatePresence>
-    )
-}
-
-// ── XP Bar with spark particles ───────────────────────────────────────────────
-function XpBar({ pct, xp, xpMax }: { pct: number; xp: number; xpMax: number }) {
-    const [sparked, setSparked] = useState(false)
-    const sparked$ = useRef(false)
-    useEffect(() => {
-        const t = setTimeout(() => { if (!sparked$.current) { sparked$.current = true; setSparked(true) } }, 600)
-        return () => clearTimeout(t)
-    }, [])
-
-    const sparks = sparked ? Array.from({ length: 6 }) : []
-
-    return (
-        <div className="xp-bar-wrap">
-            <div className="xp-bar-labels">
-                <span className="xp-nums">{xp.toLocaleString()} / {xpMax.toLocaleString()} XP</span>
-                <span className="xp-pct-tag">{pct}%</span>
-            </div>
-            <div className="xp-bar" style={{ position: 'relative' }}>
-                <motion.div
-                    className="xp-bar-fill"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ duration: 1.1, ease: 'easeOut', delay: 0.3 }}
-                    onAnimationComplete={() => setSparked(true)}
-                />
-                <AnimatePresence>
-                    {sparks.map((_, i) => (
-                        <motion.span
-                            key={i}
-                            className="xp-spark"
-                            style={{ left: `calc(${pct}% - 4px)` }}
-                            initial={{ opacity: 1, y: 0, x: 0, scale: 1 }}
-                            animate={{
-                                opacity: 0,
-                                y: (i % 2 === 0 ? -1 : 1) * (8 + i * 4),
-                                x: (i - 2.5) * 6,
-                                scale: 0,
-                            }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.7, delay: i * 0.06 }}
-                        >✦</motion.span>
-                    ))}
-                </AnimatePresence>
-            </div>
-        </div>
-    )
-}
-
-// ── Player Card (idea 1) ──────────────────────────────────────────────────────
-function PlayerCard({
-    name, avatar, level, xp, xpMax, xpPct, streakDays, tierImg, tierLabel,
-    onLevelClick,
-}: {
-    name: string; avatar: string; level: number; xp: number; xpMax: number;
-    xpPct: number; streakDays: number; tierImg: string; tierLabel: string;
-    onLevelClick: () => void;
-}) {
-    return (
-        <motion.div
-            className="player-card"
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-        >
-            <div className="player-avatar-wrap">
-                <img
-                    src={avatar}
-                    alt="avatar"
-                    className="player-avatar"
-                    onError={e => { (e.currentTarget as HTMLImageElement).src = avatarBoy }}
-                />
-                <div className="player-streak-bubble">
-                    <img src={fuegoGif} alt="racha" className="player-streak-fire" />
-                    <span>{streakDays}</span>
-                </div>
-            </div>
-
-            <div className="player-info">
-                <h2 className="player-name">{name}</h2>
-                <span className="player-tier-label">{tierLabel}</span>
-
-                <div className="player-level-row" onClick={onLevelClick}>
-                    <img src={tierImg} alt="nivel" className="player-tier-img" />
-                    <span className="player-level-num">Nivel {level}</span>
-                    <span className="player-level-hint">Ver ruta →</span>
-                </div>
-
-                <XpBar pct={xpPct} xp={xp} xpMax={xpMax} />
-            </div>
-        </motion.div>
-    )
-}
-
-// ── Daily missions (idea 3) ───────────────────────────────────────────────────
-function DailyMissions({ streakDays, completedToday }: { streakDays: number; completedToday: number }) {
-    const missions = [
-        { id: 1, icon: '📖', label: 'Completa 1 lección hoy',      done: completedToday >= 1 },
-        { id: 2, icon: '🔥', label: `Mantén tu racha (${streakDays} días)`, done: streakDays > 0 },
-        { id: 3, icon: '⭐', label: 'Responde 5 preguntas bien',    done: false },
-    ]
-    return (
-        <section className="missions-section">
-            <h2 className="dash-section-title">Misiones del día</h2>
-            <div className="missions-row">
-                {missions.map((m, i) => (
-                    <motion.div
-                        key={m.id}
-                        className={`mission-card ${m.done ? 'mission-card--done' : ''}`}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                    >
-                        <span className="mission-icon">{m.icon}</span>
-                        <span className="mission-label">{m.label}</span>
-                        <span className={`mission-check ${m.done ? 'mission-check--done' : ''}`}>
-                            {m.done ? '✓' : '○'}
-                        </span>
-                    </motion.div>
-                ))}
-            </div>
-        </section>
     )
 }
 
@@ -305,11 +180,6 @@ export default function Dashboard() {
     const pending    = data?.learningPath.filter(c => c.status === 'LOCKED')      ?? []
     const completed  = data?.learningPath.filter(c => c.status === 'COMPLETED')   ?? []
 
-    const ti       = Math.max(0, tierIndex(level))
-    const tierImg  = LEVEL_TIERS[ti].img
-    const tierLbl  = LEVEL_TIERS[ti].label
-    const avatar   = userInfo?.avatarUrl ?? avatarBoy
-    const completedToday = completed.length  // approximate
 
     return (
         <MainLayout>
