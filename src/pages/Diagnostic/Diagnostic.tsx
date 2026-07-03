@@ -7,6 +7,8 @@ import { playCorrect, playComplete } from '../../utils/sounds'
 import type { DiagnosticQuestion, DiagnosticAnswer, DiagnosticResultProfile } from '../../types/assessment'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import edufinLogo from '../../assets/images/edufinLogo.png'
+import idea   from '../../assets/images/idea.png'
+import saludo   from '../../assets/images/saludo.png'
 import pensando   from '../../assets/images/pensando.png'
 import progresoA  from '../../assets/images/ProgresoA.png'
 import './Diagnostic.css'
@@ -86,7 +88,7 @@ export default function Diagnostic() {
                         Comenzar evaluación
                     </button>
                 </div>
-                <img src={pensando} alt="personaje" className="diag-character" />
+                <img src={saludo} alt="personaje" className="diag-character" />
             </div>
         </div>
     )
@@ -105,7 +107,7 @@ export default function Diagnostic() {
                 <p className="diag-result-subtitle">Este es tu perfil financiero</p>
 
                 <div className="diag-profile-card">
-                    <img src={pensando} alt="robot" className="diag-profile-img" />
+                    <img src={idea} alt="robot" className="diag-profile-img" />
                     <div className="diag-profile-info">
                         <h2>{result?.financialLevel ?? 'Perfil financiero'}</h2>
                         <p>{result?.feedbackMessage ?? 'Completaste la evaluación inicial.'}</p>
@@ -117,7 +119,7 @@ export default function Diagnostic() {
                         <span className="diag-score-label">Puntaje total</span>
                         <div className="diag-score-val">
                             <span className="diag-score-icon">📋</span>
-                            <strong>{result?.score ?? 0}/{(result?.totalQuestions ?? 10) * 10}</strong>
+                            <strong>{Number(result?.score).toFixed(0) ?? 0}/{(result?.totalQuestions ?? 10) * 10}</strong>
                         </div>
                     </div>
                     <div className="diag-score-card">

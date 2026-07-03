@@ -15,15 +15,18 @@ export interface QuizQuestion {
     hint:           string
     successMessage: string
     errorMessage:   string
+    TheoryText?:    string
     options:        QuizOption[]
 }
 
 export interface QuizCompleteResult {
-    correctAnswers:   number
-    incorrectAnswers: number
-    totalQuestions:   number
-    xpEarned:         number
-    passed:           boolean
+    correctAnswers:      number
+    incorrectAnswers:    number
+    totalQuestions:      number
+    lessonExperience:    number
+    questionsExperience: number
+    totalExperience:     number
+    passed?:             boolean  // derived client-side if absent
 }
 
 export interface AttemptPayload {
