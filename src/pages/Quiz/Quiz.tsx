@@ -4,7 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaArrowLeft } from 'react-icons/fa'
 import {
-    getLessonQuestions, getAdaptiveQuizQuestions, startLesson, completeLesson, submitAttempt,
+    getLessonQuestions, getAdaptiveQuizQuestions, getDynamicFinalQuestions, startLesson, completeLesson, submitAttempt,
 } from '../../services/quizService'
 import { playCorrect, playWrong, playComplete } from '../../utils/sounds'
 import type { QuizQuestion, QuizOption, QuizCompleteResult } from '../../services/quizService'
@@ -459,6 +459,8 @@ export default function Quiz() {
     const navigate     = useNavigate()
     const [searchParams] = useSearchParams()
     const lessonType = searchParams.get('type')
+    const topicId = searchParams.get('topicId')
+    const isFinal = lessonType === 'FINAL'
 
     const [questions,  setQuestions]  = useState<QuizQuestion[]>([])
     const [current,    setCurrent]    = useState(0)
@@ -476,6 +478,25 @@ export default function Quiz() {
 
         setLoading(true)
 
+        // FINAL no representa una Lesson persistida.
+        if (isFinal) {
+            if (!topicId) {
+                setLoading(false)
+                return
+            }
+
+            getDynamicFinalQuestions(topicId)
+                .then(r => {
+                    setQuestions(r.data)
+                    startTime.current = Date.now()
+                    questionStartAt.current = Date.now()
+                })
+                .catch(() => {})
+                .finally(() => setLoading(false))
+
+            return
+        }
+
         const questionsRequest =
             lessonType === 'QUIZ'
                 ? getAdaptiveQuizQuestions(lessonId)
@@ -486,10 +507,11 @@ export default function Quiz() {
             .then(r => {
                 setQuestions(r.data)
                 startTime.current = Date.now()
+                questionStartAt.current = Date.now()
             })
             .catch(() => {})
             .finally(() => setLoading(false))
-    }, [lessonId, lessonType])
+    }, [lessonId, lessonType, topicId, isFinal])
 
     const q      = questions[current]
     const isLast = current === questions.length - 1
@@ -506,12 +528,37 @@ export default function Quiz() {
         setSubmitting(true)
         const timeSpentSec = Math.round((Date.now() - startTime.current) / 1000)
         try {
-            const res = await completeLesson(lessonId!, timeSpentSec)
-            setResult(res.data)
+            if (isFinal) {
+                // El FINAL todavía no tiene endpoint de "complete".
+                // Los intentos ya fueron enviados uno por uno a /attempts.
+                const tot = questions.length
+                const cor = correct
+
+                setResult({
+                    correctAnswers: cor,
+                    incorrectAnswers: tot - cor,
+                    totalQuestions: tot,
+                    lessonExperience: 0,
+                    questionsExperience: 0,
+                    totalExperience: 0,
+                    passed: cor >= tot * 0.6,
+                })
+            } else {
+                const res = await completeLesson(lessonId!, timeSpentSec)
+                setResult(res.data)
+            }
         } catch {
             const tot = questions.length
-            const cor = correct + (feedback === 'correct' ? 1 : 0)
-            setResult({ correctAnswers: cor, incorrectAnswers: tot - cor, totalQuestions: tot, lessonExperience: 0, questionsExperience: 0, totalExperience: 0, passed: cor >= tot * 0.6 })
+            const cor = correct
+            setResult({
+                correctAnswers: cor,
+                incorrectAnswers: tot - cor,
+                totalQuestions: tot,
+                lessonExperience: 0,
+                questionsExperience: 0,
+                totalExperience: 0,
+                passed: cor >= tot * 0.6,
+            })
         } finally {
             setSubmitting(false)
             playComplete()
@@ -525,7 +572,16 @@ export default function Quiz() {
 
     return (
         <>
-            <LoadingScreen visible={loading || submitting} message={submitting ? 'Calculando resultados…' : 'Cargando lección…'} />
+            <LoadingScreen
+                visible={loading || submitting}
+                message={
+                    submitting
+                        ? 'Calculando resultados…'
+                        : isFinal
+                            ? 'Generando evaluación final…'
+                            : 'Cargando lección…'
+                }
+            />
             <div className="quiz-page">
                 <div className="quiz-top-bar">
                     <button className="quiz-back-btn" onClick={() => navigate(-1)}>
