@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import confetti from 'canvas-confetti'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaArrowLeft } from 'react-icons/fa'
 import {
-    getLessonQuestions, startLesson, completeLesson, submitAttempt,
+    getLessonQuestions, getAdaptiveQuizQuestions, startLesson, completeLesson, submitAttempt,
 } from '../../services/quizService'
 import { playCorrect, playWrong, playComplete } from '../../utils/sounds'
 import type { QuizQuestion, QuizOption, QuizCompleteResult } from '../../services/quizService'
@@ -457,6 +457,8 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
 export default function Quiz() {
     const { lessonId } = useParams<{ lessonId: string }>()
     const navigate     = useNavigate()
+    const [searchParams] = useSearchParams()
+    const lessonType = searchParams.get('type')
 
     const [questions,  setQuestions]  = useState<QuizQuestion[]>([])
     const [current,    setCurrent]    = useState(0)
@@ -471,13 +473,23 @@ export default function Quiz() {
 
     useEffect(() => {
         if (!lessonId) return
+
         setLoading(true)
+
+        const questionsRequest =
+            lessonType === 'QUIZ'
+                ? getAdaptiveQuizQuestions(lessonId)
+                : getLessonQuestions(lessonId)
+
         startLesson(lessonId)
-            .then(() => getLessonQuestions(lessonId))
-            .then(r => { setQuestions(r.data); startTime.current = Date.now() })
+            .then(() => questionsRequest)
+            .then(r => {
+                setQuestions(r.data)
+                startTime.current = Date.now()
+            })
             .catch(() => {})
             .finally(() => setLoading(false))
-    }, [lessonId])
+    }, [lessonId, lessonType])
 
     const q      = questions[current]
     const isLast = current === questions.length - 1

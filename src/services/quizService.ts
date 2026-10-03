@@ -21,9 +21,9 @@ export interface QuizQuestion {
     TheoryText?:     string
     options:         QuizOption[]
 
-    // Metadata devuelta por el endpoint adaptativo.
-    interactionType: InteractionType
-    selectionReason: SelectionReason
+    // Solo se usan en preguntas provenientes del endpoint adaptativo.
+    interactionType?: InteractionType
+    selectionReason?: SelectionReason
 }
 
 interface AdaptiveQuizQuestion {
@@ -33,10 +33,10 @@ interface AdaptiveQuizQuestion {
 }
 
 export interface AdaptiveQuizResponse {
-    adaptive:                  boolean
-    standardQuestionCount:     number
-    reinforcementQuestionCount:number
-    questions:                 AdaptiveQuizQuestion[]
+    adaptive:                   boolean
+    standardQuestionCount:      number
+    reinforcementQuestionCount: number
+    questions:                  AdaptiveQuizQuestion[]
 }
 
 export interface QuizCompleteResult {
@@ -50,20 +50,27 @@ export interface QuizCompleteResult {
 }
 
 export interface AttemptPayload {
-    questionId:           string
-    selectedOptionId:     string
-    timeTakenSec:         number
+    questionId:             string
+    selectedOptionId:       string
+    timeTakenSec:           number
     selectedMatchCategory?: string | null
-    interactionType:      InteractionType
-    selectionReason:      SelectionReason
+    interactionType?:       InteractionType
+    selectionReason?:       SelectionReason
 }
 
 /**
- * Para QUIZ usamos el endpoint adaptativo.
- * El backend devuelve cada pregunta envuelta con interactionType/selectionReason;
- * aquí la aplanamos para que Quiz.tsx pueda seguir trabajando con QuizQuestion[].
+ * Endpoint antiguo/genérico.
+ * Se mantiene para LESSON / READING / VIDEO / FINAL mientras esos flujos
+ * sigan usando el banco completo asociado a la lección.
  */
-export const getLessonQuestions = async (lessonId: string) => {
+export const getLessonQuestions = (lessonId: string) =>
+    api.get<QuizQuestion[]>(`/lessons/${lessonId}/questions`)
+
+/**
+ * Endpoint específico para QUIZ.
+ * El backend devuelve como máximo 10 preguntas y puede incluir refuerzos.
+ */
+export const getAdaptiveQuizQuestions = async (lessonId: string) => {
     const response = await api.get<AdaptiveQuizResponse>(
         `/assessments/adaptive-quizzes/lessons/${lessonId}`
     )
@@ -74,7 +81,7 @@ export const getLessonQuestions = async (lessonId: string) => {
             ...item.question,
             interactionType: item.interactionType,
             selectionReason: item.selectionReason,
-        })),
+        })) as QuizQuestion[],
     }
 }
 
