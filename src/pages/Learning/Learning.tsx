@@ -355,7 +355,12 @@ export default function Learning() {
                                     className={`btn ${isLocked ? '' : 'btn-primary'} lesson-modal-btn`}
                                     disabled={isLocked}
                                     style={isLocked ? { background: '#9ca3af', color: '#fff', cursor: 'not-allowed' } : {}}
-                                    onClick={() => !isLocked && navigate(`/quiz/${selected.id}`)}
+                                    onClick={() =>
+                                        !isLocked &&
+                                        navigate(
+                                            `/quiz/${selected.id}?type=${selected.lessonType}`
+                                        )
+                                    }
                                 >
                                     {isLocked                        ? '🔒 Bloqueada'
                                     : selected.status === 'COMPLETED' ? (isVideo ? '▶ Ver otra vez' : 'Repasar lección')
