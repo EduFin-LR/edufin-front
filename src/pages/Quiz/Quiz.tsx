@@ -93,7 +93,14 @@ function MultipleChoice({
         if (!selected) return
         const opt = question.options.find(o => o.id === selected)!
         const timeTakenSec = Math.round((Date.now() - questionStartTime) / 1000)
-        submitAttempt({ questionId: question.id, selectedOptionId: selected, timeTakenSec }).catch(() => {})
+        submitAttempt({
+            questionId: question.id,
+            selectedOptionId: selected,
+            timeTakenSec,
+            selectedMatchCategory: null,
+            interactionType: question.interactionType,
+            selectionReason: question.selectionReason,
+        }).catch(() => {})
         onAnswer(selected, opt.isCorrect)
     }
 
@@ -174,7 +181,14 @@ function DragDrop({
         // un attempt por cada opción colocada
         question.options.forEach(o => {
             if (placed[o.id] !== null) {
-                submitAttempt({ questionId: question.id, selectedOptionId: o.id, timeTakenSec }).catch(() => {})
+                submitAttempt({
+                    questionId: question.id,
+                    selectedOptionId: o.id,
+                    timeTakenSec,
+                    selectedMatchCategory: placed[o.id],
+                    interactionType: question.interactionType,
+                    selectionReason: question.selectionReason,
+                }).catch(() => {})
             }
         })
         const allCorrect = question.options.every(o => placed[o.id] === o.matchCategory)
