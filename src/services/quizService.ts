@@ -45,6 +45,17 @@ export interface DynamicFinalResponse {
     questions:             AdaptiveQuestionEnvelope[]
 }
 
+
+export interface FinalCompletionResponse {
+    totalQuestions:     number
+    correctAnswers:     number
+    incorrectAnswers:   number
+    score:              number
+    passed:             boolean
+    finalExperience:    number
+    nextTopicUnlocked:  boolean
+}
+
 export interface QuizCompleteResult {
     correctAnswers:      number
     incorrectAnswers:    number
@@ -112,3 +123,17 @@ export const completeLesson = (lessonId: string, timeSpentSec: number) =>
         `/attempts/lessons/${lessonId}/complete`,
         { timeSpentSec }
     )
+
+export const completeDynamicFinal = (
+    topicId: string,
+    questionIds: string[],
+    timeSpentSec: number
+) =>
+    api.post<FinalCompletionResponse>(
+        `/assessments/finals/topics/${topicId}/complete`,
+        {
+            questionIds,
+            timeSpentSec,
+        }
+    )
+
