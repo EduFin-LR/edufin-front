@@ -157,7 +157,36 @@ export default function Learning() {
         setScale(s => Math.min(1.6, Math.max(0.5, s - e.deltaY * 0.001)))
     }, [])
 
-    const lessons   = topic?.lessons ?? []
+    const baseLessons = topic?.lessons ?? []
+
+    // El FINAL es dinámico: no existe como Lesson persistida.
+    // Por eso agregamos un nodo virtual al final de la ruta.
+    const hasPersistedFinal = baseLessons.some(l => l.lessonType === 'FINAL')
+    const allBaseLessonsCompleted =
+        baseLessons.length > 0 &&
+        baseLessons.every(l => l.status === 'COMPLETED')
+
+    const virtualFinal: Lesson | null =
+        topicId && !hasPersistedFinal
+            ? {
+                id: `final-${topicId}`,
+                title: 'Evaluación final',
+                content: 'Completa la evaluación final del módulo.',
+                videoUrl: '',
+                lessonOrder:
+                    baseLessons.reduce(
+                        (max, lesson) => Math.max(max, lesson.lessonOrder),
+                        0
+                    ) + 1,
+                lessonType: 'FINAL',
+                status: allBaseLessonsCompleted ? 'UNLOCKED' : 'LOCKED',
+            }
+            : null
+
+    const lessons = virtualFinal
+        ? [...baseLessons, virtualFinal]
+        : baseLessons
+
     const positions = buildPositions(lessons.length)
 
     // índice del primer UNLOCKED (nodo actual)
@@ -175,8 +204,13 @@ export default function Learning() {
     const unlockedPath = buildPath(positions, 0, lastUnlockedIdx)
 
     // stats del header
-    const completed    = lessons.filter(l => l.status === 'COMPLETED').length
-    const progressPct  = lessons.length > 0 ? Math.round((completed / lessons.length) * 100) : 0
+    const completed = baseLessons.filter(
+        l => l.status === 'COMPLETED'
+    ).length
+    const progressPct =
+        baseLessons.length > 0
+            ? Math.round((completed / baseLessons.length) * 100)
+            : 0
     const level        = profile?.currentLevel ?? 1
     const xp           = profile?.totalPoints  ?? 0
 
@@ -355,12 +389,20 @@ export default function Learning() {
                                     className={`btn ${isLocked ? '' : 'btn-primary'} lesson-modal-btn`}
                                     disabled={isLocked}
                                     style={isLocked ? { background: '#9ca3af', color: '#fff', cursor: 'not-allowed' } : {}}
-                                    onClick={() =>
-                                        !isLocked &&
+                                    onClick={() => {
+                                        if (isLocked) return
+
+                                        if (selected.lessonType === 'FINAL') {
+                                            navigate(
+                                                `/quiz/final-${topicId}?type=FINAL&topicId=${topicId}`
+                                            )
+                                            return
+                                        }
+
                                         navigate(
                                             `/quiz/${selected.id}?type=${selected.lessonType}`
                                         )
-                                    }
+                                    }}
                                 >
                                     {isLocked                        ? '🔒 Bloqueada'
                                     : selected.status === 'COMPLETED' ? (isVideo ? '▶ Ver otra vez' : 'Repasar lección')

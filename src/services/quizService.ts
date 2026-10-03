@@ -20,13 +20,11 @@ export interface QuizQuestion {
     errorMessage:    string
     TheoryText?:     string
     options:         QuizOption[]
-
-    // Solo se usan en preguntas provenientes del endpoint adaptativo.
     interactionType?: InteractionType
     selectionReason?: SelectionReason
 }
 
-interface AdaptiveQuizQuestion {
+interface AdaptiveQuestionEnvelope {
     question:        Omit<QuizQuestion, 'interactionType' | 'selectionReason'>
     interactionType: InteractionType
     selectionReason: SelectionReason
@@ -36,7 +34,15 @@ export interface AdaptiveQuizResponse {
     adaptive:                   boolean
     standardQuestionCount:      number
     reinforcementQuestionCount: number
-    questions:                  AdaptiveQuizQuestion[]
+    questions:                  AdaptiveQuestionEnvelope[]
+}
+
+export interface DynamicFinalResponse {
+    topicId:               string
+    adaptive:              boolean
+    standardQuestionCount: number
+    adaptiveQuestionCount: number
+    questions:             AdaptiveQuestionEnvelope[]
 }
 
 export interface QuizCompleteResult {
@@ -58,18 +64,20 @@ export interface AttemptPayload {
     selectionReason?:       SelectionReason
 }
 
-/**
- * Endpoint antiguo/genérico.
- * Se mantiene para LESSON / READING / VIDEO / FINAL mientras esos flujos
- * sigan usando el banco completo asociado a la lección.
- */
+const flattenQuestions = (
+    questions: AdaptiveQuestionEnvelope[]
+): QuizQuestion[] =>
+    questions.map(item => ({
+        ...item.question,
+        interactionType: item.interactionType,
+        selectionReason: item.selectionReason,
+    }))
+
+// LESSON / READING / VIDEO
 export const getLessonQuestions = (lessonId: string) =>
     api.get<QuizQuestion[]>(`/lessons/${lessonId}/questions`)
 
-/**
- * Endpoint específico para QUIZ.
- * El backend devuelve como máximo 10 preguntas y puede incluir refuerzos.
- */
+// QUIZ adaptativo
 export const getAdaptiveQuizQuestions = async (lessonId: string) => {
     const response = await api.get<AdaptiveQuizResponse>(
         `/assessments/adaptive-quizzes/lessons/${lessonId}`
@@ -77,11 +85,19 @@ export const getAdaptiveQuizQuestions = async (lessonId: string) => {
 
     return {
         ...response,
-        data: response.data.questions.map(item => ({
-            ...item.question,
-            interactionType: item.interactionType,
-            selectionReason: item.selectionReason,
-        })) as QuizQuestion[],
+        data: flattenQuestions(response.data.questions),
+    }
+}
+
+// FINAL dinámico por Topic/módulo
+export const getDynamicFinalQuestions = async (topicId: string) => {
+    const response = await api.get<DynamicFinalResponse>(
+        `/assessments/finals/topics/${topicId}`
+    )
+
+    return {
+        ...response,
+        data: flattenQuestions(response.data.questions),
     }
 }
 
@@ -92,4 +108,7 @@ export const submitAttempt = (payload: AttemptPayload) =>
     api.post('/attempts', payload)
 
 export const completeLesson = (lessonId: string, timeSpentSec: number) =>
-    api.post<QuizCompleteResult>(`/attempts/lessons/${lessonId}/complete`, { timeSpentSec })
+    api.post<QuizCompleteResult>(
+        `/attempts/lessons/${lessonId}/complete`,
+        { timeSpentSec }
+    )
