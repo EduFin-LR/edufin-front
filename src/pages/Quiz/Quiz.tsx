@@ -4,7 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaArrowLeft } from 'react-icons/fa'
 import {
-    getLessonQuestions, getAdaptiveQuizQuestions, getDynamicFinalQuestions, startLesson, completeLesson, submitAttempt,
+    getLessonQuestions, getAdaptiveQuizQuestions, getDynamicFinalQuestions, completeDynamicFinal, startLesson, completeLesson, submitAttempt,
 } from '../../services/quizService'
 import { playCorrect, playWrong, playComplete } from '../../utils/sounds'
 import type { QuizQuestion, QuizOption, QuizCompleteResult } from '../../services/quizService'
@@ -529,27 +529,37 @@ export default function Quiz() {
         const timeSpentSec = Math.round((Date.now() - startTime.current) / 1000)
         try {
             if (isFinal) {
-                // El FINAL todavía no tiene endpoint de "complete".
-                // Los intentos ya fueron enviados uno por uno a /attempts.
-                const tot = questions.length
-                const cor = correct
+                if (!topicId) {
+                    throw new Error('topicId no disponible para completar el FINAL')
+                }
+
+                const questionIds = questions.map(question => question.id)
+
+                const res = await completeDynamicFinal(
+                    topicId,
+                    questionIds,
+                    timeSpentSec
+                )
 
                 setResult({
-                    correctAnswers: cor,
-                    incorrectAnswers: tot - cor,
-                    totalQuestions: tot,
+                    correctAnswers: res.data.correctAnswers,
+                    incorrectAnswers: res.data.incorrectAnswers,
+                    totalQuestions: res.data.totalQuestions,
                     lessonExperience: 0,
-                    questionsExperience: 0,
-                    totalExperience: 0,
-                    passed: cor >= tot * 0.6,
+                    questionsExperience: res.data.finalExperience,
+                    totalExperience: res.data.finalExperience,
+                    passed: res.data.passed,
                 })
+
             } else {
                 const res = await completeLesson(lessonId!, timeSpentSec)
                 setResult(res.data)
             }
+
         } catch {
             const tot = questions.length
             const cor = correct
+
             setResult({
                 correctAnswers: cor,
                 incorrectAnswers: tot - cor,
@@ -559,6 +569,7 @@ export default function Quiz() {
                 totalExperience: 0,
                 passed: cor >= tot * 0.6,
             })
+
         } finally {
             setSubmitting(false)
             playComplete()
