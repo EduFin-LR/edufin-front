@@ -1,24 +1,36 @@
 /* ─── Design Tokens ─────────────────────────────────────────── */
 :root {
-  /* Colors */
-  --color-primary:        #3a9e52;
-  --color-primary-dark:   #2a7a3e;
-  --color-primary-light:  #dff0e4;
-  --color-primary-hover:  #2fa043;
+  /* Colors · tema oscuro «Bosque» (nunca negro puro) */
+  color-scheme: dark;
+  --color-primary:        #2F9E4F;
+  --color-primary-dark:   #8BE3A4;   /* verde claro para texto y enlaces sobre oscuro */
+  --color-primary-light:  #1F4A2E;   /* fondo suave verde (activo, seleccionado) */
+  --color-primary-hover:  #37AE58;
+  --color-primary-shadow: #237A3C;
 
-  --color-bg-app:         #eef8f4;
-  --color-bg-sidebar:     #2fa043;
-  --color-sidebar-active: #dff0e4;
+  --color-bg-app:         #12241B;
+  --color-surface:        #1A3125;   /* tarjetas */
+  --color-surface-2:      #15291F;   /* campos y fondos internos */
+  --color-bg-sidebar:     #15291F;
+  --color-sidebar-active: #1F4A2E;
 
-  --color-white:          #ffffff;
-  --color-text:           #1a1a1a;
-  --color-text-muted:     #6b7280;
-  --color-border:         #d1d5db;
-  --color-error:          #e53935;
-  --color-success:        #43a047;
+  --color-white:          #ffffff;   /* blanco real: texto sobre botones de color */
+  --color-text:           #E8F3EC;
+  --color-text-muted:     #9DB8A7;
+  --color-text-faint:     #6F8B7A;
+  --color-border:         #2B4636;
+  --color-track:          #24392D;   /* barras de progreso vacías */
+  --color-error:          #FF8A80;
+  --color-success:        #8BE3A4;
+  --color-warning:        #F5C04A;
+  --color-gold:           #E3A008;
+
+  /* Logo */
+  --logo-edu:             #4CC46B;
+  --logo-fin:             #B7B4FF;
 
   /* Auth panel gradient */
-  --gradient-auth-panel:  linear-gradient(180deg, #c3e8f5 0%, #9dd4a8 55%, #6cbd5a 100%);
+  --gradient-auth-panel:  linear-gradient(180deg, #15291F 0%, #12241B 100%);
 
   /* Radii */
   --radius-sm:   6px;
@@ -28,12 +40,14 @@
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.08);
-  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.10);
-  --shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.14);
+  --shadow-sm:  0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 4px rgba(0, 0, 0, 0.25);
+  --shadow-md:  0 6px 18px rgba(0, 0, 0, 0.30);
+  --shadow-lg:  0 12px 36px rgba(0, 0, 0, 0.40);
 
   /* Typography */
-  --font-base:  'Segoe UI', system-ui, sans-serif;
+  --font-base:  'Manrope', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:  'JetBrains Mono', Consolas, monospace;
+  --font-logo:  'Poppins', 'Segoe UI', sans-serif;
   --font-size-sm:   13px;
   --font-size-base: 15px;
   --font-size-md:   17px;
@@ -105,17 +119,29 @@ body {
 .btn-primary {
   background: var(--color-primary);
   color: var(--color-white);
-  box-shadow: 0 4px 12px rgba(58, 158, 82, 0.35);
+  box-shadow: 0 4px 0 var(--color-primary-shadow);
 }
 
 .btn-primary:hover {
   background: var(--color-primary-hover);
-  box-shadow: 0 6px 16px rgba(58, 158, 82, 0.45);
+  box-shadow: 0 5px 0 var(--color-primary-shadow);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn:focus-visible,
+.link-text:focus-visible,
+.input-field:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 2px;
 }
 
 .btn-secondary {
-  background: var(--color-white);
-  color: var(--color-primary);
+  background: transparent;
+  color: var(--color-primary-dark);
   border: 2px solid var(--color-primary);
 }
 
@@ -132,18 +158,18 @@ body {
   font-size: var(--font-size-base);
   font-family: var(--font-base);
   color: var(--color-text);
-  background: var(--color-white);
+  background: var(--color-surface-2);
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input-field::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
 }
 
 .input-field:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(58, 158, 82, 0.15);
+  box-shadow: 0 0 0 4px rgba(63, 191, 98, 0.18);
 }
 
 /* Link text */

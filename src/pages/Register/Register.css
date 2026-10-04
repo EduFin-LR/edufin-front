@@ -1,54 +1,73 @@
-/* Register comparte los estilos base de auth-form definidos en Login.css. */
+/* Register usa los estilos base de autenticación de Login.css */
 
-/* ── Gender switch ───────────────────────────────────────────────────────── */
-.gender-switch {
+/* ── Pasos ───────────────────────────────────────── */
+.reg-steps {
+    list-style: none;
+    margin: 0 0 22px;
+    padding: 0;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
 }
-
-.gender-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-text-muted, #666);
-    user-select: none;
+.reg-steps li:not(.reg-steps-bar) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text-faint);
+    white-space: nowrap;
 }
-
-/* Track — apagado */
-.gender-toggle {
-    position: relative;
-    width: 52px;
-    height: 28px;
-    border-radius: 999px;
-    border: none;
-    background: #d1d5db;
-    background: var(--color-primary, #2db84f);
-    cursor: pointer;
-    padding: 0;
-    transition: background 0.25s;
-    flex-shrink: 0;
-}
-
-/* Track — encendido (FEMALE) */
-.gender-toggle--on {
-    background: var(--color-primary, #2db84f);
-}
-
-/* Thumb */
-.gender-thumb {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 22px;
-    height: 22px;
+.reg-steps i {
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-    display: block;
+    border: 3px solid var(--color-border);
+    display: grid;
+    place-items: center;
+    font: 800 11px var(--font-base);
+    font-style: normal;
+}
+.reg-steps li.on { color: var(--color-text); }
+.reg-steps li.on i { border-color: var(--color-primary); color: var(--color-primary-dark); }
+.reg-steps li.done i { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.reg-steps-bar {
+    flex: 1;
+    height: 5px;
+    margin: 0 10px;
+    border-radius: 9px;
+    background: var(--color-track);
+    min-width: 24px;
+}
+.reg-steps-bar.done { background: var(--color-primary); }
+
+/* ── Seguridad de la contraseña ─────────────────── */
+.reg-strength { display: flex; gap: 4px; margin-top: 2px; }
+.reg-strength i { flex: 1; height: 5px; border-radius: 9px; background: var(--color-track); transition: background 0.2s; }
+.reg-strength-label { font-size: 12px; font-weight: 600; color: var(--color-text-muted); }
+
+/* ── Género ──────────────────────────────────────── */
+.reg-label { font-size: 13px; font-weight: 700; color: var(--color-text); }
+.reg-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.reg-option {
+    border: 1.5px solid var(--color-border);
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font: 700 14px var(--font-base);
+    cursor: pointer;
+}
+.reg-option--on { border-color: var(--color-primary); background: var(--color-primary-light); color: var(--color-primary-dark); }
+.reg-option:focus-visible { outline: 3px solid var(--color-gold); outline-offset: 2px; }
+
+/* ── Vista previa de la ruta ─────────────────────── */
+.reg-preview {
+    background: var(--color-surface-2);
+    border-radius: 16px;
+    padding: 8px 6px;
+    overflow-x: auto;
 }
 
-.gender-toggle--on .gender-thumb {
-    transform: translateX(24px);
+@media (prefers-reduced-motion: reduce) {
+    .reg-strength i { transition: none; }
 }

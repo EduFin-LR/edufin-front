@@ -6,7 +6,7 @@ import { getDiagnosticQuestions, submitDiagnostic } from '../../services/assessm
 import { playCorrect, playComplete } from '../../utils/sounds'
 import type { DiagnosticQuestion, DiagnosticAnswer, DiagnosticResultProfile } from '../../types/assessment'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
-import edufinLogo from '../../assets/images/edufinLogo.png'
+import Logo from '../../components/Logo/Logo'
 import idea   from '../../assets/images/idea.png'
 import saludo   from '../../assets/images/saludo.png'
 import pensando   from '../../assets/images/pensando.png'
@@ -74,7 +74,7 @@ export default function Diagnostic() {
     // ── Welcome ────────────────────────────────────────────────────────────────
     if (screen === 'welcome') return (
         <div className="diag-page">
-            <img src={edufinLogo} alt="Edufin" className="diag-logo" />
+            <Logo className="diag-logo" />
             <div className="diag-welcome">
                 <div className="diag-welcome-text">
                     <h1>¡BIENVENIDO, <span>{displayName.toUpperCase()}!</span></h1>
@@ -96,7 +96,7 @@ export default function Diagnostic() {
     // ── Result ─────────────────────────────────────────────────────────────────
     if (screen === 'result') return (
         <div className="diag-page diag-page--result">
-            <img src={edufinLogo} alt="Edufin" className="diag-logo" />
+            <Logo className="diag-logo" />
             <motion.div
                 className="diag-result"
                 initial={{ opacity: 0, y: 24 }}
@@ -148,7 +148,7 @@ export default function Diagnostic() {
         <>
             <LoadingScreen visible={loading} message="Procesando resultados…" />
             <div className="diag-page diag-page--quiz">
-                <img src={edufinLogo} alt="Edufin" className="diag-logo" />
+                <Logo className="diag-logo" />
 
                 <div className="diag-progress-wrap">
                     <span className="diag-progress-label">Pregunta {current + 1} de {total}</span>

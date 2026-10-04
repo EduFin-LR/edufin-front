@@ -1,0 +1,210 @@
+/* ── Ilustración del panel de autenticación ─────────────────────────────────
+   Todo se posiciona en % dentro de un escenario de proporción fija y los
+   tamaños de texto usan cqw (ancho del escenario), así escala sin deformarse. */
+.ah {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background:
+        radial-gradient(60% 50% at 55% 55%, rgba(63, 191, 98, 0.22) 0%, rgba(63, 191, 98, 0) 70%),
+        radial-gradient(40% 35% at 85% 15%, rgba(183, 180, 255, 0.10) 0%, rgba(183, 180, 255, 0) 70%),
+        linear-gradient(180deg, #13271D 0%, #12241B 100%);
+}
+/* retícula sutil de fondo */
+.ah::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(70% 60% at 50% 50%, #000 30%, transparent 80%);
+}
+
+.ah-stage {
+    position: relative;
+    /* se ajusta al ancho y también al alto disponible, sin romper la proporción */
+    width: min(88%, 600px, calc(92vh * 600 / 640));
+    aspect-ratio: 600 / 640;
+    container-type: inline-size;
+}
+
+/* ── Teléfono ───────────────────────────────────── */
+.ah-phone {
+    position: absolute;
+    left: 31%;
+    top: 4%;
+    width: 40%;
+    height: 90%;
+    border-radius: 7cqw;
+    background: #0B1611;
+    border: 1.1cqw solid #22392C;
+    box-shadow: 0 4cqw 8cqw -2cqw rgba(0, 0, 0, 0.55), 0 0 0 0.3cqw rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    animation: ah-float 7s ease-in-out infinite;
+}
+.ah-notch {
+    position: absolute;
+    top: 1.4cqw;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30%;
+    height: 3.2cqw;
+    border-radius: 99px;
+    background: #050B08;
+    z-index: 2;
+}
+.ah-screen {
+    position: absolute;
+    inset: 0;
+    padding: 6.5cqw 3.2cqw 3cqw;
+    display: flex;
+    flex-direction: column;
+    gap: 2.2cqw;
+    background: linear-gradient(180deg, #15291F 0%, #12241B 100%);
+    color: #E8F3EC;
+}
+.ah-status { display: flex; justify-content: space-between; font: 700 1.9cqw var(--font-base); color: #9DB8A7; margin-top: -3.4cqw; }
+.ah-hello { margin: 0; font: 800 3.2cqw var(--font-base); }
+.ah-next {
+    display: flex;
+    flex-direction: column;
+    gap: 1cqw;
+    padding: 2.6cqw;
+    border-radius: 3cqw;
+    background: linear-gradient(135deg, #1B1A47 0%, #2E2C7A 100%);
+    box-shadow: inset 0 0 0 0.25cqw rgba(255, 255, 255, 0.08);
+}
+.ah-next small { font: 700 1.7cqw var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: #FFD86B; }
+.ah-next b { font: 800 2.9cqw var(--font-base); }
+.ah-btn {
+    align-self: flex-start;
+    margin-top: 0.6cqw;
+    padding: 1cqw 2.4cqw;
+    border-radius: 99px;
+    background: #2F9E4F;
+    font: 800 1.9cqw var(--font-base);
+}
+.ah-bar { height: 0.9cqw; border-radius: 99px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
+.ah-bar i { display: block; height: 100%; width: 50%; background: #FFD86B; border-radius: 99px; }
+.ah-bar--gold { background: #24392D; }
+.ah-bar--gold i { width: 68%; background: linear-gradient(90deg, #E3A008, #F5C04A); }
+
+.ah-sec { margin: 0.6cqw 0 0; font: 800 2.2cqw var(--font-base); color: #9DB8A7; }
+.ah-route {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 0.6cqw;
+    display: flex;
+    flex-direction: column;
+    gap: 2.3cqw;
+    position: relative;
+}
+/* línea de la ruta */
+.ah-route::before {
+    content: '';
+    position: absolute;
+    left: calc(0.6cqw + 1.7cqw);
+    top: 1.6cqw;
+    bottom: 1.6cqw;
+    width: 0.8cqw;
+    border-radius: 99px;
+    background: linear-gradient(180deg, #3FBF62 0%, #3FBF62 48%, #24392D 52%, #24392D 100%);
+}
+.ah-route li { position: relative; display: flex; align-items: center; gap: 2.2cqw; font: 700 2.15cqw var(--font-base); }
+.ah-route li.locked { color: #6F8B7A; }
+.ah-stn {
+    position: relative;
+    z-index: 1;
+    width: 4.2cqw;
+    height: 4.2cqw;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #15291F;
+    border: 0.7cqw solid #36503F;
+    color: #fff;
+    font: 900 2cqw var(--font-base);
+}
+.ah-stn.done { background: #2F9E4F; border-color: #2F9E4F; }
+.ah-stn.current { background: #12241B; border-color: #FFD86B; box-shadow: 0 0 0 1.1cqw rgba(255, 216, 107, 0.18); }
+.ah-stn--quiz { border-radius: 1cqw; transform: rotate(45deg) scale(0.85); }
+.ah-stn--quiz.done { background: #6C63D9; border-color: #6C63D9; }
+.ah-stn--final { width: 6cqw; border-radius: 99px; }
+
+/* ── Tarjetas flotantes ─────────────────────────── */
+.ah-card {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 1.8cqw;
+    padding: 2cqw 2.6cqw;
+    border-radius: 3cqw;
+    background: rgba(26, 49, 37, 0.92);
+    border: 0.25cqw solid #2B4636;
+    box-shadow: 0 2.4cqw 5cqw -1.6cqw rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    color: #E8F3EC;
+}
+.ah-card b { display: block; font: 800 3cqw var(--font-base); line-height: 1.1; }
+.ah-card small { display: block; font: 600 1.9cqw var(--font-base); color: #9DB8A7; }
+.ah-emoji { font-size: 4.4cqw; line-height: 1; }
+
+.ah-card--streak { left: 4%; top: 16%; animation: ah-float 6s ease-in-out infinite 0.6s; }
+.ah-card--xp {
+    right: 2%;
+    top: 30%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4cqw;
+    animation: ah-float 6.5s ease-in-out infinite 1.2s;
+}
+.ah-xp { font: 900 3.6cqw var(--font-logo); color: #8BE3A4; }
+.ah-card--goal {
+    right: 0;
+    top: 47%;
+    width: 34%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1cqw;
+    animation: ah-float 7.5s ease-in-out infinite 0.2s;
+}
+.ah-card--goal b span { font: 600 1.9cqw var(--font-base); color: #9DB8A7; }
+
+/* ── Monedas, robot y mensaje ───────────────────── */
+.ah-coins { position: absolute; right: 3%; bottom: 2%; width: 27%; filter: drop-shadow(0 2cqw 2.4cqw rgba(0, 0, 0, 0.45)); }
+.ah-coins svg { display: block; width: 100%; height: auto; }
+
+.ah-robot {
+    position: absolute;
+    left: 6%;
+    bottom: 0;
+    width: 22%;
+    height: auto;
+    filter: drop-shadow(0 2cqw 2.4cqw rgba(0, 0, 0, 0.5));
+    animation: ah-bob 3.2s ease-in-out infinite;
+}
+.ah-bubble {
+    position: absolute;
+    left: 2%;
+    bottom: 22%;
+    width: 30%;
+    padding: 2cqw 2.4cqw;
+    border-radius: 3cqw 3cqw 3cqw 0.8cqw;
+    background: #FFFFFF;
+    color: #13201A;
+    font: 800 2.3cqw/1.3 var(--font-base);
+    box-shadow: 0 2.4cqw 5cqw -1.6cqw rgba(0, 0, 0, 0.5);
+    z-index: 2;
+}
+
+@keyframes ah-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.4cqw); } }
+@keyframes ah-bob   { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-1cqw) rotate(2deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .ah-phone, .ah-card, .ah-robot { animation: none; }
+}

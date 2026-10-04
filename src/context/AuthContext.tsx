@@ -74,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('username')
         localStorage.removeItem('profile')
         localStorage.removeItem('userInfo')
+        localStorage.removeItem('gender')
         setState({ token: null, userId: null, username: null, profile: null, userInfo: null, ready: true })
     }, [])
 

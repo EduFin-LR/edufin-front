@@ -1,30 +1,100 @@
+/* ── Pantalla de entrada (tema Bosque) ───────────────────────────────────── */
 .splash {
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: linear-gradient(160deg, #e8f7ec 0%, #f0faf3 60%, #d6f0e0 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 32px;
+    gap: 28px;
+    overflow: hidden;
+    background:
+        radial-gradient(45% 40% at 50% 46%, rgba(63, 191, 98, 0.20) 0%, rgba(63, 191, 98, 0) 70%),
+        radial-gradient(35% 30% at 72% 28%, rgba(183, 180, 255, 0.10) 0%, rgba(183, 180, 255, 0) 70%),
+        linear-gradient(180deg, #13271D 0%, #12241B 100%);
 }
 
-.splash-logo {
-    width: 180px;
-    object-fit: contain;
+/* retícula sutil que se desvanece hacia los bordes */
+.splash-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(55% 50% at 50% 48%, #000 25%, transparent 80%);
+    -webkit-mask-image: radial-gradient(55% 50% at 50% 48%, #000 25%, transparent 80%);
+    pointer-events: none;
 }
 
-.splash-dots {
+/* ── Marca: robot + EDUFIN ──────────────────────── */
+.splash-brand {
+    position: relative;
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: clamp(10px, 2vw, 18px);
 }
 
-.splash-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--color-primary, #2db84f);
+.splash-robot {
+    position: relative;
+    width: clamp(64px, 12vw, 96px);
+    aspect-ratio: 288 / 406;
+}
+.splash-robot-img {
+    position: relative;
+    width: 100%;
+    height: 100%;
     display: block;
+    filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
+}
+.splash-halo {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    width: 170%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(76, 196, 107, 0.35) 0%, rgba(76, 196, 107, 0) 65%);
+    animation: splash-halo 2.2s ease-in-out infinite;
+}
+
+.splash-word {
+    display: flex;
+    font-family: var(--font-logo);
+    font-weight: 900;
+    font-size: clamp(52px, 10vw, 88px);
+    line-height: 1;
+    letter-spacing: -1px;
+    perspective: 600px;
+}
+.splash-word span { display: inline-block; transform-origin: 50% 100%; }
+.splash-word .edu { color: var(--logo-edu); }
+.splash-word .fin { color: var(--logo-fin); }
+
+/* ── Línea de metro (carga) ─────────────────────── */
+.splash-line {
+    width: min(280px, 70vw);
+    height: auto;
+    overflow: visible;
+}
+.splash-line-track { stroke: #24392D; stroke-width: 6; stroke-linecap: round; }
+.splash-line-fill  { stroke: #3FBF62; stroke-width: 6; stroke-linecap: round; filter: drop-shadow(0 0 6px rgba(63, 191, 98, 0.6)); }
+.splash-stn        { stroke-width: 3; transform-box: fill-box; transform-origin: center; }
+
+.splash-tagline {
+    margin: -8px 0 0;
+    font: 600 14px var(--font-base);
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted);
+}
+
+@keyframes splash-halo {
+    0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(0.92); }
+    50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .splash-halo { animation: none; }
 }

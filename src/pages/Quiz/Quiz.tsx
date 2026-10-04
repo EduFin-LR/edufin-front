@@ -9,7 +9,7 @@ import {
 import { playCorrect, playWrong, playComplete } from '../../utils/sounds'
 import type { QuizQuestion, QuizOption, QuizCompleteResult } from '../../services/quizService'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
-import edufinLogo       from '../../assets/images/edufinLogo.png'
+import Logo from '../../components/Logo/Logo'
 import progresoA        from '../../assets/images/ProgresoA.png'
 import robotCorrecto    from '../../assets/images/robotCorrecto.png'
 import robotIncorrecto  from '../../assets/images/robotIncorrecto.png'
@@ -36,9 +36,28 @@ function highlightCaps(text: string) {
     )
 }
 
+interface Theory {
+    titulo?:     string
+    texto?:      string
+    ejemplo?:    string
+    idea_clave?: string
+}
+
+// El backend envía TheoryText como JSON serializado; si no lo es, se usa como texto plano
+function parseTheory(raw: unknown): Theory {
+    if (raw && typeof raw === 'object') return raw as Theory
+    if (typeof raw !== 'string') return {}
+    try {
+        const parsed = JSON.parse(raw)
+        if (parsed && typeof parsed === 'object') return parsed as Theory
+    } catch { /* texto plano */ }
+    return { texto: raw }
+}
+
 function TheoryCard({ text, questionId }: { text: string; questionId: string }) {
     const [open, setOpen] = useState(true)
     useEffect(() => setOpen(true), [questionId])
+    const theory = parseTheory(text)
 
     return (
         <motion.div
@@ -71,7 +90,20 @@ function TheoryCard({ text, questionId }: { text: string; questionId: string }) 
                         transition={{ duration: 0.28, ease: 'easeInOut' }}
                         style={{ overflow: 'hidden' }}
                     >
-                        <p className="theory-text">{highlightCaps(text)}</p>
+                        {theory.titulo && <h3 className="theory-subtitle">{theory.titulo}</h3>}
+                        {theory.texto && <p className="theory-text">{highlightCaps(theory.texto)}</p>}
+                        {theory.ejemplo && (
+                            <div className="theory-example">
+                                <span className="theory-label">📌 Ejemplo</span>
+                                <p>{theory.ejemplo}</p>
+                            </div>
+                        )}
+                        {theory.idea_clave && (
+                            <div className="theory-key">
+                                <span className="theory-label">⭐ Recuerda</span>
+                                <p>{theory.idea_clave}</p>
+                            </div>
+                        )}
                         <button className="theory-dismiss" onClick={() => setOpen(false)}>
                             Entendido, ir a la pregunta →
                         </button>
@@ -116,7 +148,7 @@ function MultipleChoice({
                         disabled={disabled}
                     >
                         <span className="quiz-radio" />
-                        {opt.optionText}
+                        <span className="quiz-option-text" data-text={opt.optionText}>{opt.optionText}</span>
                     </button>
                 ))}
             </div>
@@ -196,7 +228,7 @@ function DragDrop({
     }
 
     // color de zona por índice
-    const zoneColors = ['#dcfce7', '#fef9c3', '#fee2e2']
+    const zoneColors = ['rgba(76,196,107,0.12)', 'rgba(245,192,74,0.12)', 'rgba(255,138,128,0.12)']
     const zoneBorders = ['#86efac', '#fde047', '#fca5a5']
 
     return (
@@ -238,7 +270,7 @@ function DragDrop({
                         key={cat}
                         ref={el => { zoneRefs.current[cat] = el }}
                         className="dd-zone"
-                        style={{ background: zoneColors[i] ?? '#f3f4f6', borderColor: zoneBorders[i] ?? '#d1d5db' }}
+                        style={{ background: zoneColors[i] ?? 'var(--color-surface-2)', borderColor: zoneBorders[i] ?? 'var(--color-border)' }}
                     >
                         <span className="dd-zone-title">{cat}</span>
                         <div className="dd-zone-items">
@@ -371,7 +403,7 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
 
     return (
         <div className="quiz-result-page">
-            <img src={edufinLogo} alt="Edufin" className="quiz-result-logo" />
+            <Logo className="quiz-result-logo" />
 
             {/* Robot feliz */}
             <motion.img
@@ -397,7 +429,7 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
                 {/* Score circle */}
                 <div className="quiz-result-circle">
                     <svg viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="44" fill="none" stroke="#e5f7ea" strokeWidth="10"/>
+                        <circle cx="50" cy="50" r="44" fill="none" style={{ stroke: 'var(--color-track)' }} strokeWidth="10"/>
                         <motion.circle
                             cx="50" cy="50" r="44" fill="none"
                             stroke={pct >= 60 ? '#2db84f' : '#f59e0b'}
@@ -598,7 +630,7 @@ export default function Quiz() {
                     <button className="quiz-back-btn" onClick={() => navigate(-1)}>
                         <FaArrowLeft /> Salir
                     </button>
-                    <img src={edufinLogo} alt="Edufin" className="quiz-logo" />
+                    <Logo className="quiz-logo" />
                 </div>
 
                 <div className="quiz-progress-wrap">

@@ -1,0 +1,23 @@
+/* Mapa de módulos tipo metro (inicio y registro) */
+.course-metro-svg { display: block; width: 100%; min-width: 760px; height: auto; }
+
+.metro-stn { cursor: pointer; }
+.metro-stn:focus { outline: none; }
+.metro-stn:focus-visible .metro-ring { stroke: var(--color-gold); stroke-width: 4; }
+
+.metro-track-off      { stroke: var(--color-track); }
+.metro-ring           { stroke: var(--color-surface); }
+.metro-ring--locked   { fill: var(--color-surface-2); stroke: var(--color-border); }
+.metro-selected       { stroke: var(--color-text); }
+.metro-name           { fill: var(--color-text); }
+.metro-sub            { fill: var(--color-text-muted); }
+.metro-faint          { fill: var(--color-text-faint); }
+
+@keyframes metro-pulse { 0% { r: 26; opacity: 0.55; } 100% { r: 44; opacity: 0; } }
+.metro-pulse { animation: metro-pulse 1.8s ease-out infinite; pointer-events: none; }
+@keyframes metro-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.metro-bob { animation: metro-bob 1.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+    .metro-pulse, .metro-bob { animation: none; }
+}

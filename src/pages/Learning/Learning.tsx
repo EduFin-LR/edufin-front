@@ -1,17 +1,19 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBook, FaPlay, FaLock, FaClipboardList, FaCheck, FaArrowLeft, FaTimes, FaTrophy } from 'react-icons/fa'
-import robotFeliz from '../../assets/images/robotFeliz.png'
-import edufinLogo from '../../assets/images/edufinLogo.png'
+import { FaBook, FaPlay, FaLock, FaClipboardList, FaArrowLeft, FaTimes, FaTrophy, FaPlus, FaMinus, FaCrosshairs } from 'react-icons/fa'
+import Logo from '../../components/Logo/Logo'
 import progresoA  from '../../assets/images/ProgresoA.png'
 import { getTopicLessons } from '../../services/learningService'
 import type { TopicLessons, Lesson } from '../../services/learningService'
 import { useAuth } from '../../context/AuthContext'
-import { playHover } from '../../utils/sounds'
+import { themeForTopic } from './routeThemes'
+import RouteMap from './RouteMap'
+import { MAP_HEIGHT, routeWidth, positions } from './routeLayout'
+import { usePanZoom } from './usePanZoom'
+import ModuleCover from './ModuleCover'
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import './Learning.css'
-
-const avatarBoy = new URL('../../assets/images/perfilNiño (1).png', import.meta.url).href
 
 // ── Colors por tipo ────────────────────────────────────────────────────────────
 const NODE_COLORS = {
@@ -30,131 +32,60 @@ function NodeIcon({ type, locked }: { type: Lesson['lessonType']; locked: boolea
     return <FaBook />
 }
 
-// ── Generar posiciones en zigzag ───────────────────────────────────────────────
-function buildPositions(count: number) {
-    const positions: { x: number; y: number }[] = []
-    const startX = 100
-    const stepX  = count > 1 ? Math.min(160, 820 / (count - 1)) : 0
-    const yHigh  = 170
-    const yLow   = 370
-
-    for (let i = 0; i < count; i++) {
-        positions.push({ x: startX + i * stepX, y: i % 2 === 0 ? yLow : yHigh })
-    }
-    return positions
-}
-
-// ── Generar SVG path entre nodos ───────────────────────────────────────────────
-function buildPath(positions: { x: number; y: number }[], from: number, to: number) {
-    if (from >= to || positions.length === 0) return ''
-    let d = `M${positions[from].x},${positions[from].y}`
-    for (let i = from + 1; i <= to && i < positions.length; i++) {
-        const { x: x1, y: y1 } = positions[i - 1]
-        const { x: x2, y: y2 } = positions[i]
-        const mx = (x1 + x2) / 2
-        d += ` C${mx},${y1} ${mx},${y2} ${x2},${y2}`
-    }
-    return d
-}
-
-// ── Node component ─────────────────────────────────────────────────────────────
-function MapNode({ lesson, pos, isCurrent, onClick }: {
-    lesson: Lesson
-    pos: { x: number; y: number }
-    isCurrent: boolean
-    onClick: (l: Lesson) => void
-}) {
-    const isLocked    = lesson.status === 'LOCKED'
-    const isCompleted = lesson.status === 'COMPLETED'
-    const isFinal     = lesson.lessonType === 'FINAL'
-    const colors      = isLocked ? NODE_COLORS.LOCKED : NODE_COLORS[lesson.lessonType] ?? NODE_COLORS.READING
-    const nodeSize    = isFinal ? 50 : 34
-
-    const nodeStyle = isLocked
-        ? { background: '#d1d5db', border: '3px dashed #9ca3af', boxShadow: 'none' }
-        : {
-            background: isFinal
-                ? `radial-gradient(circle at 35% 35%, #fde68a, ${colors.bg} 70%)`
-                : colors.bg,
-            border: `${isFinal ? 4 : 3}px solid ${colors.border}`,
-            boxShadow: `0 6px 20px ${colors.glow}, 0 2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3)`,
-          }
-
-    return (
-        <div
-            className={`map-node-wrap ${isFinal ? 'map-node-wrap--final' : ''}`}
-            style={{ left: pos.x - nodeSize, top: pos.y - nodeSize }}
-            onClick={() => onClick(lesson)}
-        >
-            {/* Robot mascot on current node */}
-            {isCurrent && (
-                <motion.img
-                    src={robotFeliz}
-                    alt="robot"
-                    className="node-robot"
-                    animate={{ y: [0, -7, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
-                />
-            )}
-
-            {isCurrent && (
-                <div className="node-pulse-ring" style={{ background: colors.bg }} />
-            )}
-
-            <motion.div
-                className={`map-node ${isCurrent ? 'map-node--current' : ''} ${isFinal ? 'map-node--final' : ''} ${isLocked ? 'map-node--locked' : ''}`}
-                style={{ ...nodeStyle, color: colors.icon }}
-                onHoverStart={() => { if (!isLocked) playHover() }}
-                whileHover={{ scale: isLocked ? 1 : 1.12, y: isLocked ? 0 : -3 }}
-                animate={isFinal && !isLocked ? { boxShadow: [
-                    `0 6px 20px ${colors.glow}`,
-                    `0 6px 40px rgba(245,158,11,0.8)`,
-                    `0 6px 20px ${colors.glow}`,
-                ]} : {}}
-                transition={{ type: 'spring', stiffness: 400, damping: 20, ...(isFinal && !isLocked ? { boxShadow: { repeat: Infinity, duration: 2, ease: 'easeInOut' } } : {}) }}
-            >
-                <NodeIcon type={lesson.lessonType} locked={isLocked} />
-            </motion.div>
-
-            {isFinal && !isLocked && (
-                <>
-                    <div className="node-final-label">🏆 Final</div>
-                    <div className="node-final-ring1" />
-                    <div className="node-final-ring2" />
-                </>
-            )}
-
-            {isCompleted && (
-                <div className="node-check"><FaCheck /></div>
-            )}
-
-            <span className="node-num" style={{ color: isLocked ? '#9ca3af' : '#374151' }}>
-                {lesson.lessonOrder}
-            </span>
-        </div>
-    )
-}
+// La portada del módulo funciona como pantalla de carga: se ve mientras llega la ruta
+// y como mínimo este tiempo, para que no parpadee
+const COVER_MIN_MS = 2000
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Learning() {
     const navigate      = useNavigate()
     const { topicId }   = useParams<{ topicId: string }>()
     const { profile }   = useAuth()
+    // El dashboard envía el nombre del módulo para mostrar su portada sin esperar al servidor
+    const location      = useLocation()
+    const nameHint      = (location.state as { topicName?: string } | null)?.topicName
 
     const [topic,    setTopic]    = useState<TopicLessons | null>(null)
     const [selected, setSelected] = useState<Lesson | null>(null)
-    const [hint,     setHint]     = useState(true)
-    const [scale,    setScale]    = useState(1)
+    const [minElapsed, setMinElapsed] = useState(false)
+    const [loadFailed, setLoadFailed] = useState(false)
+    const [viewport, setViewport] = useState({ width: 600, height: 530 })
     const viewportRef = useRef<HTMLDivElement>(null)
+    const headerRef   = useRef<HTMLElement>(null)
+    const [headerBottom, setHeaderBottom] = useState(100)
+
+    // Tamaño del área visible (para limitar el arrastre), medido fuera del render
+    useEffect(() => {
+        const el = viewportRef.current
+        if (!el) return
+        const measure = () => setViewport({ width: el.clientWidth, height: el.clientHeight })
+        measure()
+        const ro = new ResizeObserver(measure)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
+
+    // El encabezado flota sobre el mapa: su borde inferior real es el límite superior del mapa
+    useEffect(() => {
+        const el = headerRef.current
+        if (!el) return
+        const measure = () => setHeaderBottom(el.offsetTop + el.offsetHeight)
+        measure()
+        const ro = new ResizeObserver(measure)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
 
     useEffect(() => {
         if (!topicId) return
-        getTopicLessons(topicId).then(r => setTopic(r.data)).catch(() => {})
+        getTopicLessons(topicId)
+            .then(r => setTopic(r.data))
+            .catch(() => setLoadFailed(true))
     }, [topicId])
 
-    const handleWheel = useCallback((e: React.WheelEvent) => {
-        e.preventDefault()
-        setScale(s => Math.min(1.6, Math.max(0.5, s - e.deltaY * 0.001)))
+    useEffect(() => {
+        const t = setTimeout(() => setMinElapsed(true), COVER_MIN_MS)
+        return () => clearTimeout(t)
     }, [])
 
     const baseLessons = topic?.lessons ?? []
@@ -187,7 +118,9 @@ export default function Learning() {
         ? [...baseLessons, virtualFinal]
         : baseLessons
 
-    const positions = buildPositions(lessons.length)
+    const moduleName = topic?.topicName ?? nameHint
+    const theme   = themeForTopic(moduleName, topic?.category)
+    const loading = !(minElapsed && (topic || loadFailed))
 
     // índice del primer UNLOCKED (nodo actual)
     const currentIdx = lessons.findIndex(l => l.status === 'UNLOCKED')
@@ -198,10 +131,17 @@ export default function Learning() {
         currentIdx,
     )
 
-    const canvasWidth  = positions.length > 0 ? positions[positions.length - 1].x + 120 : 600
-    const canvasHeight = 530
+    const canvasWidth  = routeWidth(theme.layout, lessons.length)
+    const canvasHeight = MAP_HEIGHT
 
-    const unlockedPath = buildPath(positions, 0, lastUnlockedIdx)
+    // Mover y hacer zoom; la vista inicial queda centrada en la lección actual
+    const focusIdx = currentIdx >= 0 ? currentIdx : Math.max(0, lastUnlockedIdx)
+    const pz = usePanZoom(viewportRef, {
+        contentW: canvasWidth, contentH: canvasHeight,
+        viewportW: viewport.width, viewportH: viewport.height,
+        topInset: headerBottom + 8,
+        focusX: lessons.length ? positions(theme.layout, lessons.length)[focusIdx].x : null,
+    })
 
     // stats del header
     const completed = baseLessons.filter(
@@ -215,109 +155,84 @@ export default function Learning() {
     const xp           = profile?.totalPoints  ?? 0
 
     return (
-        <div className="learning-page">
+        <div className="learning-page" style={{ '--rt-hud': theme.hud, '--rt-hud-fg': theme.hudFg, '--rt-line': theme.line } as React.CSSProperties}>
 
-            {/* ── Header ── */}
-            <header className="learning-header">
-                <button className="learning-back" onClick={() => navigate('/dashboard')}>
-                    <FaArrowLeft /> Volver
+            {/* ── Encabezado ── */}
+            <header ref={headerRef} className="learning-header learning-header--themed">
+                <button className="learning-back" onClick={() => navigate('/dashboard')} aria-label="Volver al inicio">
+                    <FaArrowLeft /><span>Volver</span>
                 </button>
 
                 <div className="learning-course-info">
-                    <img src={avatarBoy} alt="avatar" className="learning-avatar" />
-                    <div>
-                        <p className="learning-course-name">{topic?.topicName ?? '…'}</p>
-                        <div className="learning-progress-row">
-                            <div className="learning-progress-bar">
-                                <div className="learning-progress-fill" style={{ width: `${progressPct}%` }} />
-                            </div>
-                            <span className="learning-progress-pct">{progressPct}%</span>
+                    <p className="learning-module-tag">Módulo {String(theme.moduleNum).padStart(2, '0')} · {theme.world}</p>
+                    <h1 className="learning-course-name">{moduleName ?? '…'}</h1>
+                    <div className="learning-progress-row">
+                        <div className="learning-progress-bar" role="progressbar" aria-valuenow={progressPct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance del módulo">
+                            <div className="learning-progress-fill" style={{ width: `${progressPct}%` }} />
                         </div>
+                        <span className="learning-progress-pct">{completed} de {baseLessons.length} lecciones · {progressPct}%</span>
                     </div>
                 </div>
 
                 <div className="learning-xp">
                     <div className="learning-level-wrap">
-                        <img src={progresoA} alt="nivel" className="learning-level-img" />
+                        <img src={progresoA} alt="" className="learning-level-img" />
                         <span className="learning-level-num">{level}</span>
                     </div>
-                    <span className="learning-xp-val">{xp} exp</span>
+                    <span className="learning-xp-val">{xp} XP</span>
                 </div>
 
-                <img src={edufinLogo} alt="Edufin" className="dash-logo" />
+                <Logo className="dash-logo learning-logo" />
             </header>
 
             {/* ── Map viewport ── */}
-            <div ref={viewportRef} className="map-viewport" onWheel={handleWheel}>
-                <motion.div
-                    className="map-canvas"
-                    drag
-                    dragMomentum={false}
-                    dragConstraints={{
-                        left:   -Math.max(0, canvasWidth  - (viewportRef.current?.clientWidth  ?? 600) + 80),
-                        right:  Math.min(300, (viewportRef.current?.clientWidth  ?? 600) * 0.4),
-                        top:    -Math.max(0, canvasHeight - (viewportRef.current?.clientHeight ?? 530) + 80),
-                        bottom: Math.min(200, (viewportRef.current?.clientHeight ?? 530) * 0.3),
+            <div ref={viewportRef} className={`map-viewport ${pz.dragging ? 'map-viewport--dragging' : ''}`} style={{ background: theme.bg }}>
+                <div
+                    className={`map-canvas ${pz.animating ? 'map-canvas--animating' : ''}`}
+                    style={{
+                        width: canvasWidth,
+                        height: canvasHeight,
+                        transform: `translate3d(${pz.view.x}px, ${pz.view.y}px, 0) scale(${pz.view.s})`,
                     }}
-                    style={{ scale, width: canvasWidth, height: canvasHeight }}
-                    onDragStart={() => setHint(false)}
-                    whileDrag={{ cursor: 'grabbing' }}
                 >
-                    {/* Module banner */}
-                    <div className="map-module-banner">
-                        <span className="map-module-chip">{topic?.category ?? 'Módulo'}</span>
-                        <span className="map-module-title">{topic?.topicName ?? '…'}</span>
-                    </div>
-
-                    {/* Sky decorations */}
-                    <span className="sky-deco" style={{ top: '8%',  left: '12%' }}>🪙</span>
-                    <span className="sky-deco" style={{ top: '14%', left: '55%' }}>⭐</span>
-                    <span className="sky-deco" style={{ top: '6%',  left: '80%' }}>🪙</span>
-                    <span className="sky-deco" style={{ top: '60%', left: '30%' }}>✨</span>
-                    <span className="sky-deco" style={{ top: '70%', left: '72%' }}>⭐</span>
-
-                    {/* SVG paths — game-map dotted style */}
-                    <svg
-                        className="map-svg"
-                        viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        {/* Full path (locked — white semi-transparent dashes) */}
-                        {positions.length > 1 && (() => {
-                            const fullPath = buildPath(positions, 0, positions.length - 1)
-                            return <>
-                                <path d={fullPath} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="10" strokeLinecap="round"/>
-                                <path d={fullPath} fill="none" stroke="rgba(255,255,255,0.70)" strokeWidth="6"  strokeLinecap="round" strokeDasharray="12 14"/>
-                            </>
-                        })()}
-
-                        {/* Unlocked portion (green bright dashes) */}
-                        {unlockedPath && <>
-                            <path d={unlockedPath} fill="none" stroke="rgba(34,197,94,0.35)" strokeWidth="10" strokeLinecap="round"/>
-                            <path d={unlockedPath} fill="none" stroke="#4ade80"              strokeWidth="6"  strokeLinecap="round" strokeDasharray="12 14"/>
-                        </>}
-                    </svg>
-
-                    {/* Nodes */}
-                    {lessons.map((lesson, i) => (
-                        <MapNode
-                            key={lesson.id}
-                            lesson={lesson}
-                            pos={positions[i]}
-                            isCurrent={i === currentIdx}
-                            onClick={setSelected}
-                        />
-                    ))}
-                </motion.div>
+                    <RouteMap
+                        theme={theme}
+                        lessons={lessons}
+                        currentIdx={currentIdx}
+                        lastReachedIdx={lastUnlockedIdx}
+                        onSelect={setSelected}
+                    />
+                </div>
 
                 <AnimatePresence>
-                    {hint && (
+                    {!pz.touched && (
                         <motion.div className="map-hint" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
-                            ☝️ Arrastra para explorar · 🖱️ Scroll para zoom
+                            <span className="map-hint-desktop">Arrastra para moverte · Rueda o pellizca para acercar</span>
+                            <span className="map-hint-mobile">Arrastra para moverte · Pellizca para acercar</span>
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                <div className="map-controls" role="group" aria-label="Zoom del mapa" onPointerDown={e => e.stopPropagation()}>
+                    <button onClick={pz.zoomIn} disabled={!pz.canZoomIn} aria-label="Acercar"><FaPlus /></button>
+                    <button onClick={pz.zoomOut} disabled={!pz.canZoomOut} aria-label="Alejar"><FaMinus /></button>
+                    <button onClick={pz.recenter} aria-label="Centrar en la lección actual"><FaCrosshairs /></button>
+                </div>
             </div>
+
+            {/* ── Portada del módulo como pantalla de carga ── */}
+            <AnimatePresence>
+                {loading && moduleName && (
+                    <ModuleCover
+                        theme={theme}
+                        topicName={moduleName}
+                        lessonCount={topic ? lessons.length : null}
+                        hasFinal={lessons.some(l => l.lessonType === 'FINAL')}
+                    />
+                )}
+            </AnimatePresence>
+            {/* Si se entra por enlace directo, aún no se sabe qué módulo es: carga genérica */}
+            <LoadingScreen visible={loading && !moduleName} message="Cargando tu ruta…" />
 
             {/* ── Lesson modal ── */}
             <AnimatePresence>
