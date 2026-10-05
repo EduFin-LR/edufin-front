@@ -118,10 +118,17 @@ export const startLesson = (lessonId: string) =>
 export const submitAttempt = (payload: AttemptPayload) =>
     api.post('/attempts', payload)
 
-export const completeLesson = (lessonId: string, timeSpentSec: number) =>
+export const completeLesson = (
+    lessonId: string,
+    questionIds: string[],
+    timeSpentSec: number
+) =>
     api.post<QuizCompleteResult>(
         `/attempts/lessons/${lessonId}/complete`,
-        { timeSpentSec }
+        {
+            timeSpentSec,
+            questionIds,
+        }
     )
 
 export const completeDynamicFinal = (
