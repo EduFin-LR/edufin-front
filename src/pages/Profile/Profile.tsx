@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { getVolume, setVolume, getMuted, setMuted, playSelect } from '../../utils/sounds'
 import { useAuth } from '../../context/AuthContext'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
-import edufinLogo from '../../assets/images/edufinLogo.png'
+import Logo from '../../components/Logo/Logo'
+import { useUserAvatar } from '../../hooks/useUserAvatar'
 import fuegoGif   from '../../assets/gifs/fuego.gif'
 import progresoA  from '../../assets/images/ProgresoA.png'
 import progresoB  from '../../assets/images/ProgresoB.png'
@@ -13,7 +14,6 @@ import type { Achievement } from '../../services/profileService'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import './Profile.css'
 
-const avatarBoy = new URL('../../assets/images/perfilNiño (1).png', import.meta.url).href
 
 function LevelBadge({ level }: { level: number }) {
     const img = level <= 5  ? progresoA
@@ -54,7 +54,7 @@ export default function Profile() {
     const xp         = profile?.totalPoints  ?? 0
     const level      = profile?.currentLevel ?? 1
     const streakDays = profile?.streakDays   ?? 0
-    const avatar     = userInfo?.avatarUrl   ?? avatarBoy
+    const avatar     = useUserAvatar()
 
     return (
         <MainLayout>
@@ -64,7 +64,7 @@ export default function Profile() {
                 {/* Header */}
                 <header className="dash-header">
                     <h1 className="rank-title">Mi perfil</h1>
-                    <img src={edufinLogo} alt="Edufin" className="dash-logo" />
+                    <Logo className="dash-logo" />
                 </header>
 
                 {/* Body */}
@@ -72,8 +72,8 @@ export default function Profile() {
 
                     {/* Avatar */}
                     <div className="profile-avatar-wrap">
-                        <img src={avatar} alt="avatar" className="profile-avatar"
-                            onError={e => { (e.currentTarget as HTMLImageElement).src = avatarBoy }} />
+                        <img src={avatar.src} alt="Tu avatar" className="profile-avatar"
+                            onError={e => { e.currentTarget.src = avatar.character }} />
                     </div>
 
                     {/* Info */}

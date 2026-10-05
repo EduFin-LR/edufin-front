@@ -1,161 +1,177 @@
 .logros-page {
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: 22px;
     width: 100%;
+    max-width: 1180px;
 }
 
-/* ── Grid ────────────────────────────────────────── */
+.logros-title {
+    margin: 0;
+    font-size: clamp(26px, 3vw, 32px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+}
+.logros-sub { margin: 4px 0 0; font-size: 15px; color: var(--color-text-muted); }
+
+/* ── Resumen ─────────────────────────────────────── */
+.logros-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 16px;
+}
+@media (max-width: 860px) { .logros-summary { grid-template-columns: 1fr; } }
+
+.logros-summary > div {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    padding: 20px 22px;
+    min-width: 0;
+}
+
+.logros-summary-progress { display: flex; align-items: center; gap: 20px; }
+.logros-ring { width: 110px; height: 110px; flex-shrink: 0; }
+.logros-ring-track { fill: none; stroke: var(--color-track); stroke-width: 10; }
+.logros-ring-fill  { fill: none; stroke: var(--color-gold); stroke-width: 10; stroke-linecap: round; }
+.logros-ring-num   { fill: var(--color-text); font: 800 22px var(--font-base); }
+.logros-ring-lbl   { fill: var(--color-text-muted); font: 600 10px var(--font-base); }
+
+.logros-big { margin: 0; font-size: 34px; font-weight: 800; line-height: 1; color: var(--color-text); font-variant-numeric: tabular-nums; }
+.logros-big span { font-size: 18px; font-weight: 700; color: var(--color-text-muted); }
+.logros-muted { margin: 4px 0 0; font-size: 14px; color: var(--color-text-muted); }
+.logros-hint { margin: 10px 0 0; font-size: 13px; font-weight: 700; color: var(--color-primary-dark); }
+
+.logros-latest {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background:
+        radial-gradient(60% 90% at 0% 50%, rgba(227, 160, 8, 0.14) 0%, rgba(227, 160, 8, 0) 70%),
+        var(--color-surface) !important;
+}
+.logros-latest small {
+    display: block;
+    font: 700 11px var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+}
+.logros-latest b { display: block; margin-top: 4px; font-size: 19px; color: var(--color-text); }
+.logros-latest p { margin: 4px 0 0; font-size: 14px; color: var(--color-text-muted); line-height: 1.45; }
+.logros-latest span { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 700; color: var(--color-text-muted); }
+
+/* ── Medalla ─────────────────────────────────────── */
+.logro-medal {
+    position: relative;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+}
+.logro-medal--md { width: 72px; height: 72px; }
+.logro-medal--lg { width: 92px; height: 92px; }
+
+.logro-medal.is-on {
+    background: radial-gradient(circle at 35% 30%, #2A5A3B 0%, #1A3125 70%);
+    box-shadow: 0 0 0 3px var(--color-gold), 0 0 0 7px rgba(227, 160, 8, 0.18), 0 10px 22px -8px rgba(227, 160, 8, 0.55);
+}
+.logro-medal.is-off {
+    background: var(--color-surface-2);
+    box-shadow: 0 0 0 3px var(--color-border);
+}
+
+.logro-medal-img { width: 58%; height: 58%; object-fit: contain; }
+.logro-medal.is-off .logro-medal-img { filter: grayscale(1) brightness(0.75); }
+
+.logro-medal-state {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    border: 3px solid var(--color-surface);
+}
+.logro-medal.is-on  .logro-medal-state { background: var(--color-gold); color: #2B1E00; }
+.logro-medal.is-off .logro-medal-state { background: var(--color-border); color: var(--color-text); }
+
+/* ── Pestañas ────────────────────────────────────── */
+.logros-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.logros-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    border-radius: 999px;
+    padding: 9px 16px;
+    font: 700 14px var(--font-base);
+    cursor: pointer;
+}
+.logros-tab span {
+    min-width: 24px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--color-surface-2);
+    font-size: 12px;
+    text-align: center;
+}
+.logros-tab--on { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary-dark); }
+.logros-tab--on span { background: var(--color-primary); color: #fff; }
+.logros-tab:focus-visible { outline: 3px solid var(--color-gold); outline-offset: 2px; }
+
+/* ── Tarjetas ────────────────────────────────────── */
 .logros-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
 }
 
-/* ── Card ────────────────────────────────────────── */
 .logro-card {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    cursor: default;
-    position: relative;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 20px 18px 16px;
+    border-radius: 18px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    min-width: 0;
+    transition: transform 0.18s ease, border-color 0.18s ease;
 }
+.logro-card--on:hover { transform: translateY(-3px); border-color: rgba(227, 160, 8, 0.55); }
+.logro-card--off { background: var(--color-surface-2); }
 
-/* ── Badge circle ────────────────────────────────── */
-.logro-badge {
-    position: relative;
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+.logro-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.logro-name { margin: 0; font-size: 16px; font-weight: 800; color: var(--color-text); }
+.logro-desc { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--color-text-muted); }
 
-.logro-card--unlocked .logro-badge {
-    background: linear-gradient(145deg, #f0fdf4, #dcfce7);
-    border: 3px solid #86efac;
-    box-shadow: 0 4px 16px rgba(45,184,79,0.25);
-}
-
-.logro-card--locked .logro-badge {
-    background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
-    border: 3px dashed #d1d5db;
-    opacity: 0.6;
-}
-
-.logro-card:hover .logro-badge {
-    transform: scale(1.1);
-    box-shadow: 0 8px 24px rgba(45,184,79,0.35);
-}
-
-.logro-card--locked:hover .logro-badge {
-    transform: scale(1.05);
-    box-shadow: none;
-}
-
-.logro-icon {
-    width: 52px;
-    height: 52px;
-    object-fit: contain;
-}
-
-.logro-icon--locked {
-    filter: grayscale(1) opacity(0.35);
-}
-
-.logro-lock-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-}
-
-/* ── Name below badge ────────────────────────────── */
-.logro-name {
-    font-size: 11px;
+.logro-foot {
+    margin: auto 0 0;
+    width: 100%;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+    font-size: 12.5px;
     font-weight: 700;
-    color: #374151;
+    color: var(--color-text-muted);
+}
+.logro-foot.is-on { color: var(--color-gold); }
+
+.logros-empty {
+    margin: 0;
+    padding: 28px;
     text-align: center;
-    line-height: 1.2;
-    max-width: 90px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    border: 1px dashed var(--color-border);
+    border-radius: 18px;
+    color: var(--color-text-muted);
 }
 
-.logro-card--locked .logro-name {
-    color: #9ca3af;
-}
-
-/* ── Hover tooltip ───────────────────────────────── */
-.logro-tooltip {
-    position: absolute;
-    bottom: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: #1a2e1f;
-    color: #fff;
-    border-radius: 12px;
-    padding: 10px 14px;
-    width: 200px;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.18s ease;
-    z-index: 50;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-}
-
-.logro-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 6px solid transparent;
-    border-top-color: #1a2e1f;
-}
-
-.logro-card:hover .logro-tooltip {
-    opacity: 1;
-}
-
-.logro-tooltip-name {
-    display: block;
-    font-size: 13px;
-    font-weight: 800;
-    margin-bottom: 4px;
-}
-
-.logro-tooltip-desc {
-    display: block;
-    font-size: 11px;
-    color: #d1fae5;
-    line-height: 1.4;
-}
-
-.logro-tooltip-date {
-    display: block;
-    font-size: 10px;
-    color: #6ee7b7;
-    margin-top: 6px;
-    font-weight: 600;
-}
-
-/* ── Responsive ──────────────────────────────────── */
-@media (max-width: 900px) {
-    .logros-grid { grid-template-columns: repeat(4, 1fr); }
-}
-@media (max-width: 640px) {
-    .logros-grid { grid-template-columns: repeat(3, 1fr); }
-    .logro-badge { width: 72px; height: 72px; }
-    .logro-icon  { width: 42px; height: 42px; }
-}
-@media (max-width: 400px) {
-    .logros-grid { grid-template-columns: repeat(2, 1fr); }
+@media (prefers-reduced-motion: reduce) {
+    .logro-card { transition: none; }
 }

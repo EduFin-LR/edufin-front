@@ -3,9 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { FaHome, FaTrophy, FaUser, FaSignOutAlt, FaMedal, FaBars, FaTimes } from 'react-icons/fa'
 import { useAuth } from '../../context/AuthContext'
 import { playNav } from '../../utils/sounds'
+import Logo from '../Logo/Logo'
+import { useUserAvatar } from '../../hooks/useUserAvatar'
 import './Sidebar.css'
 
-const avatarBoy = new URL('../../assets/images/perfilNiño (1).png', import.meta.url).href
 
 const MENU = [
     { label: 'Inicio',  path: '/dashboard', icon: <FaHome /> },
@@ -24,7 +25,9 @@ function NavContent({ onClose }: { onClose?: () => void }) {
         onClose?.()
     }
 
-    const { logout } = useAuth()
+    const { logout, profile, userInfo, username } = useAuth()
+    const displayName = userInfo?.fullName || userInfo?.username || username || 'Tú'
+    const avatar = useUserAvatar()
 
     const handleLogout = () => {
         logout()
@@ -34,8 +37,8 @@ function NavContent({ onClose }: { onClose?: () => void }) {
 
     return (
         <>
-            <div className="sidebar-avatar">
-                <img src={avatarBoy} alt="avatar" />
+            <div className="sidebar-brand">
+                <Logo height={50} onClick={() => go('/dashboard')} />
             </div>
 
             <nav className="sidebar-menu">
@@ -51,10 +54,20 @@ function NavContent({ onClose }: { onClose?: () => void }) {
                 ))}
             </nav>
 
-            <button className="logout-btn" onClick={handleLogout}>
-                <FaSignOutAlt />
-                <span>Cerrar sesión</span>
-            </button>
+            <div className="sidebar-foot">
+                <button className="sidebar-me" onClick={() => go('/profile')}>
+                    <img src={avatar.src} alt="" className="sidebar-me-avatar"
+                        onError={e => { e.currentTarget.src = avatar.character }} />
+                    <span className="sidebar-me-info">
+                        <b>{displayName}</b>
+                        <small>Nivel {profile?.currentLevel ?? 1} · 🔥 {profile?.streakDays ?? 0} {profile?.streakDays === 1 ? 'día' : 'días'}</small>
+                    </span>
+                </button>
+                <button className="logout-btn" onClick={handleLogout}>
+                    <FaSignOutAlt />
+                    <span>Cerrar sesión</span>
+                </button>
+            </div>
         </>
     )
 }

@@ -1,24 +1,36 @@
 /* ─── Design Tokens ─────────────────────────────────────────── */
 :root {
-  /* Colors */
-  --color-primary:        #3a9e52;
-  --color-primary-dark:   #2a7a3e;
-  --color-primary-light:  #dff0e4;
-  --color-primary-hover:  #2fa043;
+  /* Colors · tema oscuro «Bosque» (nunca negro puro) */
+  color-scheme: dark;
+  --color-primary:        #2F9E4F;
+  --color-primary-dark:   #8BE3A4;   /* verde claro para texto y enlaces sobre oscuro */
+  --color-primary-light:  #1F4A2E;   /* fondo suave verde (activo, seleccionado) */
+  --color-primary-hover:  #37AE58;
+  --color-primary-shadow: #237A3C;
 
-  --color-bg-app:         #eef8f4;
-  --color-bg-sidebar:     #2fa043;
-  --color-sidebar-active: #dff0e4;
+  --color-bg-app:         #12241B;
+  --color-surface:        #1A3125;   /* tarjetas */
+  --color-surface-2:      #15291F;   /* campos y fondos internos */
+  --color-bg-sidebar:     #15291F;
+  --color-sidebar-active: #1F4A2E;
 
-  --color-white:          #ffffff;
-  --color-text:           #1a1a1a;
-  --color-text-muted:     #6b7280;
-  --color-border:         #d1d5db;
-  --color-error:          #e53935;
-  --color-success:        #43a047;
+  --color-white:          #ffffff;   /* blanco real: texto sobre botones de color */
+  --color-text:           #E8F3EC;
+  --color-text-muted:     #9DB8A7;
+  --color-text-faint:     #6F8B7A;
+  --color-border:         #2B4636;
+  --color-track:          #24392D;   /* barras de progreso vacías */
+  --color-error:          #FF8A80;
+  --color-success:        #8BE3A4;
+  --color-warning:        #F5C04A;
+  --color-gold:           #E3A008;
+
+  /* Logo */
+  --logo-edu:             #4CC46B;
+  --logo-fin:             #B7B4FF;
 
   /* Auth panel gradient */
-  --gradient-auth-panel:  linear-gradient(180deg, #c3e8f5 0%, #9dd4a8 55%, #6cbd5a 100%);
+  --gradient-auth-panel:  linear-gradient(180deg, #15291F 0%, #12241B 100%);
 
   /* Radii */
   --radius-sm:   6px;
@@ -28,12 +40,14 @@
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.08);
-  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.10);
-  --shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.14);
+  --shadow-sm:  0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 4px rgba(0, 0, 0, 0.25);
+  --shadow-md:  0 6px 18px rgba(0, 0, 0, 0.30);
+  --shadow-lg:  0 12px 36px rgba(0, 0, 0, 0.40);
 
   /* Typography */
-  --font-base:  'Segoe UI', system-ui, sans-serif;
+  --font-base:  'Manrope', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:  'JetBrains Mono', Consolas, monospace;
+  --font-logo:  'Poppins', 'Segoe UI', sans-serif;
   --font-size-sm:   13px;
   --font-size-base: 15px;
   --font-size-md:   17px;
@@ -58,14 +72,21 @@ html, body, #root {
   margin: 0;
 }
 
-/* ── Custom cursor ───────────────────────────────────────────── */
+/* ── Cursor de la marca ──────────────────────────────────────────
+   Flecha verde con sombra suave. Sobre algo clicable es la misma flecha
+   en un verde más claro (no cambia de forma); en campos de texto, la barra de texto. */
 :root {
-  --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cfilter id='g'%3E%3CfeGaussianBlur stdDeviation='1.5' result='blur'/%3E%3CfeComposite in='SourceGraphic' in2='blur' operator='over'/%3E%3C/filter%3E%3Cg filter='url(%23g)'%3E%3Cpolygon points='4,2 4,22 9,17 13,26 16,25 12,16 19,16' fill='%232db84f' stroke='%23fff' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E") 4 2, auto;
-  --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpolygon points='14,2 17,10 26,10 19,15 22,23 14,18 6,23 9,15 2,10 11,10' fill='%232db84f' stroke='%23fff' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") 14 14, pointer;
+  --cursor-default: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2728%27%20height%3D%2728%27%20viewBox%3D%270%200%2028%2028%27%3E%3Cdefs%3E%3Cfilter%20id%3D%27s%27%20x%3D%27-30%25%27%20y%3D%27-30%25%27%20width%3D%27160%25%27%20height%3D%27160%25%27%3E%3CfeDropShadow%20dx%3D%270%27%20dy%3D%271.2%27%20stdDeviation%3D%271.1%27%20flood-color%3D%27%23000%27%20flood-opacity%3D%270.45%27%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Cpath%20filter%3D%27url(%23s)%27%20d%3D%27M4.5%202.8%20L4.5%2021.6%20L9.3%2017.2%20L12.6%2025%20L16.2%2023.5%20L12.9%2015.9%20L19.6%2015.9%20Z%27%20fill%3D%27%233FBF62%27%20stroke%3D%27%23ffffff%27%20stroke-width%3D%271.6%27%20stroke-linejoin%3D%27round%27%2F%3E%3C%2Fsvg%3E") 4 2, auto;
+  --cursor-pointer: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2728%27%20height%3D%2728%27%20viewBox%3D%270%200%2028%2028%27%3E%3Cdefs%3E%3Cfilter%20id%3D%27s%27%20x%3D%27-30%25%27%20y%3D%27-30%25%27%20width%3D%27160%25%27%20height%3D%27160%25%27%3E%3CfeDropShadow%20dx%3D%270%27%20dy%3D%271.2%27%20stdDeviation%3D%271.1%27%20flood-color%3D%27%23000%27%20flood-opacity%3D%270.45%27%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Cpath%20filter%3D%27url(%23s)%27%20d%3D%27M4.5%202.8%20L4.5%2021.6%20L9.3%2017.2%20L12.6%2025%20L16.2%2023.5%20L12.9%2015.9%20L19.6%2015.9%20Z%27%20fill%3D%27%239BF0B4%27%20stroke%3D%27%23ffffff%27%20stroke-width%3D%271.6%27%20stroke-linejoin%3D%27round%27%2F%3E%3C%2Fsvg%3E") 4 2, pointer;
 }
 
 *, *::before, *::after { cursor: var(--cursor-default); }
-a, button, [role="button"], label, select, [tabindex] { cursor: var(--cursor-pointer); }
+:is(a, button, [role="button"], [role="tab"], [role="radio"], [role="link"], label, select, summary, [tabindex]):not(:disabled) {
+  cursor: var(--cursor-pointer) !important;
+}
+:is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]), textarea, [contenteditable="true"]) {
+  cursor: text !important;
+}
 
 body {
   font-family: var(--font-base);
@@ -105,17 +126,29 @@ body {
 .btn-primary {
   background: var(--color-primary);
   color: var(--color-white);
-  box-shadow: 0 4px 12px rgba(58, 158, 82, 0.35);
+  box-shadow: 0 4px 0 var(--color-primary-shadow);
 }
 
 .btn-primary:hover {
   background: var(--color-primary-hover);
-  box-shadow: 0 6px 16px rgba(58, 158, 82, 0.45);
+  box-shadow: 0 5px 0 var(--color-primary-shadow);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn:focus-visible,
+.link-text:focus-visible,
+.input-field:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 2px;
 }
 
 .btn-secondary {
-  background: var(--color-white);
-  color: var(--color-primary);
+  background: transparent;
+  color: var(--color-primary-dark);
   border: 2px solid var(--color-primary);
 }
 
@@ -132,18 +165,18 @@ body {
   font-size: var(--font-size-base);
   font-family: var(--font-base);
   color: var(--color-text);
-  background: var(--color-white);
+  background: var(--color-surface-2);
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input-field::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
 }
 
 .input-field:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(58, 158, 82, 0.15);
+  box-shadow: 0 0 0 4px rgba(63, 191, 98, 0.18);
 }
 
 /* Link text */

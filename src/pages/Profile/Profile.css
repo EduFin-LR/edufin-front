@@ -10,7 +10,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-xl);
-    background: var(--color-white);
+    background: var(--color-surface);
     border-radius: var(--radius-xl);
     padding: var(--space-xl);
     box-shadow: var(--shadow-sm);
@@ -23,7 +23,7 @@
     width: 260px;
     height: 260px;
     border-radius: var(--radius-full);
-    background: #dbeafe;
+    background: var(--color-surface-2);
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -114,9 +114,9 @@
 
 /* ── Sound settings ─────────────────────────────── */
 .profile-sound-card {
-    background: var(--color-white);
+    background: var(--color-surface);
     border-radius: var(--radius-xl);
-    border: 1.5px solid #d1fae5;
+    border: 1.5px solid var(--color-primary-light);
     padding: 20px 24px;
     display: flex;
     flex-direction: column;
@@ -138,7 +138,7 @@
 
 .profile-mute-btn {
     font-size: 22px;
-    background: #f3f4f6;
+    background: var(--color-surface-2);
     border: none;
     border-radius: 50%;
     width: 40px;
@@ -150,8 +150,8 @@
     flex-shrink: 0;
     transition: background 0.15s;
 }
-.profile-mute-btn:hover { background: #e5e7eb; }
-.profile-mute-btn--muted { background: #fee2e2; }
+.profile-mute-btn:hover { background: var(--color-border); }
+.profile-mute-btn--muted { background: #3A1F1F; }
 
 .profile-volume-slider {
     flex: 1;

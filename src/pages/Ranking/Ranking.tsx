@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { FaTrophy } from 'react-icons/fa'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
-import edufinLogo from '../../assets/images/edufinLogo.png'
+import Logo from '../../components/Logo/Logo'
 import progresoA  from '../../assets/images/ProgresoA.png'
 import progresoB  from '../../assets/images/ProgresoB.png'
 import progresoC  from '../../assets/images/ProgresoC.png'
@@ -43,7 +43,7 @@ export default function Ranking() {
             <div className="rank-page">
                 <header className="dash-header">
                     <h1 className="rank-title">Ranking</h1>
-                    <img src={edufinLogo} alt="Edufin" className="dash-logo" />
+                    <Logo className="dash-logo" />
                 </header>
                 <ul className="rank-list">
                     {list.map((entry, index) => {

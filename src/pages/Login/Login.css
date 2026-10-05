@@ -1,33 +1,89 @@
+/* Estilos compartidos por las pantallas de autenticación (login, registro, recuperar contraseña) */
 .auth-form {
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: 20px;
 }
 
+.auth-heading { display: flex; flex-direction: column; gap: 6px; }
+
 .auth-form-title {
-    margin: 0 0 var(--space-sm);
-    font-size: var(--font-size-xl);
-    font-weight: 900;
+    margin: 0;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
     color: var(--color-text);
+}
+
+.auth-form-sub {
+    margin: 0;
+    font-size: 15px;
+    color: var(--color-text-muted);
 }
 
 .auth-field-group {
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: 16px;
 }
+
+.auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.auth-field label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.input-field--error { border-color: var(--color-error); }
+
+.auth-password { position: relative; }
+.auth-password .input-field { padding-right: 84px; }
+.auth-show {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: var(--color-primary-dark);
+    font: 700 12.5px var(--font-base);
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.auth-show:focus-visible { outline: 3px solid var(--color-gold); outline-offset: 1px; }
 
 .auth-links {
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: var(--space-xs);
-    margin-top: calc(-1 * var(--space-sm));
+    margin-top: -6px;
+}
+.auth-links--end { justify-content: flex-end; }
+
+.auth-links .link-text,
+.auth-switch .link-text { text-decoration: none; font-size: 14px; }
+.auth-links .link-text:hover,
+.auth-switch .link-text:hover { text-decoration: underline; }
+
+.auth-submit { border-radius: 12px; padding: 14px var(--space-lg); font-size: 16px; }
+
+.auth-switch {
+    margin: 0;
+    text-align: center;
+    font-size: 14px;
+    color: var(--color-text-muted);
 }
 
 .auth-error {
     margin: 0;
-    font-size: var(--font-size-sm);
+    font-size: 12.5px;
     color: var(--color-error);
     font-weight: 600;
 }

@@ -2,14 +2,14 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import confetti from 'canvas-confetti'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaArrowLeft } from 'react-icons/fa'
+import { LuArrowLeft, LuLightbulb, LuChevronDown, LuBookOpen, LuTarget, LuArrowRight, LuGripVertical, LuX } from 'react-icons/lu'
 import {
     getLessonQuestions, getAdaptiveQuizQuestions, getDynamicFinalQuestions, completeDynamicFinal, startLesson, completeLesson, submitAttempt,
 } from '../../services/quizService'
 import { playCorrect, playWrong, playComplete } from '../../utils/sounds'
 import type { QuizQuestion, QuizOption, QuizCompleteResult } from '../../services/quizService'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
-import edufinLogo       from '../../assets/images/edufinLogo.png'
+import Logo from '../../components/Logo/Logo'
 import progresoA        from '../../assets/images/ProgresoA.png'
 import robotCorrecto    from '../../assets/images/robotCorrecto.png'
 import robotIncorrecto  from '../../assets/images/robotIncorrecto.png'
@@ -36,9 +36,28 @@ function highlightCaps(text: string) {
     )
 }
 
+interface Theory {
+    titulo?:     string
+    texto?:      string
+    ejemplo?:    string
+    idea_clave?: string
+}
+
+// El backend envía TheoryText como JSON serializado; si no lo es, se usa como texto plano
+function parseTheory(raw: unknown): Theory {
+    if (raw && typeof raw === 'object') return raw as Theory
+    if (typeof raw !== 'string') return {}
+    try {
+        const parsed = JSON.parse(raw)
+        if (parsed && typeof parsed === 'object') return parsed as Theory
+    } catch { /* texto plano */ }
+    return { texto: raw }
+}
+
 function TheoryCard({ text, questionId }: { text: string; questionId: string }) {
     const [open, setOpen] = useState(true)
     useEffect(() => setOpen(true), [questionId])
+    const theory = parseTheory(text)
 
     return (
         <motion.div
@@ -48,16 +67,16 @@ function TheoryCard({ text, questionId }: { text: string; questionId: string }) 
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
         >
-            <button className="theory-header" onClick={() => setOpen(o => !o)}>
+            <button className="theory-header" onClick={() => setOpen(o => !o)} aria-expanded={open}>
                 <span className="theory-header-left">
-                    <span className="theory-bulb">💡</span>
+                    <span className="theory-icon"><LuLightbulb /></span>
                     <span className="theory-title">Concepto clave</span>
                 </span>
                 <motion.span
                     className="theory-chevron"
                     animate={{ rotate: open ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
-                >▾</motion.span>
+                ><LuChevronDown /></motion.span>
             </button>
 
             <AnimatePresence initial={false}>
@@ -71,9 +90,22 @@ function TheoryCard({ text, questionId }: { text: string; questionId: string }) 
                         transition={{ duration: 0.28, ease: 'easeInOut' }}
                         style={{ overflow: 'hidden' }}
                     >
-                        <p className="theory-text">{highlightCaps(text)}</p>
+                        {theory.titulo && <h3 className="theory-subtitle">{theory.titulo}</h3>}
+                        {theory.texto && <p className="theory-text">{highlightCaps(theory.texto)}</p>}
+                        {theory.ejemplo && (
+                            <div className="theory-example">
+                                <span className="theory-label"><LuBookOpen /> Ejemplo</span>
+                                <p>{theory.ejemplo}</p>
+                            </div>
+                        )}
+                        {theory.idea_clave && (
+                            <div className="theory-key">
+                                <span className="theory-label"><LuTarget /> Recuerda</span>
+                                <p>{theory.idea_clave}</p>
+                            </div>
+                        )}
                         <button className="theory-dismiss" onClick={() => setOpen(false)}>
-                            Entendido, ir a la pregunta →
+                            Entendido, ir a la pregunta <LuArrowRight />
                         </button>
                     </motion.div>
                 )}
@@ -108,15 +140,16 @@ function MultipleChoice({
         <div className="quiz-mc">
             <p className="quiz-question-text">{question.questionText}</p>
             <div className="quiz-options">
-                {question.options.map(opt => (
+                {question.options.map((opt, i) => (
                     <button
                         key={opt.id}
                         className={`quiz-option ${selected === opt.id ? 'quiz-option--selected' : ''}`}
                         onClick={() => { if (!disabled) setSelected(opt.id) }}
                         disabled={disabled}
+                        aria-pressed={selected === opt.id}
                     >
-                        <span className="quiz-radio" />
-                        {opt.optionText}
+                        <span className="quiz-letter" aria-hidden="true">{String.fromCharCode(65 + i)}</span>
+                        <span className="quiz-option-text">{opt.optionText}</span>
                     </button>
                 ))}
             </div>
@@ -196,13 +229,13 @@ function DragDrop({
     }
 
     // color de zona por índice
-    const zoneColors = ['#dcfce7', '#fef9c3', '#fee2e2']
+    const zoneColors = ['rgba(76,196,107,0.12)', 'rgba(245,192,74,0.12)', 'rgba(255,138,128,0.12)']
     const zoneBorders = ['#86efac', '#fde047', '#fca5a5']
 
     return (
         <div className="quiz-dd" ref={containerRef}>
             <p className="quiz-question-text">{question.questionText}</p>
-            {question.hint && <p className="quiz-hint">💡 {question.hint}</p>}
+            {question.hint && <p className="quiz-hint"><LuLightbulb /> {question.hint}</p>}
 
             {/* Banco de tarjetas sin colocar */}
             <div className="dd-bank">
@@ -221,13 +254,13 @@ function DragDrop({
                             layout
                             exit={{ scale: 0.8, opacity: 0, transition: { duration: 0.2 } }}
                         >
-                            <span className="dd-drag-icon">⠿</span>
+                            <span className="dd-drag-icon"><LuGripVertical /></span>
                             {opt.optionText}
                         </motion.div>
                     ))}
                 </AnimatePresence>
                 {unplaced.length === 0 && (
-                    <span className="dd-bank-empty">Todas las tarjetas han sido colocadas ✓</span>
+                    <span className="dd-bank-empty">Todas las tarjetas están colocadas</span>
                 )}
             </div>
 
@@ -238,7 +271,7 @@ function DragDrop({
                         key={cat}
                         ref={el => { zoneRefs.current[cat] = el }}
                         className="dd-zone"
-                        style={{ background: zoneColors[i] ?? '#f3f4f6', borderColor: zoneBorders[i] ?? '#d1d5db' }}
+                        style={{ background: zoneColors[i] ?? 'var(--color-surface-2)', borderColor: zoneBorders[i] ?? 'var(--color-border)' }}
                     >
                         <span className="dd-zone-title">{cat}</span>
                         <div className="dd-zone-items">
@@ -252,9 +285,9 @@ function DragDrop({
                                         exit={{ scale: 0.8, opacity: 0 }}
                                         onClick={() => handleRemove(o.id)}
                                     >
-                                        <span className="dd-drag-icon">⠿</span>
+                                        <span className="dd-drag-icon"><LuGripVertical /></span>
                                         <span>{o.optionText}</span>
-                                        {!disabled && <span className="dd-remove">✕</span>}
+                                        {!disabled && <span className="dd-remove"><LuX /></span>}
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
@@ -371,7 +404,7 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
 
     return (
         <div className="quiz-result-page">
-            <img src={edufinLogo} alt="Edufin" className="quiz-result-logo" />
+            <Logo className="quiz-result-logo" />
 
             {/* Robot feliz */}
             <motion.img
@@ -397,7 +430,7 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
                 {/* Score circle */}
                 <div className="quiz-result-circle">
                     <svg viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="44" fill="none" stroke="#e5f7ea" strokeWidth="10"/>
+                        <circle cx="50" cy="50" r="44" fill="none" style={{ stroke: 'var(--color-track)' }} strokeWidth="10"/>
                         <motion.circle
                             cx="50" cy="50" r="44" fill="none"
                             stroke={pct >= 60 ? '#2db84f' : '#f59e0b'}
@@ -553,7 +586,24 @@ export default function Quiz() {
 
             } else {
                 const res = await completeLesson(lessonId!, timeSpentSec)
-                setResult(res.data)
+
+                // El backend registra varios attempts para una pregunta DRAG_AND_DROP
+                // (uno por cada opción colocada). Para el resultado visual del quiz,
+                // una pregunta debe contar una sola vez, usando el resultado de esta
+                // ejecución actual almacenado en el estado local `correct`.
+                const totalQuestions = questions.length
+                const correctAnswers = correct
+                const incorrectAnswers = totalQuestions - correctAnswers
+
+                setResult({
+                    correctAnswers,
+                    incorrectAnswers,
+                    totalQuestions,
+                    lessonExperience: res.data.lessonExperience,
+                    questionsExperience: res.data.questionsExperience,
+                    totalExperience: res.data.totalExperience,
+                    passed: correctAnswers >= totalQuestions * 0.6,
+                })
             }
 
         } catch {
@@ -594,19 +644,18 @@ export default function Quiz() {
                 }
             />
             <div className="quiz-page">
-                <div className="quiz-top-bar">
-                    <button className="quiz-back-btn" onClick={() => navigate(-1)}>
-                        <FaArrowLeft /> Salir
+                <header className="quiz-top-bar">
+                    <button className="quiz-back-btn" onClick={() => navigate(-1)} aria-label="Salir de la lección">
+                        <LuArrowLeft /><span>Salir</span>
                     </button>
-                    <img src={edufinLogo} alt="Edufin" className="quiz-logo" />
-                </div>
-
-                <div className="quiz-progress-wrap">
-                    <span className="quiz-progress-label">Pregunta {current + 1} de {questions.length}</span>
-                    <div className="quiz-progress-bar">
-                        <motion.div className="quiz-progress-fill" animate={{ width: `${pct}%` }} transition={{ duration: 0.4 }} />
+                    <div className="quiz-progress-wrap">
+                        <div className="quiz-progress-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de la lección">
+                            <motion.div className="quiz-progress-fill" animate={{ width: `${pct}%` }} transition={{ duration: 0.4 }} />
+                        </div>
+                        <span className="quiz-progress-label">Pregunta {Math.min(current + 1, questions.length)} de {questions.length}</span>
                     </div>
-                </div>
+                    <Logo className="quiz-logo" />
+                </header>
 
                 <AnimatePresence mode="wait">
                     <motion.div

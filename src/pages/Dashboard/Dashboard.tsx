@@ -1,19 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { playSelect } from '../../utils/sounds'
 import { useNavigate } from 'react-router-dom'
-import { FaPiggyBank, FaStar } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
-import edufinLogo from '../../assets/images/edufinLogo.png'
+import Logo from '../../components/Logo/Logo'
 import fuegoGif   from '../../assets/gifs/fuego.gif'
 import progresoA  from '../../assets/images/ProgresoA.png'
 import progresoB  from '../../assets/images/ProgresoB.png'
 import progresoC  from '../../assets/images/ProgresoC.png'
 import progresoD  from '../../assets/images/ProgresoD.png'
 import { getDashboard } from '../../services/dashboardService'
+import { getTopicLessons } from '../../services/learningService'
+import type { Lesson } from '../../services/learningService'
+import { themeForTopic } from '../Learning/routeThemes'
+import NextStopCard from './NextStopCard'
+import CourseMetro from './CourseMetro'
 import { useAuth } from '../../context/AuthContext'
-import type { DashboardResponse, DashboardLearningPath } from '../../types/auth'
+import type { DashboardResponse } from '../../types/auth'
 import './Dashboard.css'
 
 
@@ -99,76 +103,41 @@ function LevelRoadModal({ level, onClose }: { level: number; onClose: () => void
     )
 }
 
-// ── Course card with glow & stars (ideas 4 & 5) ───────────────────────────────
-function CourseCard({ course, onContinue }: { course: DashboardLearningPath; onContinue: () => void }) {
-    const pct         = course.progressPercentage
-    const isPending   = course.status === 'LOCKED'
-    const isCompleted = course.status === 'COMPLETED'
-    const isActive    = course.status === 'IN_PROGRESS' || course.status === 'UNLOCKED'
-
-    return (
-        <div className={`course-card ${isPending ? 'course-card--pending' : ''} ${isCompleted ? 'course-card--completed' : ''} ${isActive ? 'course-card--active' : ''}`}>
-            {isActive && <div className="course-glow-ring" />}
-
-            <div className="course-icon-wrap">
-                <FaPiggyBank className="course-icon" />
-                {isCompleted && <span className="course-done-check">✓</span>}
-            </div>
-
-            <div className="course-body">
-                <h3 className="course-title">
-                    {course.topicName}
-                    {course.isAiRecommended && <span className="course-ai-badge">IA</span>}
-                </h3>
-                <p className="course-meta">{course.completedLessons} de {course.totalLessons} lecciones completadas</p>
-                <div className="course-bar">
-                    <motion.div
-                        className="course-bar-fill"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
-                    />
-                </div>
-                {pct > 0 && <span className="course-pct">{pct}%</span>}
-            </div>
-
-            {/* Floating stars for completed */}
-            {isCompleted && (
-                <div className="course-stars">
-                    {[0,1,2].map(i => (
-                        <motion.span
-                            key={i}
-                            className="course-star"
-                            animate={{ y: [0, -5, 0], opacity: [0.6, 1, 0.6] }}
-                            transition={{ duration: 2, delay: i * 0.4, repeat: Infinity }}
-                        >
-                            <FaStar />
-                        </motion.span>
-                    ))}
-                </div>
-            )}
-
-            <button
-                className={`btn course-btn ${isPending ? 'course-btn--pending' : isCompleted ? 'course-btn--completed' : 'btn-primary'}`}
-                onClick={() => { playSelect(); onContinue() }}
-            >
-                {isCompleted ? 'Repasar' : 'Continuar'}
-            </button>
-        </div>
-    )
-}
-
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
     const navigate = useNavigate()
     const [data, setData] = useState<DashboardResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [showLevelModal, setShowLevelModal] = useState(false)
+    const [selectedId, setSelectedId] = useState<string | null>(null)
+    const [lessonsByTopic, setLessonsByTopic] = useState<Record<string, Lesson[]>>({})
     const { profile, userInfo } = useAuth()
 
     useEffect(() => {
         getDashboard().then(res => setData(res.data)).catch(() => {}).finally(() => setLoading(false))
     }, [])
+
+    // Módulos en el orden del curso, cada uno con su mundo
+    const modules = useMemo(() => (data?.learningPath ?? [])
+        .map(course => ({ course, theme: themeForTopic(course.topicName) }))
+        .sort((x, y) => x.theme.moduleNum - y.theme.moduleNum), [data])
+
+    // Por defecto se muestra el módulo en curso (o el primero sin terminar)
+    const defaultModule = modules.find(m => m.course.status === 'IN_PROGRESS' || m.course.status === 'UNLOCKED')
+        ?? modules.find(m => m.course.status !== 'COMPLETED')
+        ?? modules[modules.length - 1]
+    const selectedIdx = Math.max(0, modules.findIndex(m => m.course.topicId === (selectedId ?? defaultModule?.course.topicId)))
+    const selected    = modules[selectedIdx]
+
+    // La lección que sigue se obtiene de la ruta del módulo (se pide una vez por módulo)
+    const selectedTopicId = selected?.course.topicId
+    const needsLessons = !!selected && selected.course.status !== 'LOCKED' && selected.course.status !== 'COMPLETED'
+    useEffect(() => {
+        if (!selectedTopicId || !needsLessons || lessonsByTopic[selectedTopicId]) return
+        getTopicLessons(selectedTopicId)
+            .then(r => setLessonsByTopic(prev => ({ ...prev, [selectedTopicId]: r.data.lessons })))
+            .catch(() => setLessonsByTopic(prev => ({ ...prev, [selectedTopicId]: [] })))
+    }, [selectedTopicId, needsLessons, lessonsByTopic])
 
     const firstName  = data?.user.firstName ?? userInfo?.fullName?.split(' ')[0] ?? '…'
     const streakDays = profile?.streakDays ?? data?.gamification.streakDays ?? 0
@@ -176,9 +145,8 @@ export default function Dashboard() {
     const xp         = data?.gamification.currentXp     ?? 0
     const xpMax      = data?.gamification.nextLevelXp   ?? 400
     const xpPct      = Math.min(100, Math.round((xp / xpMax) * 100))
-    const active     = data?.learningPath.filter(c => c.status === 'IN_PROGRESS' || c.status === 'UNLOCKED') ?? []
-    const pending    = data?.learningPath.filter(c => c.status === 'LOCKED')      ?? []
-    const completed  = data?.learningPath.filter(c => c.status === 'COMPLETED')   ?? []
+    const completedCount = modules.filter(m => m.course.status === 'COMPLETED').length
+    const nextLocked     = modules.find(m => m.course.status === 'LOCKED')
 
 
     return (
@@ -190,7 +158,7 @@ export default function Dashboard() {
                 {/* Header */}
                 <header className="dash-header">
                     <h1 className="dash-greeting">¡Hola, <span>{firstName}!</span></h1>
-                    <img src={edufinLogo} alt="Edufin" className="dash-logo" />
+                    <Logo className="dash-logo" />
                 </header>
 
                 {/* Stats */}
@@ -218,33 +186,29 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Active courses */}
-                {active.length > 0 && (
-                    <section className="dash-section">
-                        <h2 className="dash-section-title">Continuar aprendiendo</h2>
-                        {active.map(c => (
-                            <CourseCard key={c.topicId} course={c} onContinue={() => navigate(`/learning/${c.topicId}`)} />
-                        ))}
-                    </section>
+                {/* 1 · Tu siguiente parada */}
+                {selected && (
+                    <NextStopCard
+                        course={selected.course}
+                        theme={selected.theme}
+                        lessons={lessonsByTopic[selected.course.topicId]}
+                        prevName={modules[selectedIdx - 1]?.course.topicName ?? null}
+                        onOpen={() => { playSelect(); navigate(`/learning/${selected.course.topicId}`, { state: { topicName: selected.course.topicName } }) }}
+                    />
                 )}
 
-                {/* Pending courses */}
-                {pending.length > 0 && (
-                    <section className="dash-section">
-                        <h2 className="dash-section-title">Pendiente</h2>
-                        {pending.map(c => (
-                            <CourseCard key={c.topicId} course={c} onContinue={() => navigate(`/learning/${c.topicId}`)} />
-                        ))}
-                    </section>
-                )}
-
-                {/* Completed courses */}
-                {completed.length > 0 && (
-                    <section className="dash-section">
-                        <h2 className="dash-section-title">Completados 🎉</h2>
-                        {completed.map(c => (
-                            <CourseCard key={c.topicId} course={c} onContinue={() => navigate(`/learning/${c.topicId}`)} />
-                        ))}
+                {/* 2 · Mapa de los módulos */}
+                {modules.length > 0 && (
+                    <section className="course-metro" aria-labelledby="course-metro-title">
+                        <div className="course-metro-head">
+                            <h2 id="course-metro-title" className="dash-section-title">Tu recorrido</h2>
+                            <span className="course-metro-sum">
+                                {completedCount} de {modules.length} módulos{nextLocked ? ` · siguiente: ${nextLocked.course.topicName}` : ''}
+                            </span>
+                        </div>
+                        <div className="course-metro-scroll">
+                            <CourseMetro modules={modules} selectedId={selected?.course.topicId ?? null} onSelect={setSelectedId} />
+                        </div>
                     </section>
                 )}
 

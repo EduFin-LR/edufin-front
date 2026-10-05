@@ -1,0 +1,17 @@
+.edufin-logo {
+    display: block;
+    width: auto;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+.edufin-logo--link { cursor: var(--cursor-pointer); }
+.edufin-logo--link:focus-visible { outline: 3px solid var(--color-gold); outline-offset: 4px; border-radius: 6px; }
+
+.edufin-logo-text {
+    font-family: var(--font-logo);
+    font-weight: 900;
+}
+
+.edufin-logo-edu { fill: var(--logo-edu); }
+.edufin-logo-fin { fill: var(--logo-fin); }

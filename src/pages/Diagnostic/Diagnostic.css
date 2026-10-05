@@ -1,7 +1,7 @@
 /* ── Base page ────────────────────────────────────────────────────────────── */
 .diag-page {
     min-height: 100vh;
-    background: linear-gradient(160deg, #e8f7ec 0%, #f0faf3 60%, #d6f0e0 100%);
+    background: linear-gradient(160deg, var(--color-primary-light) 0%, var(--color-primary-light) 60%, var(--color-primary-light) 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -35,7 +35,7 @@
 .diag-welcome-text h1 {
     font-size: 28px;
     font-weight: 900;
-    color: #1a2e1f;
+    color: var(--color-text);
     margin: 0 0 16px;
     line-height: 1.2;
 }
@@ -46,7 +46,7 @@
 
 .diag-welcome-text p {
     font-size: 16px;
-    color: #374151;
+    color: var(--color-text);
     line-height: 1.6;
     margin: 0 0 24px;
 }
@@ -66,7 +66,7 @@
     gap: 10px;
     font-size: 16px;
     font-weight: 600;
-    color: #1a2e1f;
+    color: var(--color-text);
 }
 
 .diag-icon {
@@ -96,14 +96,14 @@
 .diag-progress-label {
     font-size: 13px;
     font-weight: 700;
-    color: #374151;
+    color: var(--color-text);
     display: block;
     margin-bottom: 8px;
 }
 
 .diag-progress-bar {
     height: 8px;
-    background: #d1fae5;
+    background: var(--color-primary-light);
     border-radius: 999px;
     overflow: hidden;
 }
@@ -134,7 +134,7 @@
 .diag-question-text {
     font-size: 20px;
     font-weight: 700;
-    color: #1a2e1f;
+    color: var(--color-text);
     line-height: 1.5;
     margin: 0 0 20px;
 }
@@ -151,33 +151,33 @@
     gap: 14px;
     padding: 14px 18px;
     border-radius: 12px;
-    border: 2px solid #e5e7eb;
-    background: #fff;
+    border: 2px solid var(--color-border);
+    background: var(--color-surface);
     cursor: pointer;
     font-size: 15px;
     font-weight: 500;
-    color: #374151;
+    color: var(--color-text);
     text-align: left;
     transition: border-color 0.18s, background 0.18s;
 }
 
 .diag-option:hover {
     border-color: var(--color-primary, #2db84f);
-    background: #f0faf3;
+    background: var(--color-primary-light);
 }
 
 .diag-option--selected {
     border-color: var(--color-primary, #2db84f);
-    background: #e8f7ec;
+    background: var(--color-primary-light);
     font-weight: 700;
-    color: #1a2e1f;
+    color: var(--color-text);
 }
 
 .diag-option-radio {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    border: 2px solid #d1d5db;
+    border: 2px solid var(--color-border);
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -188,7 +188,7 @@
 .diag-option--selected .diag-option-radio {
     border-color: var(--color-primary, #2db84f);
     background: var(--color-primary, #2db84f);
-    box-shadow: inset 0 0 0 3px #fff;
+    box-shadow: inset 0 0 0 3px var(--color-surface);
 }
 
 .diag-next-btn {
@@ -206,7 +206,7 @@
 
 /* ── Result ───────────────────────────────────────────────────────────────── */
 .diag-page--result {
-    background: linear-gradient(160deg, #e8f7ec 0%, #f0faf3 50%, #c9f0d8 100%);
+    background: linear-gradient(160deg, var(--color-bg-app) 0%, #163024 100%);
 }
 
 .diag-result {
@@ -222,7 +222,7 @@
 .diag-result-title {
     font-size: 30px;
     font-weight: 900;
-    color: #1a2e1f;
+    color: var(--color-text);
     margin: 0;
 }
 
@@ -237,7 +237,7 @@
     display: flex;
     align-items: center;
     gap: 20px;
-    background: #fff;
+    background: var(--color-surface);
     border-radius: 20px;
     padding: 20px 24px;
     width: 100%;
@@ -254,13 +254,13 @@
 .diag-profile-info h2 {
     font-size: 18px;
     font-weight: 800;
-    color: #1a2e1f;
+    color: var(--color-text);
     margin: 0 0 8px;
 }
 
 .diag-profile-info p {
     font-size: 14px;
-    color: #6b7280;
+    color: var(--color-text-muted);
     margin: 0;
     line-height: 1.5;
 }
@@ -273,7 +273,7 @@
 
 .diag-score-card {
     flex: 1;
-    background: #fff;
+    background: var(--color-surface);
     border-radius: 16px;
     padding: 18px;
     display: flex;
@@ -285,7 +285,7 @@
 .diag-score-label {
     font-size: 13px;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--color-text-muted);
     text-align: center;
 }
 
@@ -296,7 +296,7 @@
     gap: 10px;
     font-size: 22px;
     font-weight: 800;
-    color: #1a2e1f;
+    color: var(--color-text);
 }
 
 .diag-score-icon { font-size: 26px; }

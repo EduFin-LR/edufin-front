@@ -1,39 +1,24 @@
-import './AuthLayout.css'
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import edufinLogo    from '../../assets/images/edufinLogo.png'
-import portadaInicio from '../../assets/images/portadaInicio.png'
+import Logo from '../../components/Logo/Logo'
+import AuthHero from './AuthHero'
+import './AuthLayout.css'
 
-interface Props {
-    children: React.ReactNode
-}
-
-export default function AuthLayout({ children }: Props) {
+export default function AuthLayout({ children }: { children: ReactNode }) {
     const navigate = useNavigate()
 
     return (
         <div className="auth-wrapper">
-            <div className="contMain">
-                <div className="auth-left">
-                    <img
-                        src={edufinLogo}
-                        alt="Edufin"
-                        className="auth-logo-img"
-                        onClick={() => navigate('/')}
-                    />
-
-                    <div className="auth-form-wrapper">
-                        {children}
-                    </div>
+            <section className="auth-left">
+                <div className="auth-form-wrapper">
+                    <Logo height={72} className="auth-logo" onClick={() => navigate('/')} />
+                    {children}
                 </div>
-            </div>
+            </section>
 
-            <div className="auth-right">
-                <img
-                    src={portadaInicio}
-                    alt="Personaje Edufin"
-                    className="auth-character"
-                />
-            </div>
+            <aside className="auth-right">
+                <AuthHero />
+            </aside>
         </div>
     )
 }

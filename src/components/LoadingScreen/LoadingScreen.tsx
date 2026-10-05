@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import edufinLogo from '../../assets/images/edufinLogo.png'
+import Logo from '../Logo/Logo'
 import './LoadingScreen.css'
 
 interface Props {
@@ -26,7 +26,7 @@ export default function LoadingScreen({ visible, message = 'Cargando…' }: Prop
                         transition={{ duration: 0.25, delay: 0.05 }}
                     >
                         {/* Logo */}
-                        <img src={edufinLogo} alt="Edufin" className="ls-logo" />
+                        <Logo className="ls-logo" />
 
                         {/* Bouncing dots */}
                         <div className="ls-dots">
