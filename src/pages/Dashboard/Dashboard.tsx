@@ -11,6 +11,8 @@ import progresoB  from '../../assets/images/ProgresoB.png'
 import progresoC  from '../../assets/images/ProgresoC.png'
 import progresoD  from '../../assets/images/ProgresoD.png'
 import { getDashboard } from '../../services/dashboardService'
+import { getExperimentalAssessmentStatus } from '../../services/assessmentService'
+import type { ExperimentalAssessmentStatus } from '../../services/assessmentService'
 import { getTopicLessons } from '../../services/learningService'
 import type { Lesson } from '../../services/learningService'
 import { themeForTopic } from '../Learning/routeThemes'
@@ -111,10 +113,14 @@ export default function Dashboard() {
     const [showLevelModal, setShowLevelModal] = useState(false)
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [lessonsByTopic, setLessonsByTopic] = useState<Record<string, Lesson[]>>({})
+    const [experimentalStatus, setExperimentalStatus] = useState<ExperimentalAssessmentStatus | null>(null)
     const { profile, userInfo } = useAuth()
 
     useEffect(() => {
-        getDashboard().then(res => setData(res.data)).catch(() => {}).finally(() => setLoading(false))
+        Promise.allSettled([
+            getDashboard().then(res => setData(res.data)),
+            getExperimentalAssessmentStatus().then(res => setExperimentalStatus(res.data)),
+        ]).finally(() => setLoading(false))
     }, [])
 
     // Módulos en el orden del curso, cada uno con su mundo
@@ -185,6 +191,26 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </div>
+
+                {experimentalStatus?.postTestEligible && !experimentalStatus.postTestCompleted && (
+                    <motion.section
+                        className="posttest-available-card"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                    >
+                        <div>
+                            <span className="posttest-available-eyebrow">Evaluación final disponible</span>
+                            <h2>Completa tu post-test</h2>
+                            <p>Ya completaste los 7 módulos. Realiza la evaluación final de 12 preguntas para cerrar tu experiencia en EDUFIN.</p>
+                        </div>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => { playSelect(); navigate('/post-test') }}
+                        >
+                            Realizar post-test
+                        </button>
+                    </motion.section>
+                )}
 
                 {/* 1 · Tu siguiente parada */}
                 {selected && (
