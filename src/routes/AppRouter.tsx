@@ -61,6 +61,7 @@ export default function AppRouter() {
 
                 {/* Diagnostic — private but no test-pending guard */}
                 <Route path="/diagnostic" element={<DiagnosticRoute />} />
+                <Route path="/post-test" element={<PrivateRoute><Diagnostic /></PrivateRoute>} />
 
                 {/* App */}
                 <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />

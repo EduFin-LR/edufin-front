@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../context/AuthContext'
 import {
     getExperimentalQuestions,
     submitExperimentalAssessment,
+    getExperimentalAssessmentStatus,
 } from '../../services/assessmentService'
 import type {
     ExperimentalQuestion,
@@ -23,6 +24,9 @@ type Screen = 'welcome' | 'quiz' | 'result'
 
 export default function Diagnostic() {
     const navigate = useNavigate()
+    const location = useLocation()
+    const isPostTest = location.pathname === '/post-test'
+    const phase = isPostTest ? 'POST_TEST' : 'PRE_TEST'
     const { username, refreshProfile } = useAuth()
 
     const [screen, setScreen] = useState<Screen>('welcome')
@@ -40,11 +44,23 @@ export default function Diagnostic() {
         setLoading(true)
         setLoadError(false)
 
-        getExperimentalQuestions()
-            .then(r => setQuestions(r.data))
+        const load = async () => {
+            if (isPostTest) {
+                const status = await getExperimentalAssessmentStatus()
+                if (!status.data.postTestEligible || status.data.postTestCompleted) {
+                    navigate('/dashboard', { replace: true })
+                    return
+                }
+            }
+
+            const response = await getExperimentalQuestions()
+            setQuestions(response.data)
+        }
+
+        load()
             .catch(() => setLoadError(true))
             .finally(() => setLoading(false))
-    }, [])
+    }, [isPostTest, navigate])
 
     const displayName = username ?? 'Estudiante'
     const total = questions.length || 12
@@ -83,14 +99,14 @@ export default function Diagnostic() {
 
         setLoading(true)
         try {
-            const res = await submitExperimentalAssessment('PRE_TEST', newAnswers)
+            const res = await submitExperimentalAssessment(phase, newAnswers)
             setResult(res.data)
             playComplete()
             setScreen('result')
         } catch (error: any) {
             const status = error?.response?.status
             if (status === 409) {
-                setSubmitError('Este pre-test ya fue registrado anteriormente para tu cuenta.')
+                setSubmitError(isPostTest ? 'Este post-test ya fue registrado anteriormente para tu cuenta.' : 'Este pre-test ya fue registrado anteriormente para tu cuenta.')
             } else {
                 setSubmitError('No se pudo guardar la evaluación. Inténtalo nuevamente.')
             }
@@ -110,11 +126,13 @@ export default function Diagnostic() {
             <Logo className="diag-logo" />
             <div className="diag-welcome">
                 <div className="diag-welcome-text">
-                    <h1>¡BIENVENIDO, <span>{displayName.toUpperCase()}!</span></h1>
+                    <h1>{isPostTest ? '¡ÚLTIMA EVALUACIÓN!' : <>¡BIENVENIDO, <span>{displayName.toUpperCase()}!</span></>}</h1>
                     <p>
-                        Antes de comenzar tu aventura,<br />
-                        queremos conocer tu nivel inicial de<br />
-                        conocimientos financieros.
+                        {isPostTest ? (
+                            <>Has completado todos los módulos.<br />Ahora queremos medir cuánto aprendiste<br />durante tu experiencia en EDUFIN.</>
+                        ) : (
+                            <>Antes de comenzar tu aventura,<br />queremos conocer tu nivel inicial de<br />conocimientos financieros.</>
+                        )}
                     </p>
                     <ul className="diag-info-list">
                         <li><span className="diag-icon">📋</span> {total} preguntas</li>
@@ -133,7 +151,7 @@ export default function Diagnostic() {
                         onClick={handleStart}
                         disabled={loading || loadError || questions.length === 0}
                     >
-                        Comenzar evaluación
+                        {isPostTest ? 'Comenzar post-test' : 'Comenzar evaluación'}
                     </button>
                 </div>
                 <img src={saludo} alt="personaje" className="diag-character" />
@@ -152,15 +170,16 @@ export default function Diagnostic() {
                 transition={{ duration: 0.4 }}
             >
                 <h1 className="diag-result-title">¡Evaluación completada!</h1>
-                <p className="diag-result-subtitle">Tus respuestas fueron registradas correctamente</p>
+                <p className="diag-result-subtitle">{isPostTest ? 'Tu evaluación final fue registrada correctamente' : 'Tus respuestas fueron registradas correctamente'}</p>
 
                 <div className="diag-profile-card">
                     <img src={idea} alt="robot" className="diag-profile-img" />
                     <div className="diag-profile-info">
-                        <h2>¡Todo listo para comenzar!</h2>
+                        <h2>{isPostTest ? '¡Experiencia completada!' : '¡Todo listo para comenzar!'}</h2>
                         <p>
-                            Este test nos ayudará a medir el aprendizaje obtenido durante tu experiencia en EDUFIN.
-                            Tus respuestas no modifican tu progreso, experiencia ni recomendaciones adaptativas.
+                            {isPostTest
+                                ? 'Gracias por completar EDUFIN. Esta evaluación permitirá comparar tu conocimiento final con tu nivel inicial y no modifica el modelo adaptativo.'
+                                : 'Este pre-test nos permite medir tu nivel inicial y también ayuda a inicializar la estimación de dominio del sistema. No otorga experiencia ni desbloquea contenidos por sí mismo.'}
                         </p>
                     </div>
                 </div>
@@ -186,7 +205,7 @@ export default function Diagnostic() {
                     await refreshProfile()
                     navigate('/dashboard')
                 }}>
-                    Ir al inicio
+                    {isPostTest ? 'Finalizar experiencia' : 'Ir al inicio'}
                 </button>
             </motion.div>
         </div>

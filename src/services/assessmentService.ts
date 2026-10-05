@@ -52,3 +52,12 @@ export const submitExperimentalAssessment = (
         phase,
         answers,
     })
+export interface ExperimentalAssessmentStatus {
+    preTestCompleted: boolean
+    postTestEligible: boolean
+    postTestCompleted: boolean
+}
+
+export const getExperimentalAssessmentStatus = () =>
+    api.get<ExperimentalAssessmentStatus>('/assessments/experimental/status')
+
