@@ -585,25 +585,17 @@ export default function Quiz() {
                 })
 
             } else {
-                const res = await completeLesson(lessonId!, timeSpentSec)
+                const questionIds = questions.map(question => question.id)
+                const res = await completeLesson(
+                    lessonId!,
+                    questionIds,
+                    timeSpentSec
+                )
 
-                // El backend registra varios attempts para una pregunta DRAG_AND_DROP
-                // (uno por cada opción colocada). Para el resultado visual del quiz,
-                // una pregunta debe contar una sola vez, usando el resultado de esta
-                // ejecución actual almacenado en el estado local `correct`.
-                const totalQuestions = questions.length
-                const correctAnswers = correct
-                const incorrectAnswers = totalQuestions - correctAnswers
-
-                setResult({
-                    correctAnswers,
-                    incorrectAnswers,
-                    totalQuestions,
-                    lessonExperience: res.data.lessonExperience,
-                    questionsExperience: res.data.questionsExperience,
-                    totalExperience: res.data.totalExperience,
-                    passed: correctAnswers >= totalQuestions * 0.6,
-                })
+                // El backend ya calcula el resultado únicamente sobre las preguntas
+                // presentadas en esta ejecución y agrupa cada DRAG_AND_DROP como
+                // una sola pregunta para score/correctas/incorrectas.
+                setResult(res.data)
             }
 
         } catch {
