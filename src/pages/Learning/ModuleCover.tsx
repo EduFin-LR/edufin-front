@@ -200,10 +200,10 @@ export default function ModuleCover({ theme, topicName, lessonCount, hasFinal }:
             role="status"
             aria-live="polite"
             aria-label={`Cargando el módulo ${theme.moduleNum}: ${topicName}`}
-            initial={{ opacity: 0 }}
+            initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.03 }}
-            transition={{ duration: 0.4 }}
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ duration: 0.35 }}
         >
             <svg className="module-cover-art" viewBox="0 0 1000 420" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
                 <CoverArt k={theme.key} n={theme.moduleNum} />

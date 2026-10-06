@@ -115,8 +115,7 @@
     justify-content: center;
     font-size: 13px;
     font-weight: 900;
-    color: #1a8c3c;
-    padding-bottom: 2px;
+    color: #000000;
     pointer-events: none;
 }
 
@@ -511,6 +510,41 @@
     .module-cover-art { top: auto; bottom: 0; height: 55%; }
     .module-cover-scrim { background: linear-gradient(180deg, var(--cv-scrim) 0%, var(--cv-scrim) 45%, transparent 62%); }
     .module-cover-text { top: 14%; transform: none; }
+}
+
+/* ── XP fly-to-header animation ───────────────────── */
+.xp-fly-wrap {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 500;
+    overflow: hidden;
+}
+.xp-fly-badge {
+    position: fixed;
+    font-size: 18px;
+    font-weight: 900;
+    color: #ffffff;
+    text-shadow: 0 0 12px rgba(255,255,255,0.8), 0 2px 8px rgba(0,0,0,0.3);
+    white-space: nowrap;
+    pointer-events: none;
+}
+.xp-fly-star {
+    position: fixed;
+    font-size: 18px;
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.8);
+    line-height: 1;
+    pointer-events: none;
+}
+@keyframes xp-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(251,191,36,0.7); }
+    70%  { box-shadow: 0 0 0 12px rgba(251,191,36,0); }
+    100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); }
+}
+.learning-xp--pulse {
+    animation: xp-pulse 0.6s ease-out 2;
+    border-radius: 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {

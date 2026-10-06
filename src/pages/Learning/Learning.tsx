@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaBook, FaPlay, FaLock, FaClipboardList, FaArrowLeft, FaTimes, FaTrophy, FaPlus, FaMinus, FaCrosshairs } from 'react-icons/fa'
@@ -36,11 +36,107 @@ function NodeIcon({ type, locked }: { type: Lesson['lessonType']; locked: boolea
 // y como mínimo este tiempo, para que no parpadee
 const COVER_MIN_MS = 2000
 
+// ── Animación XP volando al contador del header ────────────────────────────
+function XpFlyIn({ xp, from, targetRef, onDone, onCountUp }: {
+    xp: number
+    from: number
+    targetRef: React.RefObject<HTMLDivElement | null>
+    onDone: () => void
+    onCountUp: (val: number) => void
+}) {
+    const N = Math.min(10, Math.max(4, Math.floor(xp / 12) + 3))
+    const [target, setTarget] = useState<{ x: number; y: number } | null>(null)
+    const [stars] = useState(() =>
+        Array.from({ length: N }, (_, i) => ({
+            id: i,
+            ox: (Math.random() - 0.5) * 200,
+            oy: 60 + Math.random() * 100,
+            delay: 0.25 + i * 0.09,
+        }))
+    )
+
+    const doneRef = useRef(false)
+    const cb = useCallback(onDone, [])
+    const countCb = useCallback(onCountUp, [])
+
+    useEffect(() => {
+        const el = targetRef.current
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        setTarget({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
+
+        // Primera estrella llega ~delay[0] + 0.88s después del inicio
+        const firstArrival = (0.25 + 0.88) * 1000
+        const last = 0.25 + (N - 1) * 0.09 + 0.95
+        const countDuration = last * 1000 - firstArrival  // tiempo desde primera hasta última
+
+        // Animar el contador desde `from` hasta `from + xp`
+        const countTimer = setTimeout(() => {
+            let startTs: number | null = null
+            let raf: number
+            const step = (ts: number) => {
+                if (!startTs) startTs = ts
+                const elapsed = ts - startTs
+                const progress = Math.min(elapsed / Math.max(countDuration, 600), 1)
+                countCb(Math.round(from + progress * xp))
+                if (progress < 1) raf = requestAnimationFrame(step)
+            }
+            raf = requestAnimationFrame(step)
+            return () => cancelAnimationFrame(raf)
+        }, firstArrival)
+
+        const doneTimer = setTimeout(() => {
+            if (!doneRef.current) { doneRef.current = true; cb() }
+        }, last * 1000 + 400)
+
+        return () => { clearTimeout(countTimer); clearTimeout(doneTimer) }
+    }, [])
+
+    if (!target) return null
+
+    const cx = typeof window !== 'undefined' ? window.innerWidth / 2 : 300
+    const cy = typeof window !== 'undefined' ? window.innerHeight * 0.54 : 400
+
+    return (
+        <div className="xp-fly-wrap" aria-hidden>
+            <motion.div
+                className="xp-fly-badge"
+                style={{ left: cx, top: cy }}
+                initial={{ opacity: 0, scale: 0.5, x: '-50%', y: '-50%' }}
+                animate={{ opacity: [0, 1, 1, 0], scale: [0.5, 1.2, 1.1, 0.7], y: ['-50%', '-75%', '-75%', '-75%'] }}
+                transition={{ duration: 0.95, delay: 0.05 }}
+            >
+                +{xp} XP ★
+            </motion.div>
+
+            {stars.map(s => {
+                const sx = cx + s.ox
+                const sy = cy + s.oy
+                return (
+                    <motion.span
+                        key={s.id}
+                        className="xp-fly-star"
+                        style={{ left: sx, top: sy }}
+                        initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                        animate={{
+                            x: target.x - sx,
+                            y: target.y - sy,
+                            scale: [0, 1.3, 0.7],
+                            opacity: [0, 1, 1, 0],
+                        }}
+                        transition={{ duration: 0.88, delay: s.delay, ease: [0.25, 0.1, 0.25, 1] }}
+                    >★</motion.span>
+                )
+            })}
+        </div>
+    )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Learning() {
     const navigate      = useNavigate()
     const { topicId }   = useParams<{ topicId: string }>()
-    const { profile }   = useAuth()
+    const { profile, refreshProfile } = useAuth()
     // El dashboard envía el nombre del módulo para mostrar su portada sin esperar al servidor
     const location      = useLocation()
     const nameHint      = (location.state as { topicName?: string } | null)?.topicName
@@ -52,7 +148,12 @@ export default function Learning() {
     const [viewport, setViewport] = useState({ width: 600, height: 530 })
     const viewportRef = useRef<HTMLDivElement>(null)
     const headerRef   = useRef<HTMLElement>(null)
+    const xpRef       = useRef<HTMLDivElement>(null)
     const [headerBottom, setHeaderBottom] = useState(100)
+    const [pendingXp,   setPendingXp]   = useState(0)
+    const [xpAnimDone,  setXpAnimDone]  = useState(false)
+    const [xpBefore,    setXpBefore]    = useState<number | null>(null)
+    const [xpDisplayed, setXpDisplayed] = useState<number | null>(null)
 
     // Tamaño del área visible (para limitar el arrastre), medido fuera del render
     useEffect(() => {
@@ -86,6 +187,22 @@ export default function Learning() {
     useEffect(() => {
         const t = setTimeout(() => setMinElapsed(true), COVER_MIN_MS)
         return () => clearTimeout(t)
+    }, [])
+
+    // Leer XP ganada al volver del quiz y refrescar perfil
+    useEffect(() => {
+        const stored = parseInt(sessionStorage.getItem('pendingXp') || '0')
+        if (stored > 0) {
+            sessionStorage.removeItem('pendingXp')
+            const currentXp = parseInt(localStorage.getItem('profile')
+                ? (JSON.parse(localStorage.getItem('profile')!).totalPoints ?? 0)
+                : 0)
+            setXpBefore(currentXp)
+            setXpDisplayed(currentXp)
+            setPendingXp(stored)
+            refreshProfile()
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const baseLessons = topic?.lessons ?? []
@@ -153,6 +270,7 @@ export default function Learning() {
             : 0
     const level        = profile?.currentLevel ?? 1
     const xp           = profile?.totalPoints  ?? 0
+    const xpShown      = xpDisplayed !== null ? xpDisplayed : xp
 
     return (
         <div className="learning-page" style={{ '--rt-hud': theme.hud, '--rt-hud-fg': theme.hudFg, '--rt-line': theme.line } as React.CSSProperties}>
@@ -174,19 +292,19 @@ export default function Learning() {
                     </div>
                 </div>
 
-                <div className="learning-xp">
+                <div ref={xpRef} className={`learning-xp${xpAnimDone ? ' learning-xp--pulse' : ''}`}>
                     <div className="learning-level-wrap">
                         <img src={progresoA} alt="" className="learning-level-img" />
                         <span className="learning-level-num">{level}</span>
                     </div>
-                    <span className="learning-xp-val">{xp} XP</span>
+                    <span className="learning-xp-val">{xpShown} XP</span>
                 </div>
 
                 <Logo className="dash-logo learning-logo" />
             </header>
 
             {/* ── Map viewport ── */}
-            <div ref={viewportRef} className={`map-viewport ${pz.dragging ? 'map-viewport--dragging' : ''}`} style={{ background: theme.bg }}>
+            <div ref={viewportRef} className={`map-viewport ${pz.dragging ? 'map-viewport--dragging' : ''}`} style={{ background: theme.bg, visibility: loading ? 'hidden' : 'visible' }}>
                 <div
                     className={`map-canvas ${pz.animating ? 'map-canvas--animating' : ''}`}
                     style={{
@@ -234,6 +352,17 @@ export default function Learning() {
             {/* Si se entra por enlace directo, aún no se sabe qué módulo es: carga genérica */}
             <LoadingScreen visible={loading && !moduleName} message="Cargando tu ruta…" />
 
+            {/* ── Animación XP ── */}
+            {pendingXp > 0 && !xpAnimDone && !loading && xpBefore !== null && (
+                <XpFlyIn
+                    xp={pendingXp}
+                    from={xpBefore}
+                    targetRef={xpRef}
+                    onCountUp={setXpDisplayed}
+                    onDone={() => { setXpAnimDone(true); setXpDisplayed(null) }}
+                />
+            )}
+
             {/* ── Lesson modal ── */}
             <AnimatePresence>
                 {selected && (() => {
@@ -246,14 +375,15 @@ export default function Learning() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
+                            transition={{ duration: 0.1 }}
                             onClick={() => setSelected(null)}
                         >
                             <motion.div
                                 className={`lesson-modal ${isVideo ? 'lesson-modal--video' : ''}`}
-                                initial={{ y: 24, opacity: 0, scale: 0.97 }}
+                                initial={{ y: 10, opacity: 0, scale: 0.98 }}
                                 animate={{ y: 0,  opacity: 1, scale: 1    }}
-                                exit={{ y: 16, opacity: 0, scale: 0.97 }}
-                                transition={{ type: 'spring', stiffness: 520, damping: 32 }}
+                                exit={{ y: 6, opacity: 0, scale: 0.98 }}
+                                transition={{ type: 'spring', stiffness: 900, damping: 40 }}
                                 onClick={e => e.stopPropagation()}
                             >
                                 <button className="lesson-modal-close" onClick={() => setSelected(null)}><FaTimes /></button>

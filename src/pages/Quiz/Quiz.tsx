@@ -382,6 +382,35 @@ function CountUp({ to, duration = 1.2, delay = 0 }: { to: number; duration?: num
     return <>{val}</>
 }
 
+// ── XP star burst (result screen) ─────────────────────────────────────────────
+function XpStarBurst({ active }: { active: boolean }) {
+    const [stars] = useState(() =>
+        Array.from({ length: 11 }, (_, i) => ({
+            id: i,
+            x:    (Math.random() - 0.5) * 150,
+            y:    -(90 + Math.random() * 190),
+            size: 13 + Math.floor(Math.random() * 11),
+            delay: 0.78 + i * 0.058 + Math.random() * 0.05,
+            dur:  0.82 + Math.random() * 0.38,
+        }))
+    )
+    if (!active) return null
+    return (
+        <div className="xp-burst-wrap" aria-hidden>
+            {stars.map(s => (
+                <motion.span
+                    key={s.id}
+                    className="xp-burst-star"
+                    style={{ fontSize: s.size }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0, 1.5, 0.9, 0], opacity: [0, 1, 0.85, 0] }}
+                    transition={{ duration: s.dur, delay: s.delay, ease: 'easeOut' }}
+                >★</motion.span>
+            ))}
+        </div>
+    )
+}
+
 // ── Result screen ──────────────────────────────────────────────────────────────
 function ResultScreen({ result, isFinal, onBack, onRetry }: {
     result: QuizCompleteResult | null
@@ -489,6 +518,7 @@ function ResultScreen({ result, isFinal, onBack, onRetry }: {
                 {/* XP */}
                 <motion.div
                     className="quiz-xp-block"
+                    style={{ position: 'relative', overflow: 'visible' }}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.7, type: 'spring', stiffness: 260, damping: 20 }}
@@ -498,6 +528,7 @@ function ResultScreen({ result, isFinal, onBack, onRetry }: {
                         <span className="quiz-xp-total-num">+<CountUp to={totalXp} duration={1.4} delay={0.8} /></span>
                         <span className="quiz-xp-total-lbl">XP ganada</span>
                     </div>
+                    <XpStarBurst active={totalXp > 0} />
                 </motion.div>
 
                 {/* Botones */}
@@ -680,7 +711,13 @@ export default function Quiz() {
             .finally(() => setLoading(false))
     }
 
-    if (screen === 'result') return <ResultScreen result={result} isFinal={isFinal} onBack={() => navigate(-1)} onRetry={handleRetry} />
+    const handleBack = () => {
+        const xp = result?.totalExperience ?? 0
+        if (xp > 0) sessionStorage.setItem('pendingXp', String(xp))
+        navigate(-1)
+    }
+
+    if (screen === 'result') return <ResultScreen result={result} isFinal={isFinal} onBack={handleBack} onRetry={handleRetry} />
 
     return (
         <>
