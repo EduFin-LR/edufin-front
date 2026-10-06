@@ -172,11 +172,13 @@ function DragDrop({
     const [placed, setPlaced] = useState<Record<string, string | null>>(
         () => Object.fromEntries(question.options.map(o => [o.id, null]))
     )
+    const [revealed, setRevealed] = useState(false)
     const zoneRefs     = useRef<Record<string, HTMLDivElement | null>>({})
     const containerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         setPlaced(Object.fromEntries(question.options.map(o => [o.id, null])))
+        setRevealed(false)
     }, [question.id])
 
     const unplaced = question.options.filter(o => placed[o.id] === null)
@@ -211,7 +213,6 @@ function DragDrop({
 
     const handleConfirm = () => {
         const timeTakenSec = Math.round((Date.now() - questionStartTime) / 1000)
-        // un attempt por cada opción colocada
         question.options.forEach(o => {
             if (placed[o.id] !== null) {
                 submitAttempt({
@@ -225,7 +226,14 @@ function DragDrop({
             }
         })
         const allCorrect = question.options.every(o => placed[o.id] === o.matchCategory)
+        setRevealed(true)
         onAnswer(allCorrect)
+    }
+
+    // helper: estado de una tarjeta ya colocada
+    const cardResult = (o: QuizOption): 'correct' | 'wrong' | null => {
+        if (!revealed) return null
+        return placed[o.id] === o.matchCategory ? 'correct' : 'wrong'
     }
 
     // color de zona por índice
@@ -276,20 +284,24 @@ function DragDrop({
                         <span className="dd-zone-title">{cat}</span>
                         <div className="dd-zone-items">
                             <AnimatePresence>
-                                {question.options.filter(o => placed[o.id] === cat).map(o => (
-                                    <motion.div
-                                        key={o.id}
-                                        className="dd-placed"
-                                        initial={{ scale: 0.8, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        exit={{ scale: 0.8, opacity: 0 }}
-                                        onClick={() => handleRemove(o.id)}
-                                    >
-                                        <span className="dd-drag-icon"><LuGripVertical /></span>
-                                        <span>{o.optionText}</span>
-                                        {!disabled && <span className="dd-remove"><LuX /></span>}
-                                    </motion.div>
-                                ))}
+                                {question.options.filter(o => placed[o.id] === cat).map(o => {
+                                    const res = cardResult(o)
+                                    return (
+                                        <motion.div
+                                            key={o.id}
+                                            className={`dd-placed${res ? ` dd-placed--${res}` : ''}`}
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            exit={{ scale: 0.8, opacity: 0 }}
+                                            onClick={() => handleRemove(o.id)}
+                                        >
+                                            <span className="dd-drag-icon"><LuGripVertical /></span>
+                                            <span>{o.optionText}</span>
+                                            {!disabled && <span className="dd-remove"><LuX /></span>}
+                                            {res && <span className="dd-result-icon">{res === 'correct' ? '✓' : '✗'}</span>}
+                                        </motion.div>
+                                    )
+                                })}
                             </AnimatePresence>
                         </div>
                     </div>
