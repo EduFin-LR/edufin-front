@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import confetti from 'canvas-confetti'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LuArrowLeft, LuLightbulb, LuChevronDown, LuBookOpen, LuTarget, LuArrowRight, LuGripVertical, LuX } from 'react-icons/lu'
 import {
@@ -490,9 +490,8 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
 export default function Quiz() {
     const { lessonId } = useParams<{ lessonId: string }>()
     const navigate     = useNavigate()
-    const [searchParams] = useSearchParams()
-    const lessonType = searchParams.get('type')
-    const topicId = searchParams.get('topicId')
+    const location     = useLocation()
+    const { lessonType, topicId } = (location.state ?? {}) as { lessonType?: string; topicId?: string }
     const isFinal = lessonType === 'FINAL'
 
     const [questions,  setQuestions]  = useState<QuizQuestion[]>([])

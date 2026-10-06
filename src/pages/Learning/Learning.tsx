@@ -250,10 +250,10 @@ export default function Learning() {
                         >
                             <motion.div
                                 className={`lesson-modal ${isVideo ? 'lesson-modal--video' : ''}`}
-                                initial={{ y: 80, opacity: 0, scale: 0.96 }}
+                                initial={{ y: 24, opacity: 0, scale: 0.97 }}
                                 animate={{ y: 0,  opacity: 1, scale: 1    }}
-                                exit={{ y: 80, opacity: 0, scale: 0.96 }}
-                                transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                                exit={{ y: 16, opacity: 0, scale: 0.97 }}
+                                transition={{ type: 'spring', stiffness: 520, damping: 32 }}
                                 onClick={e => e.stopPropagation()}
                             >
                                 <button className="lesson-modal-close" onClick={() => setSelected(null)}><FaTimes /></button>
@@ -308,15 +308,11 @@ export default function Learning() {
                                         if (isLocked) return
 
                                         if (selected.lessonType === 'FINAL') {
-                                            navigate(
-                                                `/quiz/final-${topicId}?type=FINAL&topicId=${topicId}`
-                                            )
+                                            navigate(`/quiz/final-${topicId}`, { state: { lessonType: 'FINAL', topicId } })
                                             return
                                         }
 
-                                        navigate(
-                                            `/quiz/${selected.id}?type=${selected.lessonType}`
-                                        )
+                                        navigate(`/quiz/${selected.id}`, { state: { lessonType: selected.lessonType } })
                                     }}
                                 >
                                     {isLocked                        ? '🔒 Bloqueada'
