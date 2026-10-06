@@ -174,12 +174,20 @@ function NodeShape({ theme, kind, status, p }: NodeProps) {
 function Label({ theme, kind, lines, x, y, anchor = 'middle', size = 15 }: {
     theme: RouteTheme; kind: Kind; lines: string[]; x: number; y: number; anchor?: 'start' | 'middle' | 'end'; size?: number
 }) {
-    return <g>
-        {TAG[kind] && <text x={x} y={y - 4} textAnchor={anchor} fill={theme.tag} fontFamily={MONO} fontSize="10" fontWeight="700" letterSpacing="1.4">{TAG[kind]}</text>}
-        <text x={x} y={y + 14} textAnchor={anchor} fill={theme.fg} fontFamily={theme.font ?? FONT} fontSize={theme.upper ? size - 3 : size} fontWeight="700">
-            {lines.map((l, i) => <tspan key={i} x={x} dy={i ? '1.2em' : 0}>{theme.upper ? l.toUpperCase() : l}</tspan>)}
+    // Reto: solo la palabra "RETO", sin título
+    if (kind === 'reto') {
+        return <text x={x} y={y + 10} textAnchor={anchor} fill={theme.tag} fontFamily={MONO} fontSize="11" fontWeight="700" letterSpacing="1.4">RETO</text>
+    }
+    // Final: solo el título en color dorado/acento, sin tag "CASO REAL"
+    if (kind === 'final') {
+        return <text x={x} y={y + 14} textAnchor={anchor} fill={theme.accent} fontFamily={theme.font ?? FONT} fontSize={size - 1} fontWeight="800">
+            {lines.map((l, i) => <tspan key={i} x={x} dy={i ? '1.2em' : 0}>{l}</tspan>)}
         </text>
-    </g>
+    }
+    // Lectura / video: solo el título, sin tag ni número de módulo
+    return <text x={x} y={y + 14} textAnchor={anchor} fill={theme.fg} fontFamily={theme.font ?? FONT} fontSize={theme.upper ? size - 3 : size} fontWeight="700">
+        {lines.map((l, i) => <tspan key={i} x={x} dy={i ? '1.2em' : 0}>{theme.upper ? l.toUpperCase() : l}</tspan>)}
+    </text>
 }
 
 // ── Mapa ──────────────────────────────────────────────────────────────────────
@@ -257,12 +265,20 @@ export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, o
                         {status === 'done' && <rect x={p.x - w / 2} y={p.y - h / 2} width={w} height={h} fill="url(#rt-hatch)" />}
                         {locked && !fin && <LockGlyph x={p.x + w / 2 - 12} y={p.y + h / 2 - 12} color={theme.muted} />}
                         <g>
-                            <text x={p.x} y={p.y - h / 2 + 16} textAnchor="middle" fill={kind === 'reto' || fin ? theme.tag : '#BFD6F5'} fontFamily={MONO} fontSize="10" fontWeight="700" letterSpacing="1.2">
-                                {(TAG[kind] || 'AMBIENTE') + ' · ' + String(i + 1).padStart(2, '0')}
-                            </text>
-                            <text x={p.x} y={p.y + (lines.length > 1 ? 4 : 12)} textAnchor="middle" fill={theme.fg} fontFamily={FONT} fontSize="13" fontWeight="700">
-                                {lines.map((l, k) => <tspan key={k} x={p.x} dy={k ? '1.2em' : 0}>{l}</tspan>)}
-                            </text>
+                            {kind === 'reto' ? (
+                                <text x={p.x} y={p.y + 6} textAnchor="middle" fill={theme.tag} fontFamily={MONO} fontSize="12" fontWeight="700" letterSpacing="1.4">RETO</text>
+                            ) : fin ? (
+                                <text x={p.x} y={p.y + (lines.length > 1 ? 4 : 12)} textAnchor="middle" fill={theme.accent} fontFamily={FONT} fontSize="14" fontWeight="800">
+                                    {lines.map((l, k) => <tspan key={k} x={p.x} dy={k ? '1.2em' : 0}>{l}</tspan>)}
+                                </text>
+                            ) : <>
+                                <text x={p.x} y={p.y - h / 2 + 16} textAnchor="middle" fill={'#BFD6F5'} fontFamily={MONO} fontSize="10" fontWeight="700" letterSpacing="1.2">
+                                    {TAG[kind] || 'LECCIÓN'}
+                                </text>
+                                <text x={p.x} y={p.y + (lines.length > 1 ? 4 : 12)} textAnchor="middle" fill={theme.fg} fontFamily={FONT} fontSize="13" fontWeight="700">
+                                    {lines.map((l, k) => <tspan key={k} x={p.x} dy={k ? '1.2em' : 0}>{l}</tspan>)}
+                                </text>
+                            </>}
                         </g>
                     </g>
                 } else {
@@ -274,7 +290,6 @@ export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, o
                     if (layout === 'trail') { lx = kind === 'final' ? p.x - 14 : p.x + 20; ly = kind === 'final' ? p.y - 58 : p.y + 24; anchor = kind === 'final' ? 'end' : 'start'; size = 13 }
                     label = <g>
                         <Label theme={theme} kind={kind} lines={lines} x={lx} y={ly} anchor={anchor} size={size} />
-                        {layout === 'arcs' && <text x={p.x} y={p.y + 34} textAnchor="middle" fill={theme.muted} fontFamily={MONO} fontSize="10" fontWeight="700">M{theme.moduleNum}·{String(i + 1).padStart(2, '0')}</text>}
                         {layout === 'chart' && <line x1={p.x} x2={p.x} y1={380} y2={386} stroke={theme.lock} />}
                     </g>
                 }
