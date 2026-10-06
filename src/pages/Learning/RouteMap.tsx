@@ -176,16 +176,16 @@ function Label({ theme, kind, lines, x, y, anchor = 'middle', size = 15 }: {
 }) {
     // Reto: solo la palabra "RETO", sin título
     if (kind === 'reto') {
-        return <text x={x} y={y + 10} textAnchor={anchor} fill={theme.tag} fontFamily={MONO} fontSize="11" fontWeight="700" letterSpacing="1.4">RETO</text>
+        return <text x={x} y={y + 4} textAnchor={anchor} fill={theme.tag} fontFamily={MONO} fontSize="11" fontWeight="700" letterSpacing="1.4">RETO</text>
     }
     // Final: solo el título en color dorado/acento, sin tag "CASO REAL"
     if (kind === 'final') {
-        return <text x={x} y={y + 14} textAnchor={anchor} fill={theme.accent} fontFamily={theme.font ?? FONT} fontSize={size - 1} fontWeight="800">
+        return <text x={x} y={y + 4} textAnchor={anchor} fill={theme.accent} fontFamily={theme.font ?? FONT} fontSize={size - 1} fontWeight="800">
             {lines.map((l, i) => <tspan key={i} x={x} dy={i ? '1.2em' : 0}>{l}</tspan>)}
         </text>
     }
     // Lectura / video: solo el título, sin tag ni número de módulo
-    return <text x={x} y={y + 14} textAnchor={anchor} fill={theme.fg} fontFamily={theme.font ?? FONT} fontSize={theme.upper ? size - 3 : size} fontWeight="700">
+    return <text x={x} y={y + 4} textAnchor={anchor} fill={theme.fg} fontFamily={theme.font ?? FONT} fontSize={theme.upper ? size - 3 : size} fontWeight="700">
         {lines.map((l, i) => <tspan key={i} x={x} dy={i ? '1.2em' : 0}>{theme.upper ? l.toUpperCase() : l}</tspan>)}
     </text>
 }
@@ -282,12 +282,12 @@ export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, o
                         </g>
                     </g>
                 } else {
-                    let lx = p.x, ly = p.y + 42, anchor: 'start' | 'middle' | 'end' = 'middle', size = 15
-                    if (layout === 'metro') ly = upper ? p.y - 62 : p.y + 42
-                    if (layout === 'arcs') { ly = p.y + 56; size = 14 }
-                    if (layout === 'constellation') { ly = p.y + 36; size = 15 }
+                    let lx = p.x, ly = p.y + 22, anchor: 'start' | 'middle' | 'end' = 'middle', size = 15
+                    if (layout === 'metro') ly = upper ? p.y - 38 : p.y + 22
+                    if (layout === 'arcs') { ly = p.y + 28; size = 14 }
+                    if (layout === 'constellation') { ly = p.y + 22; size = 15 }
                     if (layout === 'chart') { ly = 404; size = 13 }
-                    if (layout === 'trail') { lx = kind === 'final' ? p.x - 14 : p.x + 20; ly = kind === 'final' ? p.y - 58 : p.y + 24; anchor = kind === 'final' ? 'end' : 'start'; size = 13 }
+                    if (layout === 'trail') { lx = kind === 'final' ? p.x - 14 : p.x + 20; ly = kind === 'final' ? p.y - 36 : p.y + 18; anchor = kind === 'final' ? 'end' : 'start'; size = 13 }
                     label = <g>
                         <Label theme={theme} kind={kind} lines={lines} x={lx} y={ly} anchor={anchor} size={size} />
                         {layout === 'chart' && <line x1={p.x} x2={p.x} y1={380} y2={386} stroke={theme.lock} />}
