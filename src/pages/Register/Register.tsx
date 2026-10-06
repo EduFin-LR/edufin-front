@@ -120,8 +120,8 @@ export default function Register() {
                     </div>
 
                     <div className="auth-field-group">
-                        {field('username', 'Nombre de usuario', { type: 'text', placeholder: 'ana.torres', autoComplete: 'username' })}
-                        {field('email', 'Correo', { type: 'email', placeholder: 'ana.torres@upc.edu.pe', autoComplete: 'email' })}
+                        {field('username', 'Nombre de usuario', { type: 'text', placeholder: 'Mínimo 3 caracteres', autoComplete: 'username' })}
+                        {field('email', 'Correo', { type: 'email', placeholder: 'Tu correo electrónico', autoComplete: 'email' })}
 
                         <div className="auth-field">
                             <label htmlFor="reg-password">Contraseña</label>
@@ -148,7 +148,25 @@ export default function Register() {
                             {errors.password && <span className="auth-error">{errors.password}</span>}
                         </div>
 
-                        {field('confirmPassword', 'Repite la contraseña', { type: 'password', autoComplete: 'new-password' })}
+                        <div className="auth-field">
+                            <label htmlFor="reg-confirmPassword">Repite la contraseña</label>
+                            <input
+                                id="reg-confirmPassword"
+                                className={`input-field ${errors.confirmPassword ? 'input-field--error' : ''}`}
+                                type="password"
+                                name="confirmPassword"
+                                placeholder="Escribe tu contraseña de nuevo"
+                                value={form.confirmPassword}
+                                onChange={handleChange}
+                                onPaste={e => e.preventDefault()}
+                                onCopy={e => e.preventDefault()}
+                                onCut={e => e.preventDefault()}
+                                autoComplete="new-password"
+                                aria-invalid={!!errors.confirmPassword}
+                                aria-describedby={errors.confirmPassword ? 'reg-confirmPassword-err' : undefined}
+                            />
+                            {errors.confirmPassword && <span className="auth-error" id="reg-confirmPassword-err">{errors.confirmPassword}</span>}
+                        </div>
 
                         <div className="auth-field">
                             <span className="reg-label" id="reg-gender-label">Género</span>
