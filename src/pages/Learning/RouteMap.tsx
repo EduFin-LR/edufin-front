@@ -198,7 +198,7 @@ export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, o
     const donePath = pathThrough(layout, pts, lastReachedIdx, origin)
 
     return (
-        <svg className="rt-svg" viewBox={`0 0 ${width} ${MAP_HEIGHT}`} width={width} height={MAP_HEIGHT} overflow="visible" role="group" aria-label={`Ruta del módulo ${theme.moduleNum}`}>
+        <svg className="rt-svg" viewBox={`0 0 ${width} ${MAP_HEIGHT}`} width="100%" height="100%" overflow="visible" role="group" aria-label={`Ruta del módulo ${theme.moduleNum}`}>
             <defs>
                 <filter id="rt-glow" x="-80%" y="-80%" width="260%" height="260%">
                     <feGaussianBlur stdDeviation="3" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>

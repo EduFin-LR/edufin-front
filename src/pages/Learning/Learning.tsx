@@ -122,8 +122,8 @@ export default function Learning() {
     const theme   = themeForTopic(moduleName, topic?.category)
     const loading = !(minElapsed && (topic || loadFailed))
 
-    // índice del primer UNLOCKED (nodo actual)
-    const currentIdx = lessons.findIndex(l => l.status === 'UNLOCKED')
+    // índice del primer nodo que el usuario puede o está trabajando (no completado ni bloqueado)
+    const currentIdx = lessons.findIndex(l => l.status !== 'COMPLETED' && l.status !== 'LOCKED')
 
     // índice del último nodo desbloqueado (COMPLETED o primer UNLOCKED)
     const lastUnlockedIdx = Math.max(
@@ -190,9 +190,9 @@ export default function Learning() {
                 <div
                     className={`map-canvas ${pz.animating ? 'map-canvas--animating' : ''}`}
                     style={{
-                        width: canvasWidth,
-                        height: canvasHeight,
-                        transform: `translate3d(${pz.view.x}px, ${pz.view.y}px, 0) scale(${pz.view.s})`,
+                        width: canvasWidth * pz.view.s,
+                        height: canvasHeight * pz.view.s,
+                        transform: `translate3d(${pz.view.x}px, ${pz.view.y}px, 0)`,
                     }}
                 >
                     <RouteMap
