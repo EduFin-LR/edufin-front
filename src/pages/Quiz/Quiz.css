@@ -578,28 +578,81 @@
     gap: 4px;
 }
 
-.quiz-stat-num {
-    font-size: 28px;
-    font-weight: 900;
-}
-
+.quiz-stat-num { font-size: 28px; font-weight: 900; }
 .quiz-stat-correct { color: #22c55e; }
 .quiz-stat-wrong   { color: #ef4444; }
-
-.quiz-stat-xp {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
+.quiz-stat-xp { display: flex; align-items: center; gap: 4px; }
 .quiz-stat-xp-img { width: 28px; object-fit: contain; }
 .quiz-stat-xpnum  { color: var(--color-primary, #2db84f); }
+.quiz-stat-lbl { font-size: 12px; color: var(--color-text-muted); font-weight: 600; }
 
-.quiz-stat-lbl {
-    font-size: 12px;
-    color: var(--color-text-muted);
-    font-weight: 600;
+/* ── Barras correctas / incorrectas ──────────────────────────────────────── */
+.quiz-result-bars {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
+.qrb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.qrb-label {
+    font-size: 13px;
+    font-weight: 600;
+    width: 84px;
+    flex-shrink: 0;
+    text-align: right;
+}
+.qrb-label--ok  { color: #16a34a; }
+.qrb-label--bad { color: #dc2626; }
+.qrb-track {
+    flex: 1;
+    height: 10px;
+    background: var(--color-border, #e5e7eb);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.qrb-fill {
+    height: 100%;
+    border-radius: 999px;
+}
+.qrb-fill--ok  { background: #22c55e; }
+.qrb-fill--bad { background: #ef4444; }
+.qrb-count {
+    font-size: 15px;
+    font-weight: 800;
+    width: 24px;
+    flex-shrink: 0;
+}
+.qrb-count--ok  { color: #16a34a; }
+.qrb-count--bad { color: #dc2626; }
+
+/* ── Botones de acción en resultado ──────────────────────────────────────── */
+.quiz-result-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+.quiz-result-btn--retry {
+    background: #f59e0b !important;
+    border-color: #d97706 !important;
+}
+.quiz-result-btn--back {
+    background: transparent;
+    border: 1.5px solid var(--color-border);
+    color: var(--color-text-muted);
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 999px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.15s;
+}
+.quiz-result-btn--back:hover { background: var(--color-surface-2, rgba(0,0,0,0.04)); }
 
 /* ── XP block ─────────────────────────────────────────────────────────────── */
 .quiz-xp-block {

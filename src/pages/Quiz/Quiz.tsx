@@ -383,45 +383,51 @@ function CountUp({ to, duration = 1.2, delay = 0 }: { to: number; duration?: num
 }
 
 // ── Result screen ──────────────────────────────────────────────────────────────
-function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; onBack: () => void }) {
-    const pct      = result ? Math.round((result.correctAnswers / result.totalQuestions) * 100) : 0
-    const passed   = result?.passed ?? (pct >= 60)
+function ResultScreen({ result, isFinal, onBack, onRetry }: {
+    result: QuizCompleteResult | null
+    isFinal: boolean
+    onBack: () => void
+    onRetry: () => void
+}) {
+    const pct    = result ? Math.round((result.correctAnswers / result.totalQuestions) * 100) : 0
+    const passed = result?.passed ?? (pct >= 60)
+    const totalXp = result?.totalExperience ?? 0
 
     const fireConfetti = useCallback(() => {
         const burst = (origin: { x: number; y: number }, angle: number) =>
-            confetti({
-                particleCount: 80,
-                spread: 60,
-                angle,
-                origin,
-                colors: ['#2db84f', '#52d472', '#fbbf24', '#34d399', '#ffffff'],
-                shapes: ['star', 'circle'],
-                scalar: 1.1,
-            })
+            confetti({ particleCount: 80, spread: 60, angle, origin, colors: ['#2db84f', '#52d472', '#fbbf24', '#34d399', '#ffffff'], shapes: ['star', 'circle'], scalar: 1.1 })
         burst({ x: 0, y: 0.7 }, 60)
         burst({ x: 1, y: 0.7 }, 120)
-        setTimeout(() => {
-            burst({ x: 0.1, y: 0.5 }, 70)
-            burst({ x: 0.9, y: 0.5 }, 110)
-        }, 350)
+        setTimeout(() => { burst({ x: 0.1, y: 0.5 }, 70); burst({ x: 0.9, y: 0.5 }, 110) }, 350)
     }, [])
 
     useEffect(() => {
-        if (passed) {
-            const t = setTimeout(fireConfetti, 500)
-            return () => clearTimeout(t)
-        }
+        if (passed) { const t = setTimeout(fireConfetti, 500); return () => clearTimeout(t) }
     }, [passed, fireConfetti])
-    const totalXp  = result?.totalExperience ?? 0
+
+    const cor = result?.correctAnswers ?? 0
+    const inc = result?.incorrectAnswers ?? 0
+    const tot = result?.totalQuestions ?? 1
+
+    const title = isFinal && passed
+        ? '¡Felicidades! Módulo completado'
+        : passed
+            ? '¡Lección completada!'
+            : '¡Buen intento!'
+
+    const subtitle = isFinal && passed
+        ? 'Aprobaste la evaluación final'
+        : passed
+            ? 'Aquí está tu resultado'
+            : 'Sigue practicando para pasar'
 
     return (
         <div className="quiz-result-page">
             <Logo className="quiz-result-logo" />
 
-            {/* Robot feliz */}
             <motion.img
-                src={robotFeliz}
-                alt="robot feliz"
+                src={passed ? robotFeliz : robotIncorrecto}
+                alt={passed ? 'robot feliz' : 'robot triste'}
                 className="quiz-result-robot"
                 initial={{ scale: 0.3, opacity: 0, y: 30 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -434,10 +440,8 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, delay: 0.2 }}
             >
-                <h1 className="quiz-result-title">
-                    {passed ? '¡Lección completada!' : '¡Buen intento!'}
-                </h1>
-                <p className="quiz-result-sub">Aquí está tu resultado</p>
+                <h1 className="quiz-result-title">{title}</h1>
+                <p className="quiz-result-sub">{subtitle}</p>
 
                 {/* Score circle */}
                 <div className="quiz-result-circle">
@@ -445,7 +449,7 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
                         <circle cx="50" cy="50" r="44" fill="none" style={{ stroke: 'var(--color-track)' }} strokeWidth="10"/>
                         <motion.circle
                             cx="50" cy="50" r="44" fill="none"
-                            stroke={pct >= 60 ? '#2db84f' : '#f59e0b'}
+                            stroke={passed ? '#2db84f' : '#f59e0b'}
                             strokeWidth="10" strokeLinecap="round"
                             transform="rotate(-90 50 50)"
                             initial={{ strokeDasharray: '0 276' }}
@@ -453,28 +457,36 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
                             transition={{ duration: 1.1, ease: 'easeOut', delay: 0.4 }}
                         />
                     </svg>
-                    <span className="quiz-result-pct" style={{ color: pct >= 60 ? '#2db84f' : '#f59e0b' }}>
-                        {pct}%
-                    </span>
+                    <span className="quiz-result-pct" style={{ color: passed ? '#2db84f' : '#f59e0b' }}>{pct}%</span>
                 </div>
 
-                {/* Correct / Incorrect */}
-                <div className="quiz-result-stats">
-                    <motion.div className="quiz-stat" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.5 }}>
-                        <span className="quiz-stat-num quiz-stat-correct">
-                            <CountUp to={result?.correctAnswers ?? 0} delay={0.5} />
-                        </span>
-                        <span className="quiz-stat-lbl">Correctas</span>
-                    </motion.div>
-                    <motion.div className="quiz-stat" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.6 }}>
-                        <span className="quiz-stat-num quiz-stat-wrong">
-                            <CountUp to={result?.incorrectAnswers ?? 0} delay={0.6} />
-                        </span>
-                        <span className="quiz-stat-lbl">Incorrectas</span>
-                    </motion.div>
-                </div>
+                {/* Barras correctas / incorrectas */}
+                <motion.div className="quiz-result-bars" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.5 }}>
+                    <div className="qrb-row">
+                        <span className="qrb-label qrb-label--ok">Correctas</span>
+                        <div className="qrb-track">
+                            <motion.div className="qrb-fill qrb-fill--ok"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(cor / tot) * 100}%` }}
+                                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.55 }}
+                            />
+                        </div>
+                        <span className="qrb-count qrb-count--ok"><CountUp to={cor} delay={0.55} /></span>
+                    </div>
+                    <div className="qrb-row">
+                        <span className="qrb-label qrb-label--bad">Incorrectas</span>
+                        <div className="qrb-track">
+                            <motion.div className="qrb-fill qrb-fill--bad"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(inc / tot) * 100}%` }}
+                                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.65 }}
+                            />
+                        </div>
+                        <span className="qrb-count qrb-count--bad"><CountUp to={inc} delay={0.65} /></span>
+                    </div>
+                </motion.div>
 
-                {/* XP breakdown */}
+                {/* XP */}
                 <motion.div
                     className="quiz-xp-block"
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -483,16 +495,26 @@ function ResultScreen({ result, onBack }: { result: QuizCompleteResult | null; o
                 >
                     <div className="quiz-xp-total">
                         <img src={progresoA} alt="xp" className="quiz-xp-icon" />
-                        <span className="quiz-xp-total-num">
-                            +<CountUp to={totalXp} duration={1.4} delay={0.8} />
-                        </span>
+                        <span className="quiz-xp-total-num">+<CountUp to={totalXp} duration={1.4} delay={0.8} /></span>
                         <span className="quiz-xp-total-lbl">XP ganada</span>
                     </div>
                 </motion.div>
 
-                <button className="btn btn-primary quiz-result-btn" onClick={onBack}>
-                    Volver a la ruta
-                </button>
+                {/* Botones */}
+                <div className="quiz-result-actions">
+                    {passed ? (
+                        <button className="btn btn-primary quiz-result-btn" onClick={onBack}>
+                            {isFinal ? 'Continuar' : 'Siguiente nivel →'}
+                        </button>
+                    ) : (
+                        <button className="btn btn-primary quiz-result-btn quiz-result-btn--retry" onClick={onRetry}>
+                            Reintentar
+                        </button>
+                    )}
+                    <button className="btn quiz-result-btn quiz-result-btn--back" onClick={onBack}>
+                        Volver a la ruta
+                    </button>
+                </div>
             </motion.div>
         </div>
     )
@@ -632,7 +654,33 @@ export default function Quiz() {
 
     const pct = questions.length > 0 ? Math.round((current / questions.length) * 100) : 0
 
-    if (screen === 'result') return <ResultScreen result={result} onBack={() => navigate(-1)} />
+    const handleRetry = () => {
+        setScreen('quiz')
+        setCurrent(0)
+        setFeedback(null)
+        setCorrect(0)
+        setResult(null)
+        setQuestions([])
+        setLoading(true)
+        // re-fetch questions
+        if (!lessonId) return
+        if (isFinal) {
+            if (!topicId) { setLoading(false); return }
+            getDynamicFinalQuestions(topicId)
+                .then(r => { setQuestions(r.data); startTime.current = Date.now(); questionStartAt.current = Date.now() })
+                .catch(() => {})
+                .finally(() => setLoading(false))
+            return
+        }
+        const req = lessonType === 'QUIZ' ? getAdaptiveQuizQuestions(lessonId) : getLessonQuestions(lessonId)
+        startLesson(lessonId)
+            .then(() => req)
+            .then(r => { setQuestions(r.data); startTime.current = Date.now(); questionStartAt.current = Date.now() })
+            .catch(() => {})
+            .finally(() => setLoading(false))
+    }
+
+    if (screen === 'result') return <ResultScreen result={result} isFinal={isFinal} onBack={() => navigate(-1)} onRetry={handleRetry} />
 
     return (
         <>
