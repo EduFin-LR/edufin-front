@@ -66,13 +66,14 @@ export default function Register() {
         return Object.keys(next).length === 0
     }
 
-    // Paso 0 → 1: crear cuenta
+    // Paso 0 → 1: crear cuenta y enviar código de verificación al correo
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!validate()) return
         setLoading(true)
         try {
             await signUp({ username: form.username.trim(), email: form.email.trim(), password: form.password, gender })
+            await resendVerification(form.email.trim())
             setStep(1)
         } catch (err) {
             const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) || 'Error al registrarse. Intenta de nuevo.'
