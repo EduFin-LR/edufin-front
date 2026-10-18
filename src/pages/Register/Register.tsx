@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isAxiosError } from 'axios'
 import AuthLayout from '../../layouts/AuthLayout/AuthLayout'
-import { signUp } from '../../services/authService'
+import { signUp, forgotPassword } from '../../services/authService'
 import type { Gender, DashboardLearningPath } from '../../types/auth'
 import { ToastContainer } from '../../components/Toast/Toast'
 import type { ToastType } from '../../components/Toast/Toast'
@@ -70,6 +70,7 @@ export default function Register() {
         setLoading(true)
         try {
             await signUp({ username: form.username.trim(), email: form.email.trim(), password: form.password, gender })
+            await forgotPassword(form.email.trim())
             setStep(1)
         } catch (err) {
             const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) || 'Error al registrarse. Intenta de nuevo.'
