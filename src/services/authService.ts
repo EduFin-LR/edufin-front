@@ -16,3 +16,11 @@ export const forgotPassword = (email: string) =>
 // POST /iam/auth/reset-password
 export const resetPassword = (email: string, code: string, newPassword: string) =>
     api.post('/iam/auth/reset-password', { email, code, newPassword })
+
+// POST /iam/auth/verify-email
+export const verifyEmail = (email: string, code: string) =>
+    api.post('/iam/auth/verify-email', { email, code })
+
+// POST /iam/auth/resend-verification
+export const resendVerification = (email: string) =>
+    api.post('/iam/auth/resend-verification', { email })
