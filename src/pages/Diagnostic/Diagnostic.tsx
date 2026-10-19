@@ -136,7 +136,7 @@ export default function Diagnostic() {
                     </p>
                     <ul className="diag-info-list">
                         <li><span className="diag-icon">📋</span> {total} preguntas</li>
-                        <li><span className="diag-icon">🕐</span> Aprox. 7 minutos</li>
+                        <li><span className="diag-icon">🕐</span> Aprox. 10 minutos</li>
                         <li><span className="diag-icon">🎯</span> Selecciona “No lo sé” si no estás seguro</li>
                     </ul>
 
