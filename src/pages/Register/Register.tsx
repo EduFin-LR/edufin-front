@@ -75,8 +75,10 @@ export default function Register() {
             await signUp({ username: form.username.trim(), email: form.email.trim(), password: form.password, gender })
             setStep(1)
         } catch (err) {
-            // Si la cuenta ya existe pero no está verificada, ir directo a verificar
-            if (isAxiosError(err) && err.response?.status === 409) {
+            // Si el correo ya está registrado (400), ir directo a verificar
+            const errMsg = isAxiosError<{ message?: string }>(err) && err.response?.data?.message || ''
+            if (isAxiosError(err) && (err.response?.status === 409 ||
+                (err.response?.status === 400 && errMsg.toLowerCase().includes('registrado')))) {
                 await resendVerification(form.email.trim()).catch(() => {})
                 setStep(1)
                 return
@@ -153,15 +155,15 @@ export default function Register() {
             {/* Indicador de pasos */}
             <ol className="reg-steps" aria-label="Pasos del registro">
                 <li className={step === 0 ? 'on' : 'done'} aria-current={step === 0 ? 'step' : undefined}>
-                    <i>{step === 0 ? 1 : '✓'}</i><span>Tu cuenta</span>
+                    <i>{step === 0 ? '1' : '✓'}</i><span className="reg-step-label">Cuenta</span>
                 </li>
                 <li className={`reg-steps-bar ${step >= 1 ? 'done' : ''}`} aria-hidden="true" />
                 <li className={step === 1 ? 'on' : step === 2 ? 'done' : ''} aria-current={step === 1 ? 'step' : undefined}>
-                    <i>{step < 2 ? 2 : '✓'}</i><span>Verificar</span>
+                    <i>{step < 2 ? '2' : '✓'}</i><span className="reg-step-label">Verificar</span>
                 </li>
                 <li className={`reg-steps-bar ${step === 2 ? 'done' : ''}`} aria-hidden="true" />
                 <li className={step === 2 ? 'on' : ''} aria-current={step === 2 ? 'step' : undefined}>
-                    <i>3</i><span>Tu ruta</span>
+                    <i>3</i><span className="reg-step-label">Tu ruta</span>
                 </li>
             </ol>
 
