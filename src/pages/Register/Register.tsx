@@ -75,11 +75,29 @@ export default function Register() {
             await signUp({ username: form.username.trim(), email: form.email.trim(), password: form.password, gender })
             setStep(1)
         } catch (err) {
+            // Si la cuenta ya existe pero no está verificada, ir directo a verificar
+            if (isAxiosError(err) && err.response?.status === 409) {
+                await resendVerification(form.email.trim()).catch(() => {})
+                setStep(1)
+                return
+            }
             const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) || 'Error al registrarse. Intenta de nuevo.'
             setToast({ message: msg, type: 'error' })
         } finally {
             setLoading(false)
         }
+    }
+
+    // Ir directo al paso de verificación (cuenta ya creada, falta verificar)
+    const handleGoToVerify = async () => {
+        if (!form.email.trim() || !/^\S+@\S+\.\S+$/.test(form.email)) {
+            setErrors(prev => ({ ...prev, email: 'Escribe tu correo para reenviar el código.' }))
+            return
+        }
+        setLoading(true)
+        await resendVerification(form.email.trim()).catch(() => {})
+        setLoading(false)
+        setStep(1)
     }
 
     // Paso 1 → 2: verificar código
@@ -230,6 +248,10 @@ export default function Register() {
                     <p className="auth-switch">
                         ¿Ya tienes cuenta?{' '}
                         <button type="button" className="link-text" onClick={() => navigate('/')}>Inicia sesión</button>
+                    </p>
+                    <p className="auth-switch">
+                        ¿Ya te registraste pero no verificaste?{' '}
+                        <button type="button" className="link-text" onClick={handleGoToVerify}>Verificar correo</button>
                     </p>
                 </form>
             )}
