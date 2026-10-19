@@ -81,6 +81,7 @@
     line-height: 1.35;
     margin: 8px 0 20px;
     text-wrap: balance;
+    white-space: pre-line;
 }
 
 .quiz-hint {
