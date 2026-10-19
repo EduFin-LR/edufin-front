@@ -66,30 +66,29 @@ export default function Register() {
         return Object.keys(next).length === 0
     }
 
-    // Paso 0 → 1: enviar código de verificación al correo (aún no se crea la cuenta)
+    // Paso 0 → 1: crear cuenta (el backend envía el código automáticamente)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!validate()) return
         setLoading(true)
         try {
-            await resendVerification(form.email.trim())
+            await signUp({ username: form.username.trim(), email: form.email.trim(), password: form.password, gender })
             setStep(1)
         } catch (err) {
-            const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) || 'No se pudo enviar el código. Intenta de nuevo.'
+            const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) || 'Error al registrarse. Intenta de nuevo.'
             setToast({ message: msg, type: 'error' })
         } finally {
             setLoading(false)
         }
     }
 
-    // Paso 1 → 2: verificar código y recién crear la cuenta
+    // Paso 1 → 2: verificar código
     const handleVerify = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!code.trim()) { setCodeError('Ingresa el código que te enviamos.'); return }
         setLoading(true)
         try {
             await verifyEmail(form.email.trim(), code.trim())
-            await signUp({ username: form.username.trim(), email: form.email.trim(), password: form.password, gender })
             setStep(2)
         } catch (err) {
             const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) || 'Código incorrecto o expirado.'
@@ -130,7 +129,7 @@ export default function Register() {
 
     return (
         <AuthLayout>
-            <LoadingScreen visible={loading} message={step === 0 ? 'Enviando código…' : 'Creando cuenta…'} />
+            <LoadingScreen visible={loading} message={step === 0 ? 'Creando cuenta…' : 'Verificando…'} />
             <ToastContainer toast={toast} onClose={() => setToast(null)} />
 
             {/* Indicador de pasos */}
