@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from 'react'
 import type { Lesson } from '../../services/learningService'
 import type { RouteTheme } from './routeThemes'
-import { MAP_HEIGHT, positions, pathThrough, routeWidth, seeded, splitTitle, type Pt } from './routeLayout'
+import { mapSize, positions, pathThrough, seeded, splitTitle, starsPoint, V_LABEL_X, type Pt } from './routeLayout'
 import robotFeliz from '../../assets/images/robotFeliz.png'
 import { MAX_STARS } from '../../utils/stars'
 
@@ -15,8 +15,8 @@ const MONO = '"JetBrains Mono", Consolas, monospace'
 // El fondo se dibuja mucho más allá del área de la ruta (el SVG tiene overflow visible),
 // así al moverse o alejarse el fondo es uniforme en toda la pantalla.
 const EXT = 4000
-function Backdrop({ theme, width }: { theme: RouteTheme; width: number }) {
-    const box = { x: -EXT, y: -EXT, width: width + EXT * 2, height: MAP_HEIGHT + EXT * 2 }
+function Backdrop({ theme, width, height }: { theme: RouteTheme; width: number; height: number }) {
+    const box = { x: -EXT, y: -EXT, width: width + EXT * 2, height: height + EXT * 2 }
     const rnd = seeded(theme.moduleNum * 13)
     const base = <rect {...box} fill={theme.bg} />
     switch (theme.key) {
@@ -34,7 +34,7 @@ function Backdrop({ theme, width }: { theme: RouteTheme; width: number }) {
                     </pattern>
                 </defs>
                 {base}<rect {...box} fill="url(#rt-traces)" />
-                <text x="24" y={MAP_HEIGHT - 16} fill="#3F7A5A" fontFamily={MONO} fontSize="11" letterSpacing="2">EDUFIN · REV 1.0 · M0{theme.moduleNum}</text>
+                <text x="24" y={height - 16} fill="#3F7A5A" fontFamily={MONO} fontSize="11" letterSpacing="2">EDUFIN · REV 1.0 · M0{theme.moduleNum}</text>
             </>
         case 'flight':
             return <>
@@ -66,7 +66,7 @@ function Backdrop({ theme, width }: { theme: RouteTheme; width: number }) {
                 {base}<rect {...box} fill="url(#rt-starfield)" />
                 {/* algunas estrellas titilan cerca de la ruta */}
                 {Array.from({ length: 14 }, (_, k) => (
-                    <circle key={k} cx={rnd() * width} cy={rnd() * MAP_HEIGHT} r="1.3" fill="#FFFFFF" className="rt-twinkle" />
+                    <circle key={k} cx={rnd() * width} cy={rnd() * height} r="1.3" fill="#FFFFFF" className="rt-twinkle" />
                 ))}
             </>
         case 'summit': {
@@ -75,10 +75,10 @@ function Backdrop({ theme, width }: { theme: RouteTheme; width: number }) {
             return <>
                 <defs>
                     {/* degradado en coordenadas del mapa: arriba y abajo se extiende el color del borde */}
-                    <linearGradient id="rt-sky" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="0" y2={MAP_HEIGHT}><stop offset="0" stopColor="#2D3A6B" /><stop offset="1" stopColor="#8E5C86" /></linearGradient>
+                    <linearGradient id="rt-sky" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="0" y2={height}><stop offset="0" stopColor="#2D3A6B" /><stop offset="1" stopColor="#8E5C86" /></linearGradient>
                 </defs>
                 <rect {...box} fill="url(#rt-sky)" />
-                <path d={`${ridge(0)} V${MAP_HEIGHT + EXT} H${-EXT}Z`} fill="#3B3A72" />
+                <path d={`${ridge(0)} V${height + EXT} H${-EXT}Z`} fill="#3B3A72" />
                 {[1, 2, 3, 4].map(k => <path key={k} d={ridge(k)} fill="none" stroke="#4C4A8A" strokeWidth="1.2" />)}
             </>
         }
@@ -228,30 +228,31 @@ function Label({ theme, kind, lines, x, y, anchor = 'middle', size = 15 }: {
 }
 
 // ── Mapa ──────────────────────────────────────────────────────────────────────
-export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, onSelect, celebrate }: {
+export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, onSelect, celebrate, vertical = false }: {
     theme: RouteTheme
     lessons: Lesson[]
     currentIdx: number
     lastReachedIdx: number
     onSelect: (l: Lesson) => void
     celebrate?: StarCelebration | null
+    vertical?: boolean   // celular: la ruta baja en vez de ir a la derecha
 }) {
     const { layout } = theme
-    const pts   = useMemo(() => positions(layout, lessons.length), [layout, lessons.length])
-    const width = routeWidth(layout, lessons.length)
+    const pts   = useMemo(() => positions(layout, lessons.length, vertical), [layout, lessons.length, vertical])
+    const { w: width, h: height } = mapSize(layout, lessons.length, vertical)
     const origin = layout === 'chart' && pts.length ? { x: pts[0].x - 70, y: 380 } : undefined
-    const fullPath = pathThrough(layout, pts, pts.length - 1, origin)
-    const donePath = pathThrough(layout, pts, lastReachedIdx, origin)
+    const fullPath = pathThrough(layout, pts, pts.length - 1, origin, vertical)
+    const donePath = pathThrough(layout, pts, lastReachedIdx, origin, vertical)
 
     return (
-        <svg className="rt-svg" viewBox={`0 0 ${width} ${MAP_HEIGHT}`} width="100%" height="100%" overflow="visible" role="group" aria-label={`Ruta del módulo ${theme.moduleNum}`}>
+        <svg className="rt-svg" viewBox={`0 0 ${width} ${height}`} width="100%" height="100%" overflow="visible" role="group" aria-label={`Ruta del módulo ${theme.moduleNum}`}>
             <defs>
                 <filter id="rt-glow" x="-80%" y="-80%" width="260%" height="260%">
                     <feGaussianBlur stdDeviation="3" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
                 </filter>
                 <linearGradient id="rt-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#3A9E52" stopOpacity="0.28" /><stop offset="1" stopColor="#3A9E52" stopOpacity="0" /></linearGradient>
             </defs>
-            <Backdrop theme={theme} width={width} />
+            <Backdrop theme={theme} width={width} height={height} />
 
             {/* Meta del gráfico de mercado */}
             {layout === 'chart' && pts.length > 0 && <>
@@ -326,19 +327,23 @@ export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, o
                     if (layout === 'constellation') { ly = p.y + 22; size = 15 }
                     if (layout === 'chart') { ly = 404; size = 13 }
                     if (layout === 'trail') { lx = kind === 'final' ? p.x - 14 : p.x + 20; ly = kind === 'final' ? p.y - 36 : p.y + 18; anchor = kind === 'final' ? 'end' : 'start'; size = 13 }
+                    // Vertical: en metro y constelación los nombres forman una columna a la derecha del camino
+                    if (vertical && (layout === 'metro' || layout === 'constellation')) {
+                        lx = V_LABEL_X; ly = p.y + 1 - (lines.length - 1) * 9; anchor = 'start'; size = layout === 'metro' ? 15 : 14
+                    }
                     label = <g>
                         <Label theme={theme} kind={kind} lines={lines} x={lx} y={ly} anchor={anchor} size={size} />
                         {layout === 'chart' && <line x1={p.x} x2={p.x} y1={380} y2={386} stroke={theme.lock} />}
                     </g>
                 }
 
-                // Estrellas del reto: arriba del nodo (o abajo si la etiqueta va arriba, en el metro)
+                // Estrellas del reto: donde no choquen con la etiqueta ni el camino
                 let starsEl: ReactNode = null
                 if (kind === 'reto' && !locked) {
-                    const sy = layout === 'rooms' ? p.y - 20 : layout === 'metro' && upper ? p.y + 31 : p.y - 30
+                    const sp = starsPoint(layout, p, vertical)
                     const cel = celebrate?.lessonId === lesson.id ? celebrate : null
                     const stars = Math.min(MAX_STARS, Math.max(0, lesson.stars ?? 0))
-                    starsEl = <NodeStars theme={theme} x={p.x} y={sy} stars={stars} from={cel ? Math.min(cel.from, stars) : stars} active={!!cel?.active} />
+                    starsEl = <NodeStars theme={theme} x={sp.x} y={sp.y} stars={stars} from={cel ? Math.min(cel.from, stars) : stars} active={!!cel?.active} />
                 }
 
                 return (
@@ -358,14 +363,18 @@ export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, o
             })}
 
             {/* El robot marca dónde estás */}
-            {currentIdx >= 0 && pts[currentIdx] && (
-                <g className="rt-bob" pointerEvents="none">
-                    <image href={robotFeliz}
-                        x={pts[currentIdx].x - (layout === 'rooms' ? 113 : 86)}
-                        y={pts[currentIdx].y - (layout === 'rooms' ? 46 : 50)}
-                        width={layout === 'rooms' ? 48 : 58} height={layout === 'rooms' ? 48 : 58} />
+            {currentIdx >= 0 && pts[currentIdx] && (() => {
+                const p = pts[currentIdx]
+                const size = layout === 'rooms' ? 48 : 58
+                // En el plano vertical va al costado libre de la sala (hacia el centro)
+                const x = layout === 'rooms'
+                    ? (vertical ? (p.x < width / 2 ? p.x + 74 : p.x - 74 - size) : p.x - 113)
+                    : p.x - (vertical ? 70 : 86)
+                const y = layout === 'rooms' ? p.y - (vertical ? size / 2 : 46) : p.y - 50
+                return <g className="rt-bob" pointerEvents="none">
+                    <image href={robotFeliz} x={x} y={y} width={size} height={size} />
                 </g>
-            )}
+            })()}
         </svg>
     )
 }

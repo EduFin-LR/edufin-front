@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isAxiosError } from 'axios'
+import { FaCheck, FaArrowRight } from 'react-icons/fa'
 import AuthLayout from '../../layouts/AuthLayout/AuthLayout'
 import { signUp, verifyEmail, resendVerification } from '../../services/authService'
 import type { Gender, DashboardLearningPath } from '../../types/auth'
@@ -155,11 +156,11 @@ export default function Register() {
             {/* Indicador de pasos */}
             <ol className="reg-steps" aria-label="Pasos del registro">
                 <li className={step === 0 ? 'on' : 'done'} aria-current={step === 0 ? 'step' : undefined}>
-                    <i>{step === 0 ? '1' : '✓'}</i><span className="reg-step-label">Cuenta</span>
+                    <i>{step === 0 ? '1' : <FaCheck />}</i><span className="reg-step-label">Cuenta</span>
                 </li>
                 <li className={`reg-steps-bar ${step >= 1 ? 'done' : ''}`} aria-hidden="true" />
                 <li className={step === 1 ? 'on' : step === 2 ? 'done' : ''} aria-current={step === 1 ? 'step' : undefined}>
-                    <i>{step < 2 ? '2' : '✓'}</i><span className="reg-step-label">Verificar</span>
+                    <i>{step < 2 ? '2' : <FaCheck />}</i><span className="reg-step-label">Verificar</span>
                 </li>
                 <li className={`reg-steps-bar ${step === 2 ? 'done' : ''}`} aria-hidden="true" />
                 <li className={step === 2 ? 'on' : ''} aria-current={step === 2 ? 'step' : undefined}>
@@ -312,7 +313,7 @@ export default function Register() {
                         <CourseMetro modules={PREVIEW} selectedId={null} onSelect={() => {}} />
                     </div>
                     <button type="button" className="btn btn-primary auth-submit" onClick={() => navigate('/')}>
-                        Iniciar sesión →
+                        Iniciar sesión <FaArrowRight className="ic" />
                     </button>
                 </div>
             )}

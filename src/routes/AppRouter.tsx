@@ -74,6 +74,9 @@ export default function AppRouter() {
                 <Route path="/quiz/:lessonId" element={<PrivateRoute><Quiz /></PrivateRoute>} />
                 <Route path="/ranking"   element={<PrivateRoute><Ranking /></PrivateRoute>} />
                 <Route path="/profile"   element={<PrivateRoute><Profile /></PrivateRoute>} />
+
+                {/* Ruta desconocida: con sesión al dashboard (o al diagnóstico), sin sesión al login */}
+                <Route path="*" element={<PublicRoute><Navigate to="/" replace /></PublicRoute>} />
             </Routes>
         </BrowserRouter>
     )

@@ -5,131 +5,319 @@
     width: 100%;
 }
 
-/* ── Body: avatar + info side by side ───────────── */
-.profile-body {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xl);
-    background: var(--color-surface);
+/* ── Insignia de nivel (imagen + número) ────────── */
+.pf-badge {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+}
+/* fija al cuadro: en el grid la imagen tomaba su alto natural y bajaba la estrella */
+.pf-badge img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.pf-badge span {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    /* el centro de la estrella de la insignia está al 49% de alto */
+    padding-bottom: 2%;
+    font-size: 13px;
+    font-weight: 900;
+    color: #000000;
+    line-height: 1;
+}
+
+/* ── Portada ─────────────────────────────────────── */
+.pf-hero {
+    position: relative;
     border-radius: var(--radius-xl);
-    padding: var(--space-xl);
-    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    background: var(--color-surface);
     border: 1.5px solid var(--color-border);
 }
-
-/* ── Avatar ─────────────────────────────────────── */
-.profile-avatar-wrap {
-    flex-shrink: 0;
-    width: 260px;
-    height: 260px;
-    border-radius: var(--radius-full);
-    background: var(--color-surface-2);
-    overflow: hidden;
+.pf-cover {
+    height: 120px;
+    background:
+        radial-gradient(circle, rgba(255, 255, 255, 0.14) 1.5px, transparent 2.5px) 0 0 / 22px 22px,
+        radial-gradient(120% 140% at 85% 0%, #4CC46B 0%, transparent 55%),
+        linear-gradient(120deg, #1F6B38 0%, #2F9E4F 55%, #1A4D2C 100%);
+}
+.pf-hero-body {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-end;
+    gap: var(--space-lg);
+    padding: 0 var(--space-xl) var(--space-lg);
+    margin-top: -56px;
 }
-
-.profile-avatar {
-    width: 100%;
-    height: 100%;
+.pf-avatar-wrap { position: relative; flex-shrink: 0; }
+.pf-avatar {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
     object-fit: cover;
+    display: block;
+    background: var(--color-surface-2);
+    border: 5px solid var(--color-surface);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
+.pf-avatar-badge {
+    position: absolute;
+    right: -2px;
+    bottom: 2px;
+    width: 46px;
+    height: 46px;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+}
+.pf-avatar-badge span { font-size: 15px; }
 
-/* ── Info ────────────────────────────────────────── */
-.profile-info {
-    flex: 1;
+.pf-identity {
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: 6px;
+    min-width: 0;
+    /* el texto empieza debajo de la franja de color, no encima */
+    padding: 68px 0 4px;
 }
-
-.profile-name {
+.pf-name {
     margin: 0;
-    font-size: clamp(24px, 3vw, 36px);
+    font-size: clamp(22px, 3vw, 30px);
     font-weight: 900;
     color: var(--color-text);
+    line-height: 1.15;
 }
-
-.profile-joined {
-    margin: -12px 0 0;
-    font-size: var(--font-size-base);
+.pf-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: var(--font-size-sm);
     color: var(--color-text-muted);
 }
-
-/* ── Stats ───────────────────────────────────────── */
-.profile-stats {
-    display: flex;
+.pf-meta span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.pf-tier-pill {
+    align-self: flex-start;
+    display: inline-flex;
     align-items: center;
-    gap: var(--space-xl);
-    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    color: var(--color-primary-dark);
+    background: var(--color-primary-light);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 50%, transparent);
 }
 
-.profile-stat {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-}
-
-.profile-fire {
-    width: 48px;
-    height: 48px;
-    object-fit: contain;
-}
-
-.profile-stat-val {
-    font-size: clamp(20px, 2.5vw, 28px);
-    font-weight: 900;
-    color: var(--color-text);
-}
-
-/* ── Logros ──────────────────────────────────────── */
-.profile-logros { display: flex; flex-direction: column; gap: var(--space-sm); }
-
-.profile-logros-title {
-    margin: 0;
-    font-size: var(--font-size-lg);
-    font-weight: 900;
-    color: var(--color-text);
-}
-
-.profile-logros-grid {
-    display: flex;
+/* ── Indicadores ─────────────────────────────────── */
+.pf-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--space-md);
-    flex-wrap: wrap;
 }
-
-.profile-logro-item {
-    cursor: default;
-    transition: transform 0.18s ease;
-}
-
-.profile-logro-item:hover { transform: scale(1.08); }
-
-.profile-logro-icon {
-    width: 52px;
-    height: 52px;
-    object-fit: contain;
-}
-
-/* ── Sound settings ─────────────────────────────── */
-.profile-sound-card {
+.pf-stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius-lg);
     background: var(--color-surface);
-    border-radius: var(--radius-xl);
-    border: 1.5px solid var(--color-primary-light);
-    padding: 20px 24px;
+    border: 1.5px solid var(--color-border);
+    min-width: 0;
+}
+.pf-stat > div { display: flex; flex-direction: column; min-width: 0; }
+.pf-stat strong {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--color-text);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.pf-stat strong small { font-size: 13px; font-weight: 700; color: var(--color-text-muted); }
+.pf-stat > div > span { font-size: 12px; color: var(--color-text-muted); }
+.pf-stat-icon {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+}
+.pf-stat-icon img { width: 28px; height: 28px; object-fit: contain; }
+.pf-stat-icon--xp   { color: #FBBF24; background: rgba(251, 191, 36, 0.14); }
+.pf-stat-icon--fire { background: rgba(245, 158, 11, 0.14); }
+.pf-stat-icon--rank { color: #60A5FA; background: rgba(96, 165, 250, 0.14); }
+.pf-stat-icon--mod  { color: var(--color-primary-dark); background: var(--color-primary-light); }
+
+/* ── Columnas ────────────────────────────────────── */
+.pf-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: var(--space-lg);
+    align-items: start;
+}
+.pf-col { display: flex; flex-direction: column; gap: var(--space-lg); min-width: 0; }
+
+.pf-card {
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
     display: flex;
     flex-direction: column;
     gap: 14px;
 }
-
-.profile-sound-title {
+.pf-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pf-card-title {
     margin: 0;
     font-size: 16px;
     font-weight: 800;
     color: var(--color-text);
 }
+.pf-card-count {
+    font-size: 12px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    color: var(--color-primary-dark);
+    background: var(--color-primary-light);
+}
+.pf-empty { margin: 0; font-size: var(--font-size-sm); color: var(--color-text-muted); }
 
+/* ── Progreso de nivel ───────────────────────────── */
+.pf-level-row { display: flex; align-items: center; gap: 14px; }
+.pf-level-badge { width: 56px; height: 56px; }
+.pf-level-badge span { font-size: 18px; }
+.pf-level-info { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pf-level-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--color-text);
+}
+.pf-level-top small { font-size: 13px; color: var(--color-text-faint); font-weight: 700; }
+.pf-level-nums { font-size: 13px; color: var(--color-text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pf-level-hint { font-size: 12.5px; color: var(--color-text-muted); }
+.pf-level-hint b { color: var(--color-text); }
+
+.pf-bar {
+    height: 10px;
+    border-radius: var(--radius-full);
+    background: var(--color-track);
+    overflow: hidden;
+}
+.pf-bar--thin { height: 6px; }
+.pf-bar-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #2F9E4F, #4CC46B);
+    transition: width 0.8s ease;
+}
+
+.pf-tiers {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+.pf-tiers li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 10px 4px 8px;
+    border-radius: 12px;
+    border: 1px dashed var(--color-border);
+    text-align: center;
+    opacity: 0.5;
+}
+.pf-tiers li img { width: 30px; height: 30px; object-fit: contain; margin-bottom: 2px; filter: grayscale(0.7); }
+.pf-tiers li strong { font-size: 12px; color: var(--color-text); }
+.pf-tiers li span { font-size: 10.5px; color: var(--color-text-faint); }
+.pf-tiers li.is-done { opacity: 0.85; border-style: solid; }
+.pf-tiers li.is-done img { filter: none; }
+.pf-tiers li.is-current {
+    opacity: 1;
+    border-style: solid;
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+.pf-tiers li.is-current img { filter: none; }
+
+/* ── Módulos ─────────────────────────────────────── */
+.pf-modules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.pf-modules li { display: flex; align-items: center; gap: 12px; }
+.pf-mod-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+    background: var(--color-primary-light);
+}
+.pf-modules li.is-done .pf-mod-icon { color: #fff; background: var(--color-primary); font-size: 14px; }
+.pf-modules li.is-locked .pf-mod-icon { color: var(--color-text-faint); background: var(--color-surface-2); font-size: 13px; }
+.pf-mod-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.pf-mod-top { display: flex; justify-content: space-between; gap: 8px; }
+.pf-mod-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pf-mod-count { font-size: 12px; color: var(--color-text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pf-modules li.is-locked .pf-mod-name { color: var(--color-text-faint); }
+
+/* ── Logros ──────────────────────────────────────── */
+.pf-achievements { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.pf-achievements li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+}
+.pf-ach-icon { position: relative; flex-shrink: 0; width: 46px; height: 46px; }
+.pf-ach-icon img { width: 100%; height: 100%; object-fit: contain; }
+.pf-ach-lock {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 9px;
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+}
+.pf-ach-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pf-ach-info strong { font-size: 14px; color: var(--color-text); }
+.pf-ach-info span { font-size: 12.5px; color: var(--color-text-muted); line-height: 1.35; }
+.pf-ach-info em { font-size: 11.5px; font-style: normal; font-weight: 700; color: var(--color-primary-dark); }
+.pf-achievements li.is-locked { border-style: dashed; background: transparent; }
+.pf-achievements li.is-locked .pf-ach-icon img { filter: grayscale(1) brightness(0.6); opacity: 0.6; }
+.pf-achievements li.is-locked strong { color: var(--color-text-muted); }
+
+/* ── Sonido ──────────────────────────────────────── */
 .profile-sound-row {
     display: flex;
     align-items: center;
@@ -137,9 +325,10 @@
 }
 
 .profile-mute-btn {
-    font-size: 22px;
+    font-size: 18px;
+    color: var(--color-text);
     background: var(--color-surface-2);
-    border: none;
+    border: 1px solid var(--color-border);
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -151,10 +340,11 @@
     transition: background 0.15s;
 }
 .profile-mute-btn:hover { background: var(--color-border); }
-.profile-mute-btn--muted { background: #3A1F1F; }
+.profile-mute-btn--muted { background: #3A1F1F; color: var(--color-error); }
 
 .profile-volume-slider {
     flex: 1;
+    min-width: 0;
     height: 6px;
     accent-color: var(--color-primary);
     cursor: pointer;
@@ -163,9 +353,10 @@
 .profile-volume-pct {
     font-size: 13px;
     font-weight: 700;
-    color: var(--color-primary);
+    color: var(--color-primary-dark);
     min-width: 38px;
     text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 .profile-sound-test {
@@ -181,24 +372,40 @@
     white-space: nowrap;
     flex-shrink: 0;
 }
-.profile-sound-test:hover { background: var(--color-primary-dark); }
+.profile-sound-test:hover { background: var(--color-primary-hover); }
 
 /* ── Responsive ──────────────────────────────────── */
-@media (max-width: 768px) {
-    .profile-body {
+@media (max-width: 1100px) {
+    .pf-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+    .pf-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+    .pf-cover { height: 90px; }
+    .pf-hero-body {
         flex-direction: column;
         align-items: center;
         text-align: center;
-        padding: var(--space-lg);
-        gap: var(--space-lg);
+        padding: 0 var(--space-md) var(--space-lg);
+        margin-top: -52px;
+        gap: 10px;
     }
+    .pf-avatar { width: 104px; height: 104px; border-width: 4px; }
+    .pf-avatar-badge { width: 40px; height: 40px; }
+    .pf-identity { align-items: center; padding-top: 0; }
+    .pf-meta { justify-content: center; }
+    .pf-tier-pill { align-self: center; }
 
-    .profile-avatar-wrap {
-        width: 180px;
-        height: 180px;
-    }
+    .pf-stats { gap: 10px; }
+    .pf-stat { padding: 12px; gap: 10px; }
+    .pf-stat-icon { width: 36px; height: 36px; font-size: 15px; border-radius: 10px; }
+    .pf-stat-icon img { width: 24px; height: 24px; }
+    .pf-stat strong { font-size: 18px; }
+    .pf-stat > div > span { font-size: 11px; }
 
-    .profile-stats { justify-content: center; }
-    .profile-logros-grid { justify-content: center; }
+    .pf-card { padding: 16px; }
+    .pf-tiers { gap: 6px; }
+    .pf-tiers li span { display: none; }
+    .profile-sound-row { gap: 10px; }
 }
-

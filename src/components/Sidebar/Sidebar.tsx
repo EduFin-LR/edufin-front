@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { FaHome, FaTrophy, FaUser, FaSignOutAlt, FaMedal, FaBars, FaTimes } from 'react-icons/fa'
+import { FaHome, FaTrophy, FaUser, FaSignOutAlt, FaMedal, FaBars, FaTimes, FaFire } from 'react-icons/fa'
 import { useAuth } from '../../context/AuthContext'
 import { playNav } from '../../utils/sounds'
 import Logo from '../Logo/Logo'
@@ -60,7 +60,7 @@ function NavContent({ onClose }: { onClose?: () => void }) {
                         onError={e => { e.currentTarget.src = avatar.character }} />
                     <span className="sidebar-me-info">
                         <b>{displayName}</b>
-                        <small>Nivel {profile?.currentLevel ?? 1} · 🔥 {profile?.streakDays ?? 0} {profile?.streakDays === 1 ? 'día' : 'días'}</small>
+                        <small>Nivel {profile?.currentLevel ?? 1} · <FaFire className="ic ic-fire" /> {profile?.streakDays ?? 0} {profile?.streakDays === 1 ? 'día' : 'días'}</small>
                     </span>
                 </button>
                 <button className="logout-btn" onClick={handleLogout}>

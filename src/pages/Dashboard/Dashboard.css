@@ -97,10 +97,10 @@
     justify-content: center;
     font-size: 20px;
     font-weight: 900;
-    color: var(--color-primary-dark);
+    color: #000000;   /* negro como en la ruta y el ranking */
     line-height: 1;
-    /* nudge slightly up to hit visual center of badge */
-    padding-bottom: 4px;
+    /* el centro de la estrella de la insignia está al 49% de alto */
+    padding-bottom: 2%;
     pointer-events: none;
 }
 
@@ -558,13 +558,34 @@
 }
 
 @media (max-width: 640px) {
+    /* Racha y nivel juntos en una fila: la racha solo ocupa lo que necesita */
     .dash-stats {
-        grid-template-columns: 1fr;
+        grid-template-columns: auto 1fr;
+        gap: 10px;
     }
+    .dash-stats .stat-card { padding: 10px 12px; gap: 10px; }
+
+    .streak-icon { width: 30px; height: 30px; }
+    .stat-num { font-size: 22px; }
+    .stat-lbl { font-size: 11px; white-space: nowrap; }
+
+    .level-badge-wrap { width: 42px; height: 42px; }
+    .level-badge-num { font-size: 15px; }
+    .level-info { min-width: 0; gap: 3px; }
+    .level-title { font-size: 12px; color: var(--color-text-muted); }
+    .xp-row { gap: 6px; }
+    .xp-nums { font-size: 15px; white-space: nowrap; }
+    .xp-tag { font-size: 10.5px; padding: 1px 7px; }
+    .xp-bar { height: 7px; }
 
     .dash-logo { height: 32px; }
+}
 
-    .xp-nums { font-size: var(--font-size-md); }
+/* Celulares muy angostos: la etiqueta de la racha baja a dos líneas para dar aire al nivel */
+@media (max-width: 380px) {
+    .dash-stats .stat-card { padding: 10px; gap: 8px; }
+    .stat-lbl { white-space: normal; max-width: 52px; line-height: 1.2; }
+    .level-badge-wrap { width: 38px; height: 38px; }
 }
 
 /* ── 1 · Tu siguiente parada ─────────────────────── */
