@@ -385,9 +385,12 @@
     background: var(--color-surface);
     border: 1.5px solid var(--color-border);
     border-radius: 16px;
-    overflow: hidden;
+    /* Sin overflow: hidden, para que la tarjeta arrastrada se vea por encima de todo */
+    position: relative;
+    z-index: 2;
 }
 .dd-bank-head {
+    border-radius: 14.5px 14.5px 0 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -427,6 +430,7 @@
 }
 
 .dd-card {
+    position: relative;
     display: flex;
     align-items: flex-start;
     gap: 8px;
