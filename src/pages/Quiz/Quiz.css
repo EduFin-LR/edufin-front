@@ -554,6 +554,23 @@
 
 .quiz-result-circle svg { width: 100%; height: 100%; }
 
+/* ── Estrellas del reto ── */
+.quiz-result-stars { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 4px 0 2px; }
+.qrs-row { display: flex; align-items: flex-end; gap: 10px; }
+.qrs-slot { position: relative; display: inline-block; font-size: 44px; line-height: 1; }
+.qrs-slot--mid { font-size: 56px; transform: translateY(-6px); }
+.qrs-empty { color: var(--color-track, #e5e7eb); }
+.qrs-full {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FBBF24;
+    text-shadow: 0 0 14px rgba(251,191,36,0.75), 0 3px 6px rgba(180,83,9,0.45);
+}
+.qrs-label { margin: 0; font-size: 13.5px; font-weight: 700; color: var(--color-text-muted, #6b7280); text-align: center; }
+
 .quiz-result-pct {
     position: absolute;
     inset: 0;

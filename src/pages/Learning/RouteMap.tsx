@@ -3,6 +3,7 @@ import type { Lesson } from '../../services/learningService'
 import type { RouteTheme } from './routeThemes'
 import { MAP_HEIGHT, positions, pathThrough, routeWidth, seeded, splitTitle, type Pt } from './routeLayout'
 import robotFeliz from '../../assets/images/robotFeliz.png'
+import { MAX_STARS } from '../../utils/stars'
 
 type Kind = 'lectura' | 'reto' | 'video' | 'final'
 
@@ -170,6 +171,42 @@ function NodeShape({ theme, kind, status, p }: NodeProps) {
     </g>
 }
 
+// ── Estrellas del reto (0-3) ──────────────────────────────────────────────────
+export interface StarCelebration { lessonId: string; from: number; active: boolean }
+
+const STAR_GOLD = '#FBBF24', STAR_EDGE = '#B45309'
+const starPts = (cx: number, cy: number, r: number) => Array.from({ length: 10 }, (_, k) => {
+    const a = -Math.PI / 2 + (k * Math.PI) / 5, rr = k % 2 ? r * 0.45 : r
+    return `${(cx + Math.cos(a) * rr).toFixed(1)},${(cy + Math.sin(a) * rr).toFixed(1)}`
+}).join(' ')
+
+// `from` = estrellas que ya tenía; las siguientes aparecen con animación cuando `active`
+function NodeStars({ theme, x, y, stars, from, active }: {
+    theme: RouteTheme; x: number; y: number; stars: number; from: number; active: boolean
+}) {
+    return (
+        <g aria-hidden="true" pointerEvents="none">
+            {Array.from({ length: MAX_STARS }, (_, k) => {
+                const cx = x + (k - 1) * 19, cy = y + (k === 1 ? -4 : 0)
+                const isNew = k >= from && k < stars
+                const filled = k < stars && (!isNew || active)
+                const delay = isNew ? `${(k - from) * 0.35}s` : undefined
+                return (
+                    <g key={k}>
+                        {filled && isNew && <circle cx={cx} cy={cy} r="6" fill="none" stroke={STAR_GOLD} strokeWidth="2" className="rt-star-burst" style={{ animationDelay: delay }} />}
+                        <polygon points={starPts(cx, cy, 9)}
+                            fill={filled ? STAR_GOLD : theme.nodeBg}
+                            stroke={filled ? STAR_EDGE : theme.muted}
+                            strokeWidth="1.6" strokeLinejoin="round"
+                            className={filled && isNew ? 'rt-star-pop' : undefined}
+                            style={{ animationDelay: delay }} />
+                    </g>
+                )
+            })}
+        </g>
+    )
+}
+
 // ── Etiqueta (tipo + título) ──────────────────────────────────────────────────
 function Label({ theme, kind, lines, x, y, anchor = 'middle', size = 15 }: {
     theme: RouteTheme; kind: Kind; lines: string[]; x: number; y: number; anchor?: 'start' | 'middle' | 'end'; size?: number
@@ -191,12 +228,13 @@ function Label({ theme, kind, lines, x, y, anchor = 'middle', size = 15 }: {
 }
 
 // ── Mapa ──────────────────────────────────────────────────────────────────────
-export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, onSelect }: {
+export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, onSelect, celebrate }: {
     theme: RouteTheme
     lessons: Lesson[]
     currentIdx: number
     lastReachedIdx: number
     onSelect: (l: Lesson) => void
+    celebrate?: StarCelebration | null
 }) {
     const { layout } = theme
     const pts   = useMemo(() => positions(layout, lessons.length), [layout, lessons.length])
@@ -294,6 +332,15 @@ export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, o
                     </g>
                 }
 
+                // Estrellas del reto: arriba del nodo (o abajo si la etiqueta va arriba, en el metro)
+                let starsEl: ReactNode = null
+                if (kind === 'reto' && !locked) {
+                    const sy = layout === 'rooms' ? p.y - 20 : layout === 'metro' && upper ? p.y + 31 : p.y - 30
+                    const cel = celebrate?.lessonId === lesson.id ? celebrate : null
+                    const stars = Math.min(MAX_STARS, Math.max(0, lesson.stars ?? 0))
+                    starsEl = <NodeStars theme={theme} x={p.x} y={sy} stars={stars} from={cel ? Math.min(cel.from, stars) : stars} active={!!cel?.active} />
+                }
+
                 return (
                     <g key={lesson.id} className="rt-node" tabIndex={0} role="button"
                         aria-label={`${lesson.title} · ${status === 'done' ? 'completada' : locked ? 'bloqueada' : 'disponible'}`}
@@ -303,6 +350,7 @@ export default function RouteMap({ theme, lessons, currentIdx, lastReachedIdx, o
                         {status === 'current' && layout !== 'rooms' && <circle cx={p.x} cy={p.y} r="14" fill={theme.line} className="rt-pulse" />}
                         {layout !== 'rooms' && <NodeShape theme={theme} kind={kind} status={status} p={p} />}
                         {label}
+                        {starsEl}
                         {/* área de clic más generosa */}
                         <circle cx={p.x} cy={p.y} r="26" fill="transparent" />
                     </g>

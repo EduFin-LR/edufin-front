@@ -6,7 +6,8 @@ import { LuArrowLeft, LuLightbulb, LuChevronDown, LuBookOpen, LuTarget, LuArrowR
 import {
     getLessonQuestions, getAdaptiveQuizQuestions, getDynamicFinalQuestions, completeDynamicFinal, startLesson, completeLesson, submitAttempt,
 } from '../../services/quizService'
-import { playCorrect, playWrong, playComplete } from '../../utils/sounds'
+import { playCorrect, playWrong, playComplete, playStar } from '../../utils/sounds'
+import { MAX_STARS, PENDING_STARS_KEY, starsForScore } from '../../utils/stars'
 import type { QuizQuestion, QuizOption, QuizCompleteResult } from '../../services/quizService'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import Logo from '../../components/Logo/Logo'
@@ -411,10 +412,45 @@ function XpStarBurst({ active }: { active: boolean }) {
     )
 }
 
+// ── Estrellas del reto (result screen) ────────────────────────────────────────
+const RESULT_STARS_DELAY = 1.5   // después de que se llena el círculo
+function ResultStars({ earned }: { earned: number }) {
+    useEffect(() => {
+        const timers = Array.from({ length: earned }, (_, k) =>
+            setTimeout(() => playStar(k), (RESULT_STARS_DELAY + k * 0.4 + 0.2) * 1000))
+        return () => timers.forEach(clearTimeout)
+    }, [earned])
+
+    const label = earned === 3 ? '¡Perfecto! Reto dominado' : earned === 2 ? '¡Bien! Llega al 90% para la tercera' : 'Repasa y vuelve por más estrellas'
+    return (
+        <div className="quiz-result-stars" aria-label={`Ganaste ${earned} de ${MAX_STARS} estrellas`}>
+            <div className="qrs-row">
+                {Array.from({ length: MAX_STARS }, (_, k) => (
+                    <span key={k} className={`qrs-slot${k === 1 ? ' qrs-slot--mid' : ''}`}>
+                        <span className="qrs-empty">★</span>
+                        {k < earned && (
+                            <motion.span
+                                className="qrs-full"
+                                initial={{ scale: 0, rotate: -120, opacity: 0 }}
+                                animate={{ scale: [0, 1.6, 1], rotate: [-120, 15, 0], opacity: 1 }}
+                                transition={{ duration: 0.55, delay: RESULT_STARS_DELAY + k * 0.4, ease: 'easeOut' }}
+                            >★</motion.span>
+                        )}
+                    </span>
+                ))}
+            </div>
+            <motion.p className="qrs-label" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: RESULT_STARS_DELAY + earned * 0.4 + 0.2 }}>
+                {label}
+            </motion.p>
+        </div>
+    )
+}
+
 // ── Result screen ──────────────────────────────────────────────────────────────
-function ResultScreen({ result, isFinal, onBack, onRetry }: {
+function ResultScreen({ result, isFinal, showStars, onBack, onRetry }: {
     result: QuizCompleteResult | null
     isFinal: boolean
+    showStars: boolean
     onBack: () => void
     onRetry: () => void
 }) {
@@ -489,6 +525,8 @@ function ResultScreen({ result, isFinal, onBack, onRetry }: {
                     <span className="quiz-result-pct" style={{ color: passed ? '#2db84f' : '#f59e0b' }}>{pct}%</span>
                 </div>
 
+                {showStars && result && result.totalQuestions > 0 && <ResultStars earned={starsForScore(pct)} />}
+
                 {/* Barras correctas / incorrectas */}
                 <motion.div className="quiz-result-bars" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.5 }}>
                     <div className="qrb-row">
@@ -558,6 +596,8 @@ export default function Quiz() {
     const location     = useLocation()
     const { lessonType, topicId } = (location.state ?? {}) as { lessonType?: string; topicId?: string }
     const isFinal = lessonType === 'FINAL'
+    // Solo los retos (QUIZ) dan estrellas
+    const isQuizLesson = lessonType === 'QUIZ'
 
     const [questions,  setQuestions]  = useState<QuizQuestion[]>([])
     const [current,    setCurrent]    = useState(0)
@@ -714,10 +754,11 @@ export default function Quiz() {
     const handleBack = () => {
         const xp = result?.totalExperience ?? 0
         if (xp > 0) sessionStorage.setItem('pendingXp', String(xp))
+        if (isQuizLesson && lessonId) sessionStorage.setItem(PENDING_STARS_KEY, lessonId)
         navigate(-1)
     }
 
-    if (screen === 'result') return <ResultScreen result={result} isFinal={isFinal} onBack={handleBack} onRetry={handleRetry} />
+    if (screen === 'result') return <ResultScreen result={result} isFinal={isFinal} showStars={isQuizLesson} onBack={handleBack} onRetry={handleRetry} />
 
     return (
         <>

@@ -127,6 +127,52 @@
 
 .learning-logo { height: 34px; }
 
+/* ── Estrellas del módulo ─────────────────────────── */
+.learning-stars {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+    padding: 7px 13px 7px 10px;
+    border-radius: 999px;
+    background: rgba(251, 191, 36, 0.14);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+}
+.learning-stars-icon {
+    color: #FBBF24;
+    font-size: 18px;
+    filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.55));
+}
+.learning-stars-val {
+    font-size: 14px;
+    font-weight: 800;
+    white-space: nowrap;
+    color: var(--rt-hud-fg, var(--color-text));
+    font-variant-numeric: tabular-nums;
+}
+.learning-stars-val small { font-size: 12px; font-weight: 700; opacity: 0.65; }
+@keyframes stars-pulse {
+    0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(251,191,36,0.7); }
+    35%  { transform: scale(1.12); }
+    70%  { transform: scale(1);    box-shadow: 0 0 0 12px rgba(251,191,36,0); }
+    100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); }
+}
+.learning-stars--pulse { animation: stars-pulse 0.7s ease-out 2; }
+
+/* Estrellas en el modal del reto */
+.lesson-modal-stars {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+}
+.lesson-modal-stars-row { display: flex; gap: 6px; font-size: 26px; }
+.lesson-modal-stars-row svg { color: rgba(127, 127, 127, 0.3); }
+.lesson-modal-stars-row svg.is-on { color: #FBBF24; filter: drop-shadow(0 2px 4px rgba(180, 83, 9, 0.35)); }
+.lesson-modal-stars-row svg:nth-child(2) { transform: translateY(-4px); }
+.lesson-modal-stars-hint { font-size: 12.5px; font-weight: 600; opacity: 0.75; text-align: center; }
+
 /* ── Map viewport ─────────────────────────────────── */
 .map-viewport {
     flex: 1;
@@ -488,6 +534,16 @@
 @keyframes cv-draw { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: 0; } }
 .cv-draw { stroke-dasharray: 1200; animation: cv-draw 2s ease-out both; }
 
+/* Estrella nueva en el reto: aparece con rebote y un aro que se expande */
+@keyframes rt-star-pop {
+    0%   { transform: scale(0) rotate(-90deg); }
+    60%  { transform: scale(1.7) rotate(10deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+.rt-star-pop { transform-box: fill-box; transform-origin: center; animation: rt-star-pop 0.55s cubic-bezier(.3,1.6,.5,1) both; }
+@keyframes rt-star-burst { 0% { r: 4; opacity: 0.9; } 100% { r: 18; opacity: 0; } }
+.rt-star-burst { animation: rt-star-burst 0.7s ease-out both; }
+
 @media (max-width: 768px) {
     /* Encabezado en celular: botón redondo, nombre en una línea y barra a todo el ancho */
     .learning-header {
@@ -501,6 +557,9 @@
     .learning-back { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; font-size: 15px; }
     .learning-back span { display: none; }
     .learning-xp, .learning-logo { display: none; }
+    .learning-stars { padding: 6px 10px 6px 8px; gap: 5px; }
+    .learning-stars-icon { font-size: 15px; }
+    .learning-stars-val { font-size: 13px; }
     .learning-module-tag { font-size: 10px; }
     .learning-course-name { font-size: 16px; }
     .learning-progress-bar { width: auto; flex: 1; min-width: 60px; }
@@ -529,6 +588,14 @@
     white-space: nowrap;
     pointer-events: none;
 }
+.star-fly {
+    position: fixed;
+    font-size: 24px;
+    line-height: 1;
+    color: #FBBF24;
+    text-shadow: 0 0 10px rgba(251,191,36,0.9), 0 2px 6px rgba(180,83,9,0.5);
+    pointer-events: none;
+}
 .xp-fly-star {
     position: fixed;
     font-size: 18px;
@@ -548,7 +615,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .rt-pulse, .rt-flow, .rt-bob, .rt-twinkle, .cv-drive, .cv-rise, .cv-draw, .module-cover-loader i { animation: none; }
+    .rt-pulse, .rt-flow, .rt-bob, .rt-twinkle, .cv-drive, .cv-rise, .cv-draw, .module-cover-loader i, .rt-star-pop, .rt-star-burst { animation: none; }
+    .rt-star-burst { display: none; }
     .map-canvas--animating { transition: none; }
 }
 

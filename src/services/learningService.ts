@@ -8,6 +8,8 @@ export interface Lesson {
     lessonOrder: number
     lessonType:  'QUIZ' | 'VIDEO' | 'READING' | 'FINAL'
     status:      'UNLOCKED' | 'LOCKED' | 'COMPLETED'
+    // Solo QUIZ: 0 sin intento; 1-3 según el mejor puntaje
+    stars?:      number
 }
 
 export interface TopicLessons {

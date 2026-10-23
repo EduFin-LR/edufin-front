@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBook, FaPlay, FaLock, FaClipboardList, FaArrowLeft, FaTimes, FaTrophy, FaPlus, FaMinus, FaCrosshairs } from 'react-icons/fa'
+import { FaBook, FaPlay, FaLock, FaClipboardList, FaArrowLeft, FaTimes, FaTrophy, FaPlus, FaMinus, FaCrosshairs, FaStar } from 'react-icons/fa'
 import Logo from '../../components/Logo/Logo'
 import progresoA  from '../../assets/images/ProgresoA.png'
 import { getTopicLessons } from '../../services/learningService'
 import type { TopicLessons, Lesson } from '../../services/learningService'
 import { useAuth } from '../../context/AuthContext'
 import { themeForTopic } from './routeThemes'
-import RouteMap from './RouteMap'
+import RouteMap, { type StarCelebration } from './RouteMap'
 import { MAP_HEIGHT, routeWidth, positions } from './routeLayout'
 import { usePanZoom } from './usePanZoom'
 import ModuleCover from './ModuleCover'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
+import { playStar } from '../../utils/sounds'
+import { MAX_STARS, PENDING_STARS_KEY, routeStarsKey } from '../../utils/stars'
 import './Learning.css'
 
 // ── Colors por tipo ────────────────────────────────────────────────────────────
@@ -132,6 +134,64 @@ function XpFlyIn({ xp, from, targetRef, onDone, onCountUp }: {
     )
 }
 
+// ── Estrellas nuevas: aparecen en el reto y vuelan al contador del header ──────
+const STAR_GAP = 0.35   // segundos entre una estrella y la siguiente
+type ScreenPt = { x: number; y: number }
+function StarFlyIn({ count, locate, targetRef, onArrive, onDone }: {
+    count: number
+    // Dónde están en pantalla las estrellas del reto, y la escala del mapa
+    locate: () => (ScreenPt & { scale: number }) | null
+    targetRef: React.RefObject<HTMLDivElement | null>
+    onArrive: (n: number) => void
+    onDone: () => void
+}) {
+    const [path, setPath] = useState<{ from: ScreenPt & { scale: number }; to: ScreenPt } | null>(null)
+
+    useEffect(() => {
+        const el = targetRef.current
+        const from = locate()
+        if (!el || !from) { onDone(); return }
+        const rect = el.getBoundingClientRect()
+        setPath({ from, to: { x: rect.left + 18, y: rect.top + rect.height / 2 } })
+
+        // Primero brillan en el nodo, luego cada una sale volando al contador
+        const timers: ReturnType<typeof setTimeout>[] = []
+        for (let k = 0; k < count; k++) {
+            timers.push(setTimeout(() => playStar(k), k * STAR_GAP * 1000))
+            timers.push(setTimeout(() => onArrive(k + 1), (0.7 + k * STAR_GAP + 0.75) * 1000))
+        }
+        timers.push(setTimeout(onDone, (0.7 + (count - 1) * STAR_GAP + 0.75) * 1000 + 300))
+        return () => timers.forEach(clearTimeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- la animación corre una sola vez
+    }, [])
+
+    if (!path) return null
+    const { from, to: target } = path
+    return (
+        <div className="xp-fly-wrap" aria-hidden>
+            {Array.from({ length: count }, (_, k) => {
+                const sx = from.x + (k - 1) * 19 * from.scale
+                const sy = from.y
+                return (
+                    <motion.span
+                        key={k}
+                        className="star-fly"
+                        style={{ left: sx, top: sy }}
+                        initial={{ x: '-50%', y: '-50%', scale: 0, opacity: 0 }}
+                        animate={{
+                            x: ['-50%', '-50%', `calc(-50% + ${target.x - sx}px)`],
+                            y: ['-50%', 'calc(-50% - 22px)', `calc(-50% + ${target.y - sy}px)`],
+                            scale: [0, 1.6, 0.8],
+                            opacity: [0, 1, 1],
+                        }}
+                        transition={{ duration: 1.45, delay: k * STAR_GAP, times: [0, 0.48, 1], ease: 'easeInOut' }}
+                    >★</motion.span>
+                )
+            })}
+        </div>
+    )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Learning() {
     const navigate      = useNavigate()
@@ -154,6 +214,11 @@ export default function Learning() {
     const [xpAnimDone,  setXpAnimDone]  = useState(false)
     const [xpBefore,    setXpBefore]    = useState<number | null>(null)
     const [xpDisplayed, setXpDisplayed] = useState<number | null>(null)
+    const starRef = useRef<HTMLDivElement>(null)
+    const pendingStarsLesson = useRef<string | null>(null)
+    const [celebration,  setCelebration]  = useState<{ lessonId: string; from: number; gained: number } | null>(null)
+    const [starsArrived, setStarsArrived] = useState(0)
+    const [starsDone,    setStarsDone]    = useState(false)
 
     // Tamaño del área visible (para limitar el arrastre), medido fuera del render
     useEffect(() => {
@@ -176,6 +241,30 @@ export default function Learning() {
         ro.observe(el)
         return () => ro.disconnect()
     }, [])
+
+    // Reto recién terminado: sus estrellas nuevas se animan al cargar la ruta
+    useEffect(() => {
+        const id = sessionStorage.getItem(PENDING_STARS_KEY)
+        if (id) { sessionStorage.removeItem(PENDING_STARS_KEY); pendingStarsLesson.current = id }
+    }, [])
+
+    // Se recuerdan las estrellas vistas para saber cuántas son nuevas al volver
+    useEffect(() => {
+        if (!topic || !topicId) return
+        const key = routeStarsKey(topicId)
+        let seen: Record<string, number> = {}
+        try { seen = JSON.parse(localStorage.getItem(key) ?? '{}') } catch { /* sin datos previos */ }
+        const now: Record<string, number> = {}
+        topic.lessons.forEach(l => { if (l.lessonType === 'QUIZ') now[l.id] = Math.min(MAX_STARS, l.stars ?? 0) })
+        try { localStorage.setItem(key, JSON.stringify(now)) } catch { /* almacenamiento lleno o bloqueado */ }
+
+        const id = pendingStarsLesson.current
+        pendingStarsLesson.current = null
+        if (id && id in now) {
+            const from = Math.min(seen[id] ?? 0, now[id])
+            if (now[id] > from) setCelebration({ lessonId: id, from, gained: now[id] - from })
+        }
+    }, [topic, topicId])
 
     useEffect(() => {
         if (!topicId) return
@@ -272,6 +361,31 @@ export default function Learning() {
     const xp           = profile?.totalPoints  ?? 0
     const xpShown      = xpDisplayed !== null ? xpDisplayed : xp
 
+    // Estrellas del módulo (solo los retos tienen estrellas)
+    const quizzes     = baseLessons.filter(l => l.lessonType === 'QUIZ')
+    const starsMax    = quizzes.length * MAX_STARS
+    const starsEarned = quizzes.reduce((sum, l) => sum + Math.min(MAX_STARS, l.stars ?? 0), 0)
+    const starsShown  = celebration && !starsDone ? starsEarned - celebration.gained + starsArrived : starsEarned
+
+    // Las estrellas se animan después de la XP (si la hubo)
+    const starsReady = !!celebration && !loading && (pendingXp === 0 || xpAnimDone)
+    const celebrate: StarCelebration | null = celebration ? { ...celebration, active: starsReady } : null
+
+    // Punto de pantalla donde están las estrellas del reto celebrado (se mide al animar)
+    const locateCelebratedStars = () => {
+        const idx = celebration ? lessons.findIndex(l => l.id === celebration.lessonId) : -1
+        const vp = viewportRef.current
+        if (idx < 0 || !vp) return null
+        const p = positions(theme.layout, lessons.length)[idx]
+        const r = vp.getBoundingClientRect()
+        const sy = theme.layout === 'rooms' ? p.y - 20 : theme.layout === 'metro' && p.y < 260 ? p.y + 31 : p.y - 30
+        return {
+            x: Math.min(r.right - 30, Math.max(r.left + 30, r.left + pz.view.x + p.x * pz.view.s)),
+            y: Math.min(r.bottom - 30, Math.max(r.top + 30, r.top + pz.view.y + sy * pz.view.s)),
+            scale: pz.view.s,
+        }
+    }
+
     return (
         <div className="learning-page" style={{ '--rt-hud': theme.hud, '--rt-hud-fg': theme.hudFg, '--rt-line': theme.line } as React.CSSProperties}>
 
@@ -291,6 +405,15 @@ export default function Learning() {
                         <span className="learning-progress-pct">{completed} de {baseLessons.length} lecciones · {progressPct}%</span>
                     </div>
                 </div>
+
+                {starsMax > 0 && (
+                    <div ref={starRef} className={`learning-stars${starsDone ? ' learning-stars--pulse' : ''}`}
+                        role="img" aria-label={`${starsShown} de ${starsMax} estrellas en este módulo`}
+                        title="Estrellas del módulo: consíguelas en los retos">
+                        <FaStar className="learning-stars-icon" />
+                        <span className="learning-stars-val">{starsShown}<small>/{starsMax}</small></span>
+                    </div>
+                )}
 
                 <div ref={xpRef} className={`learning-xp${xpAnimDone ? ' learning-xp--pulse' : ''}`}>
                     <div className="learning-level-wrap">
@@ -319,6 +442,7 @@ export default function Learning() {
                         currentIdx={currentIdx}
                         lastReachedIdx={lastUnlockedIdx}
                         onSelect={setSelected}
+                        celebrate={celebrate}
                     />
                 </div>
 
@@ -360,6 +484,17 @@ export default function Learning() {
                     targetRef={xpRef}
                     onCountUp={setXpDisplayed}
                     onDone={() => { setXpAnimDone(true); setXpDisplayed(null) }}
+                />
+            )}
+
+            {/* ── Animación de estrellas ── */}
+            {celebration && starsReady && !starsDone && (
+                <StarFlyIn
+                    count={celebration.gained}
+                    locate={locateCelebratedStars}
+                    targetRef={starRef}
+                    onArrive={setStarsArrived}
+                    onDone={() => setStarsDone(true)}
                 />
             )}
 
@@ -428,6 +563,23 @@ export default function Learning() {
                                     <h3 className="lesson-modal-title">{selected.title}</h3>
                                     <p className="lesson-modal-desc">{selected.content}</p>
                                     {selected.status === 'COMPLETED' && <span className="lesson-modal-badge-done">✅ Completada</span>}
+                                    {selected.lessonType === 'QUIZ' && !isLocked && (() => {
+                                        const st = Math.min(MAX_STARS, selected.stars ?? 0)
+                                        return (
+                                            <div className="lesson-modal-stars">
+                                                <div className="lesson-modal-stars-row" aria-label={`${st} de ${MAX_STARS} estrellas`}>
+                                                    {Array.from({ length: MAX_STARS }, (_, k) => (
+                                                        <FaStar key={k} className={k < st ? 'is-on' : ''} />
+                                                    ))}
+                                                </div>
+                                                <span className="lesson-modal-stars-hint">
+                                                    {st === 0 ? 'Acierta el 90% o más para ganar 3 estrellas'
+                                                    : st < MAX_STARS ? `Tu mejor resultado: ${st} de ${MAX_STARS}. Llega al 90% para las 3`
+                                                    :                  '¡Reto dominado!'}
+                                                </span>
+                                            </div>
+                                        )
+                                    })()}
                                 </div>
 
                                 <button
