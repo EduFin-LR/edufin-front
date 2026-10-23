@@ -1,18 +1,21 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBook, FaPlay, FaLock, FaClipboardList, FaArrowLeft, FaTimes, FaTrophy, FaPlus, FaMinus, FaCrosshairs } from 'react-icons/fa'
+import { FaBook, FaPlay, FaLock, FaClipboardList, FaArrowLeft, FaArrowRight, FaTimes, FaTrophy, FaPlus, FaMinus, FaCrosshairs, FaStar, FaCheckCircle, FaCheck, FaChevronLeft, FaChevronRight, FaRedo, FaRegCircle } from 'react-icons/fa'
 import Logo from '../../components/Logo/Logo'
 import progresoA  from '../../assets/images/ProgresoA.png'
 import { getTopicLessons } from '../../services/learningService'
 import type { TopicLessons, Lesson } from '../../services/learningService'
 import { useAuth } from '../../context/AuthContext'
 import { themeForTopic } from './routeThemes'
-import RouteMap from './RouteMap'
-import { MAP_HEIGHT, routeWidth, positions } from './routeLayout'
+import RouteMap, { type StarCelebration } from './RouteMap'
+import { hasVertical, mapSize, positions, starsPoint } from './routeLayout'
 import { usePanZoom } from './usePanZoom'
 import ModuleCover from './ModuleCover'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
+import { playStar } from '../../utils/sounds'
+import { MAX_STARS, PENDING_STARS_KEY, routeStarsKey } from '../../utils/stars'
+import { PENDING_NEXT_KEY } from '../../utils/nextLesson'
 import './Learning.css'
 
 // ── Colors por tipo ────────────────────────────────────────────────────────────
@@ -23,6 +26,14 @@ const NODE_COLORS = {
     FINAL:   { bg:'#f59e0b', border:'#b45309', glow:'rgba(245,158,11,0.55)', icon:'#fff' },
     LOCKED:  { bg:'#d1d5db', border:'#9ca3af', glow:'rgba(156,163,175,0.2)', icon:'#9ca3af' },
 }
+
+const TYPE_LABEL: Record<Lesson['lessonType'], string> = {
+    READING: 'Lectura', QUIZ: 'Reto', VIDEO: 'Video', FINAL: 'Evaluación final',
+}
+// Cualquier tipo que no sea reto, video o final se muestra como lectura (igual que en la ruta)
+const typeLabel = (l: Lesson) => TYPE_LABEL[l.lessonType] ?? TYPE_LABEL.READING
+// Qué pide cada estrella del reto (ver starsForScore)
+const STAR_STEPS = ['Completa', '50%+', '90%+']
 
 function NodeIcon({ type, locked }: { type: Lesson['lessonType']; locked: boolean }) {
     if (locked) return <FaLock />
@@ -35,12 +46,172 @@ function NodeIcon({ type, locked }: { type: Lesson['lessonType']; locked: boolea
 // La portada del módulo funciona como pantalla de carga: se ve mientras llega la ruta
 // y como mínimo este tiempo, para que no parpadee
 const COVER_MIN_MS = 2000
+// Ancho máximo (px) en que la ruta pasa a vertical
+const MOBILE_MAX = 768
+
+// ── Animación XP volando al contador del header ────────────────────────────
+function XpFlyIn({ xp, from, targetRef, onDone, onCountUp }: {
+    xp: number
+    from: number
+    targetRef: React.RefObject<HTMLDivElement | null>
+    onDone: () => void
+    onCountUp: (val: number) => void
+}) {
+    const N = Math.min(10, Math.max(4, Math.floor(xp / 12) + 3))
+    const [target, setTarget] = useState<{ x: number; y: number } | null>(null)
+    const [stars] = useState(() =>
+        Array.from({ length: N }, (_, i) => ({
+            id: i,
+            ox: (Math.random() - 0.5) * 200,
+            oy: 60 + Math.random() * 100,
+            delay: 0.25 + i * 0.09,
+        }))
+    )
+
+    const doneRef = useRef(false)
+    const cb = useCallback(onDone, [])
+    const countCb = useCallback(onCountUp, [])
+
+    useEffect(() => {
+        const el = targetRef.current
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        setTarget({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
+
+        // Primera estrella llega ~delay[0] + 0.88s después del inicio
+        const firstArrival = (0.25 + 0.88) * 1000
+        const last = 0.25 + (N - 1) * 0.09 + 0.95
+        const countDuration = last * 1000 - firstArrival  // tiempo desde primera hasta última
+
+        // Animar el contador desde `from` hasta `from + xp`
+        const countTimer = setTimeout(() => {
+            let startTs: number | null = null
+            let raf: number
+            const step = (ts: number) => {
+                if (!startTs) startTs = ts
+                const elapsed = ts - startTs
+                const progress = Math.min(elapsed / Math.max(countDuration, 600), 1)
+                countCb(Math.round(from + progress * xp))
+                if (progress < 1) raf = requestAnimationFrame(step)
+            }
+            raf = requestAnimationFrame(step)
+            return () => cancelAnimationFrame(raf)
+        }, firstArrival)
+
+        const doneTimer = setTimeout(() => {
+            if (!doneRef.current) { doneRef.current = true; cb() }
+        }, last * 1000 + 400)
+
+        return () => { clearTimeout(countTimer); clearTimeout(doneTimer) }
+    }, [])
+
+    if (!target) return null
+
+    const cx = typeof window !== 'undefined' ? window.innerWidth / 2 : 300
+    const cy = typeof window !== 'undefined' ? window.innerHeight * 0.54 : 400
+
+    return (
+        <div className="xp-fly-wrap" aria-hidden>
+            <motion.div
+                className="xp-fly-badge"
+                style={{ left: cx, top: cy }}
+                initial={{ opacity: 0, scale: 0.5, x: '-50%', y: '-50%' }}
+                animate={{ opacity: [0, 1, 1, 0], scale: [0.5, 1.2, 1.1, 0.7], y: ['-50%', '-75%', '-75%', '-75%'] }}
+                transition={{ duration: 0.95, delay: 0.05 }}
+            >
+                +{xp} XP <FaStar className="ic" />
+            </motion.div>
+
+            {stars.map(s => {
+                const sx = cx + s.ox
+                const sy = cy + s.oy
+                return (
+                    <motion.span
+                        key={s.id}
+                        className="xp-fly-star"
+                        style={{ left: sx, top: sy }}
+                        initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                        animate={{
+                            x: target.x - sx,
+                            y: target.y - sy,
+                            scale: [0, 1.3, 0.7],
+                            opacity: [0, 1, 1, 0],
+                        }}
+                        transition={{ duration: 0.88, delay: s.delay, ease: [0.25, 0.1, 0.25, 1] }}
+                    >
+                        <FaStar />
+                    </motion.span>
+                )
+            })}
+        </div>
+    )
+}
+
+// ── Estrellas nuevas: aparecen en el reto y vuelan al contador del header ──────
+const STAR_GAP = 0.35   // segundos entre una estrella y la siguiente
+type ScreenPt = { x: number; y: number }
+function StarFlyIn({ count, locate, targetRef, onArrive, onDone }: {
+    count: number
+    // Dónde están en pantalla las estrellas del reto, y la escala del mapa
+    locate: () => (ScreenPt & { scale: number }) | null
+    targetRef: React.RefObject<HTMLDivElement | null>
+    onArrive: (n: number) => void
+    onDone: () => void
+}) {
+    const [path, setPath] = useState<{ from: ScreenPt & { scale: number }; to: ScreenPt } | null>(null)
+
+    useEffect(() => {
+        const el = targetRef.current
+        const from = locate()
+        if (!el || !from) { onDone(); return }
+        const rect = el.getBoundingClientRect()
+        setPath({ from, to: { x: rect.left + 18, y: rect.top + rect.height / 2 } })
+
+        // Primero brillan en el nodo, luego cada una sale volando al contador
+        const timers: ReturnType<typeof setTimeout>[] = []
+        for (let k = 0; k < count; k++) {
+            timers.push(setTimeout(() => playStar(k), k * STAR_GAP * 1000))
+            timers.push(setTimeout(() => onArrive(k + 1), (0.7 + k * STAR_GAP + 0.75) * 1000))
+        }
+        timers.push(setTimeout(onDone, (0.7 + (count - 1) * STAR_GAP + 0.75) * 1000 + 300))
+        return () => timers.forEach(clearTimeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- la animación corre una sola vez
+    }, [])
+
+    if (!path) return null
+    const { from, to: target } = path
+    return (
+        <div className="xp-fly-wrap" aria-hidden>
+            {Array.from({ length: count }, (_, k) => {
+                const sx = from.x + (k - 1) * 19 * from.scale
+                const sy = from.y
+                return (
+                    <motion.span
+                        key={k}
+                        className="star-fly"
+                        style={{ left: sx, top: sy }}
+                        initial={{ x: '-50%', y: '-50%', scale: 0, opacity: 0 }}
+                        animate={{
+                            x: ['-50%', '-50%', `calc(-50% + ${target.x - sx}px)`],
+                            y: ['-50%', 'calc(-50% - 22px)', `calc(-50% + ${target.y - sy}px)`],
+                            scale: [0, 1.6, 0.8],
+                            opacity: [0, 1, 1],
+                        }}
+                        transition={{ duration: 1.45, delay: k * STAR_GAP, times: [0, 0.48, 1], ease: 'easeInOut' }}
+                    >
+                        <FaStar />
+                    </motion.span>
+                )
+            })}
+        </div>
+    )
+}
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Learning() {
     const navigate      = useNavigate()
     const { topicId }   = useParams<{ topicId: string }>()
-    const { profile }   = useAuth()
+    const { profile, refreshProfile } = useAuth()
     // El dashboard envía el nombre del módulo para mostrar su portada sin esperar al servidor
     const location      = useLocation()
     const nameHint      = (location.state as { topicName?: string } | null)?.topicName
@@ -52,7 +223,20 @@ export default function Learning() {
     const [viewport, setViewport] = useState({ width: 600, height: 530 })
     const viewportRef = useRef<HTMLDivElement>(null)
     const headerRef   = useRef<HTMLElement>(null)
+    const xpRef       = useRef<HTMLDivElement>(null)
     const [headerBottom, setHeaderBottom] = useState(100)
+    const [pendingXp,   setPendingXp]   = useState(0)
+    const [xpAnimDone,  setXpAnimDone]  = useState(false)
+    const [xpBefore,    setXpBefore]    = useState<number | null>(null)
+    const [xpDisplayed, setXpDisplayed] = useState<number | null>(null)
+    const starRef = useRef<HTMLDivElement>(null)
+    const pendingStarsLesson = useRef<string | null>(null)
+    const [celebration,  setCelebration]  = useState<{ lessonId: string; from: number; gained: number } | null>(null)
+    const [starsArrived, setStarsArrived] = useState(0)
+    const [starsDone,    setStarsDone]    = useState(false)
+    // Ya se decidió si hay estrellas que celebrar (para no abrir el modal antes)
+    const [starsChecked, setStarsChecked] = useState(false)
+    const pendingNextFrom = useRef<string | null>(null)
 
     // Tamaño del área visible (para limitar el arrastre), medido fuera del render
     useEffect(() => {
@@ -76,6 +260,33 @@ export default function Learning() {
         return () => ro.disconnect()
     }, [])
 
+    // Reto recién terminado: sus estrellas nuevas se animan al cargar la ruta
+    useEffect(() => {
+        const id = sessionStorage.getItem(PENDING_STARS_KEY)
+        if (id) { sessionStorage.removeItem(PENDING_STARS_KEY); pendingStarsLesson.current = id }
+        const next = sessionStorage.getItem(PENDING_NEXT_KEY)
+        if (next) { sessionStorage.removeItem(PENDING_NEXT_KEY); pendingNextFrom.current = next }
+    }, [])
+
+    // Se recuerdan las estrellas vistas para saber cuántas son nuevas al volver
+    useEffect(() => {
+        if (!topic || !topicId) return
+        const key = routeStarsKey(topicId)
+        let seen: Record<string, number> = {}
+        try { seen = JSON.parse(localStorage.getItem(key) ?? '{}') } catch { /* sin datos previos */ }
+        const now: Record<string, number> = {}
+        topic.lessons.forEach(l => { if (l.lessonType === 'QUIZ') now[l.id] = Math.min(MAX_STARS, l.stars ?? 0) })
+        try { localStorage.setItem(key, JSON.stringify(now)) } catch { /* almacenamiento lleno o bloqueado */ }
+
+        const id = pendingStarsLesson.current
+        pendingStarsLesson.current = null
+        if (id && id in now) {
+            const from = Math.min(seen[id] ?? 0, now[id])
+            if (now[id] > from) setCelebration({ lessonId: id, from, gained: now[id] - from })
+        }
+        setStarsChecked(true)
+    }, [topic, topicId])
+
     useEffect(() => {
         if (!topicId) return
         getTopicLessons(topicId)
@@ -86,6 +297,22 @@ export default function Learning() {
     useEffect(() => {
         const t = setTimeout(() => setMinElapsed(true), COVER_MIN_MS)
         return () => clearTimeout(t)
+    }, [])
+
+    // Leer XP ganada al volver del quiz y refrescar perfil
+    useEffect(() => {
+        const stored = parseInt(sessionStorage.getItem('pendingXp') || '0')
+        if (stored > 0) {
+            sessionStorage.removeItem('pendingXp')
+            const currentXp = parseInt(localStorage.getItem('profile')
+                ? (JSON.parse(localStorage.getItem('profile')!).totalPoints ?? 0)
+                : 0)
+            setXpBefore(currentXp)
+            setXpDisplayed(currentXp)
+            setPendingXp(stored)
+            refreshProfile()
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const baseLessons = topic?.lessons ?? []
@@ -122,8 +349,8 @@ export default function Learning() {
     const theme   = themeForTopic(moduleName, topic?.category)
     const loading = !(minElapsed && (topic || loadFailed))
 
-    // índice del primer UNLOCKED (nodo actual)
-    const currentIdx = lessons.findIndex(l => l.status === 'UNLOCKED')
+    // índice del primer nodo que el usuario puede o está trabajando (no completado ni bloqueado)
+    const currentIdx = lessons.findIndex(l => l.status !== 'COMPLETED' && l.status !== 'LOCKED')
 
     // índice del último nodo desbloqueado (COMPLETED o primer UNLOCKED)
     const lastUnlockedIdx = Math.max(
@@ -131,8 +358,10 @@ export default function Learning() {
         currentIdx,
     )
 
-    const canvasWidth  = routeWidth(theme.layout, lessons.length)
-    const canvasHeight = MAP_HEIGHT
+    // En celular la ruta se recorre de arriba hacia abajo (salvo la cumbre y el gráfico, que suben)
+    const vertical = viewport.width <= MOBILE_MAX && hasVertical(theme.layout)
+    const pts = positions(theme.layout, lessons.length, vertical)
+    const { w: canvasWidth, h: canvasHeight } = mapSize(theme.layout, lessons.length, vertical)
 
     // Mover y hacer zoom; la vista inicial queda centrada en la lección actual
     const focusIdx = currentIdx >= 0 ? currentIdx : Math.max(0, lastUnlockedIdx)
@@ -140,7 +369,9 @@ export default function Learning() {
         contentW: canvasWidth, contentH: canvasHeight,
         viewportW: viewport.width, viewportH: viewport.height,
         topInset: headerBottom + 8,
-        focusX: lessons.length ? positions(theme.layout, lessons.length)[focusIdx].x : null,
+        focusX: lessons.length ? pts[focusIdx].x : null,
+        focusY: lessons.length ? pts[focusIdx].y : null,
+        vertical,
     })
 
     // stats del header
@@ -153,6 +384,57 @@ export default function Learning() {
             : 0
     const level        = profile?.currentLevel ?? 1
     const xp           = profile?.totalPoints  ?? 0
+    const xpShown      = xpDisplayed !== null ? xpDisplayed : xp
+
+    // Estrellas del módulo (solo los retos tienen estrellas)
+    const quizzes     = baseLessons.filter(l => l.lessonType === 'QUIZ')
+    const starsMax    = quizzes.length * MAX_STARS
+    const starsEarned = quizzes.reduce((sum, l) => sum + Math.min(MAX_STARS, l.stars ?? 0), 0)
+    const starsShown  = celebration && !starsDone ? starsEarned - celebration.gained + starsArrived : starsEarned
+
+    // Las estrellas se animan después de la XP (si la hubo)
+    const starsReady = !!celebration && !loading && (pendingXp === 0 || xpAnimDone)
+    const celebrate: StarCelebration | null = celebration ? { ...celebration, active: starsReady } : null
+
+    // Punto de pantalla donde están las estrellas del reto celebrado (se mide al animar)
+    const locateCelebratedStars = () => {
+        const idx = celebration ? lessons.findIndex(l => l.id === celebration.lessonId) : -1
+        const vp = viewportRef.current
+        if (idx < 0 || !vp) return null
+        const sp = starsPoint(theme.layout, pts[idx], vertical)
+        const r = vp.getBoundingClientRect()
+        return {
+            x: Math.min(r.right - 30, Math.max(r.left + 30, r.left + pz.view.x + sp.x * pz.view.s)),
+            y: Math.min(r.bottom - 30, Math.max(r.top + 30, r.top + pz.view.y + sp.y * pz.view.s)),
+            scale: pz.view.s,
+        }
+    }
+
+    // "Siguiente nivel": tras las animaciones de XP y estrellas se abre la lección siguiente
+    const animsDone = starsChecked && !loading && (pendingXp === 0 || xpAnimDone) && (!celebration || starsDone)
+    useEffect(() => {
+        const from = pendingNextFrom.current
+        if (!from || !animsDone) return
+        pendingNextFrom.current = null
+        const idx  = lessons.findIndex(l => l.id === from)
+        const next = idx >= 0 ? lessons[idx + 1] : undefined
+        if (next && next.status !== 'LOCKED') setSelected(next)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [animsDone])
+
+    // Con el modal abierto: Esc cierra y las flechas recorren la ruta
+    useEffect(() => {
+        if (!selected) return
+        const onKey = (e: KeyboardEvent) => {
+            const i = lessons.findIndex(l => l.id === selected.id)
+            if (e.key === 'Escape') setSelected(null)
+            else if (e.key === 'ArrowLeft'  && i > 0)                  setSelected(lessons[i - 1])
+            else if (e.key === 'ArrowRight' && i < lessons.length - 1) setSelected(lessons[i + 1])
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lessons se deriva de topic
+    }, [selected, topic])
 
     return (
         <div className="learning-page" style={{ '--rt-hud': theme.hud, '--rt-hud-fg': theme.hudFg, '--rt-line': theme.line } as React.CSSProperties}>
@@ -174,25 +456,38 @@ export default function Learning() {
                     </div>
                 </div>
 
-                <div className="learning-xp">
-                    <div className="learning-level-wrap">
-                        <img src={progresoA} alt="" className="learning-level-img" />
-                        <span className="learning-level-num">{level}</span>
+                {/* Estrellas y XP: en fila en escritorio, apiladas en celular */}
+                <div className="learning-hud-stats">
+                    {starsMax > 0 && (
+                        <div ref={starRef} className={`learning-stars${starsDone ? ' learning-stars--pulse' : ''}`}
+                            role="img" aria-label={`${starsShown} de ${starsMax} estrellas en este módulo`}
+                            title="Estrellas del módulo: consíguelas en los retos">
+                            <FaStar className="learning-stars-icon" />
+                            <span className="learning-stars-val">{starsShown}<small>/{starsMax}</small></span>
+                        </div>
+                    )}
+
+                    <div ref={xpRef} className={`learning-xp${xpAnimDone ? ' learning-xp--pulse' : ''}`}
+                        aria-label={`Nivel ${level}, ${xpShown} XP`}>
+                        <div className="learning-level-wrap">
+                            <img src={progresoA} alt="" className="learning-level-img" />
+                            <span className="learning-level-num">{level}</span>
+                        </div>
+                        <span className="learning-xp-val">{xpShown} XP</span>
                     </div>
-                    <span className="learning-xp-val">{xp} XP</span>
                 </div>
 
                 <Logo className="dash-logo learning-logo" />
             </header>
 
             {/* ── Map viewport ── */}
-            <div ref={viewportRef} className={`map-viewport ${pz.dragging ? 'map-viewport--dragging' : ''}`} style={{ background: theme.bg }}>
+            <div ref={viewportRef} className={`map-viewport ${pz.dragging ? 'map-viewport--dragging' : ''}`} style={{ background: theme.bg, visibility: loading ? 'hidden' : 'visible' }}>
                 <div
                     className={`map-canvas ${pz.animating ? 'map-canvas--animating' : ''}`}
                     style={{
-                        width: canvasWidth,
-                        height: canvasHeight,
-                        transform: `translate3d(${pz.view.x}px, ${pz.view.y}px, 0) scale(${pz.view.s})`,
+                        width: canvasWidth * pz.view.s,
+                        height: canvasHeight * pz.view.s,
+                        transform: `translate3d(${pz.view.x}px, ${pz.view.y}px, 0)`,
                     }}
                 >
                     <RouteMap
@@ -201,6 +496,8 @@ export default function Learning() {
                         currentIdx={currentIdx}
                         lastReachedIdx={lastUnlockedIdx}
                         onSelect={setSelected}
+                        celebrate={celebrate}
+                        vertical={vertical}
                     />
                 </div>
 
@@ -234,96 +531,185 @@ export default function Learning() {
             {/* Si se entra por enlace directo, aún no se sabe qué módulo es: carga genérica */}
             <LoadingScreen visible={loading && !moduleName} message="Cargando tu ruta…" />
 
+            {/* ── Animación XP ── */}
+            {pendingXp > 0 && !xpAnimDone && !loading && xpBefore !== null && (
+                <XpFlyIn
+                    xp={pendingXp}
+                    from={xpBefore}
+                    targetRef={xpRef}
+                    onCountUp={setXpDisplayed}
+                    onDone={() => { setXpAnimDone(true); setXpDisplayed(null) }}
+                />
+            )}
+
+            {/* ── Animación de estrellas ── */}
+            {celebration && starsReady && !starsDone && (
+                <StarFlyIn
+                    count={celebration.gained}
+                    locate={locateCelebratedStars}
+                    targetRef={starRef}
+                    onArrive={setStarsArrived}
+                    onDone={() => setStarsDone(true)}
+                />
+            )}
+
             {/* ── Lesson modal ── */}
             <AnimatePresence>
                 {selected && (() => {
                     const isVideo  = selected.lessonType === 'VIDEO' && !!selected.videoUrl
-                    const colors   = NODE_COLORS[selected.lessonType] ?? NODE_COLORS.READING
                     const isLocked = selected.status === 'LOCKED'
+                    const isDone   = selected.status === 'COMPLETED'
+                    const colors   = isLocked ? NODE_COLORS.LOCKED : (NODE_COLORS[selected.lessonType] ?? NODE_COLORS.READING)
+                    const accent   = NODE_COLORS[selected.lessonType] ?? NODE_COLORS.READING
+                    const idx      = lessons.findIndex(l => l.id === selected.id)
+                    const prev     = idx > 0 ? lessons[idx - 1] : undefined
+                    const next     = idx >= 0 ? lessons[idx + 1] : undefined
+                    const status   = isLocked ? 'locked' : isDone ? 'done' : 'open'
+
+                    const start = () => {
+                        if (isLocked) return
+                        if (selected.lessonType === 'FINAL') {
+                            navigate(`/quiz/final-${topicId}`, { state: { lessonType: 'FINAL', topicId } })
+                            return
+                        }
+                        navigate(`/quiz/${selected.id}`, { state: { lessonType: selected.lessonType } })
+                    }
+
                     return (
                         <motion.div
                             className="lesson-overlay"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
+                            transition={{ duration: 0.12 }}
                             onClick={() => setSelected(null)}
                         >
-                            <motion.div
-                                className={`lesson-modal ${isVideo ? 'lesson-modal--video' : ''}`}
-                                initial={{ y: 80, opacity: 0, scale: 0.96 }}
-                                animate={{ y: 0,  opacity: 1, scale: 1    }}
-                                exit={{ y: 80, opacity: 0, scale: 0.96 }}
-                                transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-                                onClick={e => e.stopPropagation()}
-                            >
-                                <button className="lesson-modal-close" onClick={() => setSelected(null)}><FaTimes /></button>
-
-                                {/* Video embed */}
-                                {isVideo && (
-                                    <motion.div
-                                        className="lesson-video-wrap"
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.18, duration: 0.4 }}
-                                    >
-                                        <iframe
-                                            className="lesson-video-iframe"
-                                            src={selected.videoUrl}
-                                            title={selected.title}
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                        />
-                                    </motion.div>
-                                )}
-
-                                {/* Icon (only for non-video) */}
-                                {!isVideo && (
-                                    <div className="lesson-modal-icon" style={{
-                                        background: colors.bg,
-                                        boxShadow:  `0 8px 24px ${colors.glow}`,
-                                    }}>
-                                        <NodeIcon type={selected.lessonType} locked={isLocked} />
-                                    </div>
-                                )}
-
-                                {/* Video type badge */}
-                                {isVideo && (
-                                    <div className="lesson-video-badge">
-                                        <span className="lesson-video-dot" />
-                                        Video
-                                    </div>
-                                )}
-
-                                <div className="lesson-modal-body">
-                                    <h3 className="lesson-modal-title">{selected.title}</h3>
-                                    <p className="lesson-modal-desc">{selected.content}</p>
-                                    {selected.status === 'COMPLETED' && <span className="lesson-modal-badge-done">✅ Completada</span>}
-                                </div>
-
-                                <button
-                                    className={`btn ${isLocked ? '' : 'btn-primary'} lesson-modal-btn`}
-                                    disabled={isLocked}
-                                    style={isLocked ? { background: '#9ca3af', color: '#fff', cursor: 'not-allowed' } : {}}
-                                    onClick={() => {
-                                        if (isLocked) return
-
-                                        if (selected.lessonType === 'FINAL') {
-                                            navigate(
-                                                `/quiz/final-${topicId}?type=FINAL&topicId=${topicId}`
-                                            )
-                                            return
-                                        }
-
-                                        navigate(
-                                            `/quiz/${selected.id}?type=${selected.lessonType}`
-                                        )
-                                    }}
-                                >
-                                    {isLocked                        ? '🔒 Bloqueada'
-                                    : selected.status === 'COMPLETED' ? (isVideo ? '▶ Ver otra vez' : 'Repasar lección')
-                                    :                                   (isVideo ? '▶ Ver video'     : 'Iniciar lección')}
+                            <div className={`lesson-shell ${isVideo ? 'lesson-shell--video' : ''}`} onClick={e => e.stopPropagation()}>
+                                <button className="lesson-nav lesson-nav--prev" disabled={!prev}
+                                    onClick={() => prev && setSelected(prev)} aria-label="Lección anterior">
+                                    <FaChevronLeft />
                                 </button>
-                            </motion.div>
+
+                                <motion.div
+                                    key={selected.id}
+                                    className={`lesson-modal ${isVideo ? 'lesson-modal--video' : ''}`}
+                                    style={{ '--lm-accent': accent.bg, '--lm-accent-dark': accent.border, '--lm-glow': colors.glow } as React.CSSProperties}
+                                    initial={{ y: 12, opacity: 0, scale: 0.97 }}
+                                    animate={{ y: 0,  opacity: 1, scale: 1    }}
+                                    exit={{ y: 6, opacity: 0, scale: 0.98 }}
+                                    transition={{ type: 'spring', stiffness: 700, damping: 38 }}
+                                    role="dialog"
+                                    aria-modal="true"
+                                    aria-labelledby="lesson-modal-title"
+                                >
+                                    <button className="lesson-modal-close" onClick={() => setSelected(null)} aria-label="Cerrar"><FaTimes /></button>
+
+                                    {isVideo ? (
+                                        <motion.div
+                                            className="lesson-video-wrap"
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.18, duration: 0.4 }}
+                                        >
+                                            <iframe
+                                                className="lesson-video-iframe"
+                                                src={selected.videoUrl}
+                                                title={selected.title}
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        </motion.div>
+                                    ) : (
+                                        // Cabecera con el color del tipo de lección
+                                        <div className={`lesson-modal-hero ${isLocked ? 'is-locked' : ''}`}>
+                                            <span className="lesson-modal-step">
+                                                Paso {idx + 1} de {lessons.length}
+                                            </span>
+                                            <div className="lesson-modal-icon">
+                                                <NodeIcon type={selected.lessonType} locked={isLocked} />
+                                                {isDone && <span className="lesson-modal-icon-check"><FaCheck /></span>}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="lesson-modal-body">
+                                        <div className="lesson-modal-tags">
+                                            <span className="lesson-modal-type">
+                                                {isVideo && <span className="lesson-video-dot" />}
+                                                {typeLabel(selected)}
+                                            </span>
+                                            <span className={`lesson-modal-status lesson-modal-status--${status}`}>
+                                                {status === 'done'   ? <><FaCheckCircle className="ic" /> Completada</>
+                                                : status === 'locked' ? <><FaLock className="ic" /> Bloqueada</>
+                                                :                       <><FaRegCircle className="ic" /> Disponible</>}
+                                            </span>
+                                        </div>
+                                        <h3 id="lesson-modal-title" className="lesson-modal-title">{selected.title}</h3>
+                                        <p className="lesson-modal-desc">{selected.content}</p>
+                                    </div>
+
+                                    {selected.lessonType === 'QUIZ' && !isLocked && (() => {
+                                        const st = Math.min(MAX_STARS, selected.stars ?? 0)
+                                        return (
+                                            <div className="lesson-modal-panel">
+                                                <div className="lesson-modal-panel-head">
+                                                    <span>Tu mejor resultado</span>
+                                                    <strong>{st} / {MAX_STARS}</strong>
+                                                </div>
+                                                {/* Escala de estrellas: misma que el backend */}
+                                                <ol className="lesson-modal-ladder" aria-label={`${st} de ${MAX_STARS} estrellas`}>
+                                                    {STAR_STEPS.map((step, k) => (
+                                                        <li key={k} className={k < st ? 'is-on' : ''}>
+                                                            <FaStar />
+                                                            <span>{step}</span>
+                                                        </li>
+                                                    ))}
+                                                </ol>
+                                                <p className="lesson-modal-panel-hint">
+                                                    {st === 0        ? 'Responde el reto para ganar tu primera estrella.'
+                                                    : st < MAX_STARS ? 'Llega al 90% de aciertos para conseguir las 3 estrellas.'
+                                                    :                  'Reto dominado. Puedes repasarlo cuando quieras.'}
+                                                </p>
+                                            </div>
+                                        )
+                                    })()}
+
+                                    {isLocked && (
+                                        <div className="lesson-modal-panel lesson-modal-panel--locked">
+                                            <FaLock className="ic" />
+                                            <p>
+                                                {selected.lessonType === 'FINAL'
+                                                    ? 'Completa todas las lecciones del módulo para desbloquear la evaluación final.'
+                                                    : prev ? <>Termina {prev.lessonType === 'QUIZ' ? 'el reto' : prev.lessonType === 'VIDEO' ? 'el video' : 'la lectura'} <strong>{prev.title}</strong> para desbloquear esta lección.</>
+                                                    : 'Termina la lección anterior para desbloquear esta.'}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <div className="lesson-modal-actions">
+                                        <button
+                                            className={`btn ${isLocked ? 'lesson-modal-btn--locked' : 'btn-primary'} lesson-modal-btn`}
+                                            disabled={isLocked}
+                                            onClick={start}
+                                        >
+                                            {isLocked ? <><FaLock className="ic" /> Bloqueada</>
+                                            : isVideo ? <><FaPlay className="ic" /> {isDone ? 'Ver otra vez' : 'Ver video'}</>
+                                            : isDone  ? <><FaRedo className="ic" /> {selected.lessonType === 'QUIZ' ? 'Repetir reto' : 'Repasar lección'}</>
+                                            :           <>{selected.lessonType === 'QUIZ' || selected.lessonType === 'FINAL' ? 'Comenzar reto' : 'Iniciar lección'} <FaArrowRight className="ic" /></>}
+                                        </button>
+                                        {isDone && next && next.status !== 'LOCKED' && (
+                                            <button className="lesson-modal-link" onClick={() => setSelected(next)}>
+                                                Siguiente: {typeLabel(next)} <FaChevronRight className="ic" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </motion.div>
+
+                                <button className="lesson-nav lesson-nav--next" disabled={!next}
+                                    onClick={() => next && setSelected(next)} aria-label="Lección siguiente">
+                                    <FaChevronRight />
+                                </button>
+                            </div>
                         </motion.div>
                     )
                 })()}
