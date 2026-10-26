@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { playSelect } from '../../utils/sounds'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { FaArrowLeft } from 'react-icons/fa'
 import MainLayout from '../../layouts/MainLayout/MainLayout'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import Logo from '../../components/Logo/Logo'
@@ -90,7 +91,7 @@ function LevelRoadModal({ level, onClose }: { level: number; onClose: () => void
                                         <div className="lvl-node-info">
                                             <span className="lvl-node-label">{tier.label}</span>
                                             <span className="lvl-node-range">Niveles {tier.minLevel} – {tier.maxLevel === 99 ? '30' : tier.maxLevel}</span>
-                                            {isNow && <span className="lvl-node-here-tag">← Aquí estás</span>}
+                                            {isNow && <span className="lvl-node-here-tag"><FaArrowLeft className="ic" /> Aquí estás</span>}
                                         </div>
                                     </div>
                                 </div>

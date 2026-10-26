@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { motion } from 'framer-motion'
+import { FaArrowRight } from 'react-icons/fa'
 import { CoverArt } from '../Learning/ModuleCover'
 import type { RouteTheme } from '../Learning/routeThemes'
 import type { DashboardLearningPath } from '../../types/auth'
@@ -26,7 +27,7 @@ export default function NextStopCard({ course, theme, lessons, prevName, onOpen 
     const hasFinal = lessons?.some(l => l.lessonType === 'FINAL') ?? true
 
     let stopLabel: string, stopText: string
-    if (done)        { stopLabel = 'Módulo completado'; stopText = `Terminaste las ${course.totalLessons} lecciones ✓` }
+    if (done)        { stopLabel = 'Módulo completado'; stopText = `Terminaste las ${course.totalLessons} lecciones` }
     else if (locked) { stopLabel = 'Bloqueado';         stopText = prevName ? `Completa «${prevName}» para desbloquearlo` : 'Aún no está disponible' }
     else             { stopLabel = `Tu siguiente parada${next ? ' · ' + TYPE_LABEL[next.lessonType] : ''}`; stopText = next?.title ?? (lessons ? 'Empieza el módulo' : '…') }
 
@@ -65,7 +66,7 @@ export default function NextStopCard({ course, theme, lessons, prevName, onOpen 
                 </div>
 
                 <button className={`next-stop-btn ${locked ? 'next-stop-btn--ghost' : ''}`} onClick={onOpen}>
-                    {done ? 'Repasar' : locked ? 'Ver ruta' : 'Continuar →'}
+                    {done ? 'Repasar' : locked ? 'Ver ruta' : <>Continuar <FaArrowRight className="ic" /></>}
                 </button>
             </div>
         </motion.section>

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isAxiosError } from 'axios'
+import { FaCheck, FaArrowRight } from 'react-icons/fa'
 import AuthLayout from '../../layouts/AuthLayout/AuthLayout'
-import { signUp } from '../../services/authService'
+import { signUp, verifyEmail, resendVerification } from '../../services/authService'
 import type { Gender, DashboardLearningPath } from '../../types/auth'
 import { ToastContainer } from '../../components/Toast/Toast'
 import type { ToastType } from '../../components/Toast/Toast'
@@ -13,8 +14,8 @@ import '../Login/Login.css'
 import './Register.css'
 
 type Field = 'username' | 'email' | 'password' | 'confirmPassword'
+type Step = 0 | 1 | 2   // 0 = formulario, 1 = verificar email, 2 = tu ruta
 
-// Vista previa de la ruta para el paso final (aún sin progreso: solo el módulo 1 abierto)
 const PREVIEW_NAMES = ['Ingresos y presupuesto', 'Ahorro', 'Crédito y deuda', 'Pensiones', 'Inversión', 'Módulo 6', 'Sistema financiero y seguridad']
 const PREVIEW = Object.values(THEMES)
     .sort((a, b) => a.moduleNum - b.moduleNum)
@@ -26,7 +27,6 @@ const PREVIEW = Object.values(THEMES)
         } satisfies DashboardLearningPath,
     }))
 
-// 0 a 4 según largo, mayúsculas/minúsculas, números y símbolos
 function passwordStrength(p: string) {
     let n = 0
     if (p.length >= 8) n++
@@ -40,12 +40,15 @@ const STRENGTH_COLOR = ['#FF8A80', '#F5C04A', '#A5D66B', '#4CC46B']
 
 export default function Register() {
     const navigate = useNavigate()
-    const [step, setStep] = useState<0 | 1>(0)
-    const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '' })
-    const [gender, setGender]   = useState<Gender>('MALE')
-    const [errors, setErrors]   = useState<Partial<Record<Field, string>>>({})
-    const [loading, setLoading] = useState(false)
-    const [toast, setToast]     = useState<{ message: string; type: ToastType } | null>(null)
+    const [step, setStep]         = useState<Step>(0)
+    const [form, setForm]         = useState({ username: '', email: '', password: '', confirmPassword: '' })
+    const [gender, setGender]     = useState<Gender>('MALE')
+    const [errors, setErrors]     = useState<Partial<Record<Field, string>>>({})
+    const [loading, setLoading]   = useState(false)
+    const [toast, setToast]       = useState<{ message: string; type: ToastType } | null>(null)
+    const [code, setCode]         = useState('')
+    const [codeError, setCodeError] = useState('')
+    const [resending, setResending] = useState(false)
 
     const strength = passwordStrength(form.password)
 
@@ -64,6 +67,7 @@ export default function Register() {
         return Object.keys(next).length === 0
     }
 
+    // Paso 0 → 1: crear cuenta (el backend envía el código automáticamente)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!validate()) return
@@ -72,10 +76,58 @@ export default function Register() {
             await signUp({ username: form.username.trim(), email: form.email.trim(), password: form.password, gender })
             setStep(1)
         } catch (err) {
+            // Si el correo ya está registrado (400), ir directo a verificar
+            const errMsg = isAxiosError<{ message?: string }>(err) && err.response?.data?.message || ''
+            if (isAxiosError(err) && (err.response?.status === 409 ||
+                (err.response?.status === 400 && errMsg.toLowerCase().includes('registrado')))) {
+                await resendVerification(form.email.trim()).catch(() => {})
+                setStep(1)
+                return
+            }
             const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) || 'Error al registrarse. Intenta de nuevo.'
             setToast({ message: msg, type: 'error' })
         } finally {
             setLoading(false)
+        }
+    }
+
+    // Ir directo al paso de verificación (cuenta ya creada, falta verificar)
+    const handleGoToVerify = async () => {
+        if (!form.email.trim() || !/^\S+@\S+\.\S+$/.test(form.email)) {
+            setErrors(prev => ({ ...prev, email: 'Escribe tu correo para reenviar el código.' }))
+            return
+        }
+        setLoading(true)
+        await resendVerification(form.email.trim()).catch(() => {})
+        setLoading(false)
+        setStep(1)
+    }
+
+    // Paso 1 → 2: verificar código
+    const handleVerify = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!code.trim()) { setCodeError('Ingresa el código que te enviamos.'); return }
+        setLoading(true)
+        try {
+            await verifyEmail(form.email.trim(), code.trim())
+            setStep(2)
+        } catch (err) {
+            const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) || 'Código incorrecto o expirado.'
+            setCodeError(msg)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleResend = async () => {
+        setResending(true)
+        try {
+            await resendVerification(form.email.trim())
+            setToast({ message: 'Código reenviado. Revisa tu correo.', type: 'success' })
+        } catch {
+            setToast({ message: 'No se pudo reenviar. Intenta en un momento.', type: 'error' })
+        } finally {
+            setResending(false)
         }
     }
 
@@ -98,21 +150,26 @@ export default function Register() {
 
     return (
         <AuthLayout>
-            <LoadingScreen visible={loading} message="Creando cuenta…" />
+            <LoadingScreen visible={loading} message={step === 0 ? 'Creando cuenta…' : 'Verificando…'} />
             <ToastContainer toast={toast} onClose={() => setToast(null)} />
 
-            {/* Pasos: tu cuenta → tu ruta */}
+            {/* Indicador de pasos */}
             <ol className="reg-steps" aria-label="Pasos del registro">
                 <li className={step === 0 ? 'on' : 'done'} aria-current={step === 0 ? 'step' : undefined}>
-                    <i>{step === 0 ? 1 : '✓'}</i><span>Tu cuenta</span>
+                    <i>{step === 0 ? '1' : <FaCheck />}</i><span className="reg-step-label">Cuenta</span>
                 </li>
-                <li className={`reg-steps-bar ${step === 1 ? 'done' : ''}`} aria-hidden="true" />
-                <li className={step === 1 ? 'on' : ''} aria-current={step === 1 ? 'step' : undefined}>
-                    <i>2</i><span>Tu ruta</span>
+                <li className={`reg-steps-bar ${step >= 1 ? 'done' : ''}`} aria-hidden="true" />
+                <li className={step === 1 ? 'on' : step === 2 ? 'done' : ''} aria-current={step === 1 ? 'step' : undefined}>
+                    <i>{step < 2 ? '2' : <FaCheck />}</i><span className="reg-step-label">Verificar</span>
+                </li>
+                <li className={`reg-steps-bar ${step === 2 ? 'done' : ''}`} aria-hidden="true" />
+                <li className={step === 2 ? 'on' : ''} aria-current={step === 2 ? 'step' : undefined}>
+                    <i>3</i><span className="reg-step-label">Tu ruta</span>
                 </li>
             </ol>
 
-            {step === 0 ? (
+            {/* ── Paso 0: formulario ── */}
+            {step === 0 && (
                 <form className="auth-form" onSubmit={handleSubmit} noValidate>
                     <div className="auth-heading">
                         <h1 className="auth-form-title">Crea tu cuenta</h1>
@@ -120,8 +177,8 @@ export default function Register() {
                     </div>
 
                     <div className="auth-field-group">
-                        {field('username', 'Nombre de usuario', { type: 'text', placeholder: 'ana.torres', autoComplete: 'username' })}
-                        {field('email', 'Correo', { type: 'email', placeholder: 'ana.torres@upc.edu.pe', autoComplete: 'email' })}
+                        {field('username', 'Nombre de usuario', { type: 'text', placeholder: 'Mínimo 3 caracteres', autoComplete: 'username' })}
+                        {field('email', 'Correo', { type: 'email', placeholder: 'Tu correo electrónico', autoComplete: 'email' })}
 
                         <div className="auth-field">
                             <label htmlFor="reg-password">Contraseña</label>
@@ -148,7 +205,25 @@ export default function Register() {
                             {errors.password && <span className="auth-error">{errors.password}</span>}
                         </div>
 
-                        {field('confirmPassword', 'Repite la contraseña', { type: 'password', autoComplete: 'new-password' })}
+                        <div className="auth-field">
+                            <label htmlFor="reg-confirmPassword">Repite la contraseña</label>
+                            <input
+                                id="reg-confirmPassword"
+                                className={`input-field ${errors.confirmPassword ? 'input-field--error' : ''}`}
+                                type="password"
+                                name="confirmPassword"
+                                placeholder="Escribe tu contraseña de nuevo"
+                                value={form.confirmPassword}
+                                onChange={handleChange}
+                                onPaste={e => e.preventDefault()}
+                                onCopy={e => e.preventDefault()}
+                                onCut={e => e.preventDefault()}
+                                autoComplete="new-password"
+                                aria-invalid={!!errors.confirmPassword}
+                                aria-describedby={errors.confirmPassword ? 'reg-confirmPassword-err' : undefined}
+                            />
+                            {errors.confirmPassword && <span className="auth-error" id="reg-confirmPassword-err">{errors.confirmPassword}</span>}
+                        </div>
 
                         <div className="auth-field">
                             <span className="reg-label" id="reg-gender-label">Género</span>
@@ -177,8 +252,56 @@ export default function Register() {
                         ¿Ya tienes cuenta?{' '}
                         <button type="button" className="link-text" onClick={() => navigate('/')}>Inicia sesión</button>
                     </p>
+                    <p className="auth-switch">
+                        ¿Ya te registraste pero no verificaste?{' '}
+                        <button type="button" className="link-text" onClick={handleGoToVerify}>Verificar correo</button>
+                    </p>
                 </form>
-            ) : (
+            )}
+
+            {/* ── Paso 1: verificar email ── */}
+            {step === 1 && (
+                <form className="auth-form" onSubmit={handleVerify} noValidate>
+                    <div className="auth-heading">
+                        <h1 className="auth-form-title">Verifica tu correo</h1>
+                        <p className="auth-form-sub">
+                            Enviamos un código a <strong>{form.email}</strong>. Ingrésalo para activar tu cuenta.
+                        </p>
+                    </div>
+
+                    <div className="auth-field-group">
+                        <div className="auth-field">
+                            <label htmlFor="reg-code">Código de verificación</label>
+                            <input
+                                id="reg-code"
+                                className={`input-field rp-code-input ${codeError ? 'input-field--error' : ''}`}
+                                type="text"
+                                placeholder="Ej. 439349"
+                                value={code}
+                                onChange={e => { setCode(e.target.value); setCodeError('') }}
+                                inputMode="numeric"
+                                maxLength={8}
+                                autoComplete="one-time-code"
+                                autoFocus
+                            />
+                            {codeError && <span className="auth-error">{codeError}</span>}
+                        </div>
+                    </div>
+
+                    <div className="auth-links">
+                        <button type="button" className="link-text" onClick={handleResend} disabled={resending}>
+                            {resending ? 'Reenviando…' : '¿No llegó? Reenviar código'}
+                        </button>
+                    </div>
+
+                    <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
+                        {loading ? 'Verificando…' : 'Verificar cuenta'}
+                    </button>
+                </form>
+            )}
+
+            {/* ── Paso 2: tu ruta ── */}
+            {step === 2 && (
                 <div className="auth-form">
                     <div className="auth-heading">
                         <h1 className="auth-form-title">Tu ruta está lista{form.username ? `, ${form.username.trim()}` : ''}</h1>
@@ -190,7 +313,7 @@ export default function Register() {
                         <CourseMetro modules={PREVIEW} selectedId={null} onSelect={() => {}} />
                     </div>
                     <button type="button" className="btn btn-primary auth-submit" onClick={() => navigate('/')}>
-                        Iniciar sesión →
+                        Iniciar sesión <FaArrowRight className="ic" />
                     </button>
                 </div>
             )}
