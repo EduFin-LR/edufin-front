@@ -242,7 +242,7 @@ export default function Diagnostic() {
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.25 }}
                             >
-                                <p className="diag-question-text">{q?.questionText}</p>
+                                <p className="diag-question-text">{q?.questionText?.replace(/\\n/g, '\n')}</p>
                                 <div className="diag-options">
                                     {q?.options.map(opt => (
                                         <button

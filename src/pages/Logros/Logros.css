@@ -82,7 +82,7 @@
     box-shadow: 0 0 0 3px var(--color-border);
 }
 
-.logro-medal-img { width: 58%; height: 58%; object-fit: contain; }
+.logro-medal-img { width: 74%; height: 74%; object-fit: contain; }
 .logro-medal.is-off .logro-medal-img { filter: grayscale(1) brightness(0.75); }
 
 .logro-medal-state {

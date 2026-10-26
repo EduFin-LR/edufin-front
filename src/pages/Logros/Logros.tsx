@@ -6,6 +6,7 @@ import Logo from '../../components/Logo/Logo'
 import { getMyAchievements } from '../../services/profileService'
 import type { Achievement } from '../../services/profileService'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
+import AchievementBadge from '../../components/AchievementBadge/AchievementBadge'
 import './Logros.css'
 
 type TabType = 'todos' | 'desbloqueados' | 'bloqueados'
@@ -42,7 +43,7 @@ function ProgressRing({ value, total }: { value: number; total: number }) {
 function Medal({ a, size = 'md' }: { a: Achievement; size?: 'md' | 'lg' }) {
     return (
         <div className={`logro-medal logro-medal--${size} ${a.isUnlocked ? 'is-on' : 'is-off'}`}>
-            <img src={a.iconUrl} alt="" className="logro-medal-img" />
+            <AchievementBadge name={a.name} iconUrl={a.iconUrl} className="logro-medal-img" />
             <span className="logro-medal-state" aria-hidden="true">
                 {a.isUnlocked ? <FaCheck /> : <FaLock />}
             </span>
