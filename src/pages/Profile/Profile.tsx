@@ -91,6 +91,33 @@ export default function Profile() {
     const sortedAch   = [...achievements].sort((a, b) =>
         Number(b.isUnlocked) - Number(a.isUnlocked) || (b.earnedAt ?? '').localeCompare(a.earnedAt ?? ''))
 
+    // Tarjeta de sonido: se pinta en una columna distinta según el ancho
+    const soundCard = (className: string) => (
+        <section className={`pf-card ${className}`}>
+            <h3 className="pf-card-title">Sonido</h3>
+            <div className="profile-sound-row">
+                <button
+                    className={`profile-mute-btn ${muted ? 'profile-mute-btn--muted' : ''}`}
+                    onClick={handleMute}
+                    title={muted ? 'Activar sonido' : 'Silenciar'}
+                    aria-label={muted ? 'Activar sonido' : 'Silenciar'}
+                >
+                    {muted ? <FaVolumeMute /> : <FaVolumeUp />}
+                </button>
+                <input
+                    type="range"
+                    min={0} max={1} step={0.01}
+                    value={muted ? 0 : volume}
+                    onChange={e => handleVolume(parseFloat(e.target.value))}
+                    className="profile-volume-slider"
+                    aria-label="Volumen"
+                />
+                <span className="profile-volume-pct">{muted ? 0 : Math.round(volume * 100)}%</span>
+                <button className="profile-sound-test" onClick={handleTest}>Probar</button>
+            </div>
+        </section>
+    )
+
     return (
         <MainLayout>
             <LoadingScreen visible={loading} message="Cargando perfil…" />
@@ -216,6 +243,9 @@ export default function Profile() {
                                 </ul>
                             </section>
                         )}
+
+                        {/* En web va en esta columna; en móvil queda al final de la página */}
+                        {soundCard('pf-sound--desktop')}
                     </div>
 
                     <div className="pf-col">
@@ -248,30 +278,7 @@ export default function Profile() {
                             )}
                         </section>
 
-                        {/* ── Ajustes ── */}
-                        <section className="pf-card">
-                            <h3 className="pf-card-title">Sonido</h3>
-                            <div className="profile-sound-row">
-                                <button
-                                    className={`profile-mute-btn ${muted ? 'profile-mute-btn--muted' : ''}`}
-                                    onClick={handleMute}
-                                    title={muted ? 'Activar sonido' : 'Silenciar'}
-                                    aria-label={muted ? 'Activar sonido' : 'Silenciar'}
-                                >
-                                    {muted ? <FaVolumeMute /> : <FaVolumeUp />}
-                                </button>
-                                <input
-                                    type="range"
-                                    min={0} max={1} step={0.01}
-                                    value={muted ? 0 : volume}
-                                    onChange={e => handleVolume(parseFloat(e.target.value))}
-                                    className="profile-volume-slider"
-                                    aria-label="Volumen"
-                                />
-                                <span className="profile-volume-pct">{muted ? 0 : Math.round(volume * 100)}%</span>
-                                <button className="profile-sound-test" onClick={handleTest}>Probar</button>
-                            </div>
-                        </section>
+                        {soundCard('pf-sound--mobile')}
                     </div>
                 </div>
 
