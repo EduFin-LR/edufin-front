@@ -12,7 +12,6 @@ import progresoC  from '../../assets/images/ProgresoC.png'
 import progresoD  from '../../assets/images/ProgresoD.png'
 import { getMyAchievements, getLeaderboard } from '../../services/profileService'
 import type { Achievement } from '../../services/profileService'
-import AchievementBadge from '../../components/AchievementBadge/AchievementBadge'
 import { getDashboard } from '../../services/dashboardService'
 import type { DashboardResponse } from '../../types/auth'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
@@ -235,7 +234,7 @@ export default function Profile() {
                                     {sortedAch.map(a => (
                                         <li key={a.id} className={a.isUnlocked ? '' : 'is-locked'}>
                                             <div className="pf-ach-icon">
-                                                <AchievementBadge name={a.name} iconUrl={a.iconUrl} className="pf-ach-img" />
+                                                <img src={a.iconUrl} alt="" />
                                                 {!a.isUnlocked && <span className="pf-ach-lock"><FaLock /></span>}
                                             </div>
                                             <div className="pf-ach-info">
