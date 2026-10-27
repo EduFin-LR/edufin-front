@@ -19,10 +19,10 @@ import './Profile.css'
 
 // Mismos rangos que la ruta de niveles del dashboard
 const TIERS = [
-    { img: progresoA, label: 'Iniciado', min: 1,  max: 5  },
-    { img: progresoB, label: 'Aprendiz', min: 6,  max: 15 },
-    { img: progresoC, label: 'Experto',  min: 16, max: 25 },
-    { img: progresoD, label: 'Maestro',  min: 26, max: 99 },
+    { img: progresoA, label: 'Iniciado', min: 1,  max: 29 },
+    { img: progresoB, label: 'Aprendiz', min: 30, max: 49 },
+    { img: progresoC, label: 'Experto',  min: 50, max: 74 },
+    { img: progresoD, label: 'Maestro',  min: 75, max: Infinity },
 ]
 const tierIdx = (level: number) => Math.max(0, TIERS.findIndex(t => level >= t.min && level <= t.max))
 
@@ -208,7 +208,7 @@ export default function Profile() {
                                     <li key={t.label} className={i < tier ? 'is-done' : i === tier ? 'is-current' : ''}>
                                         <img src={t.img} alt="" />
                                         <strong>{t.label}</strong>
-                                        <span>Nv. {t.min}{t.max < 99 ? `–${t.max}` : '+'}</span>
+                                        <span>Nv. {t.min}{t.max === Infinity ? '+' : `–${t.max}`}</span>
                                     </li>
                                 ))}
                             </ol>

@@ -17,9 +17,9 @@ const avatarGirl = new URL('../../assets/images/perfilNiño (3).png', import.met
 
 // Mismos rangos que la ruta de niveles del dashboard
 function tierFor(level: number) {
-    if (level <= 5)  return { img: progresoA, label: 'Iniciado' }
-    if (level <= 15) return { img: progresoB, label: 'Aprendiz' }
-    if (level <= 25) return { img: progresoC, label: 'Experto' }
+    if (level <= 29) return { img: progresoA, label: 'Iniciado' }
+    if (level <= 49) return { img: progresoB, label: 'Aprendiz' }
+    if (level <= 74) return { img: progresoC, label: 'Experto' }
     return                  { img: progresoD, label: 'Maestro' }
 }
 

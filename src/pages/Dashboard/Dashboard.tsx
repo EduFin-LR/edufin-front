@@ -25,10 +25,10 @@ import './Dashboard.css'
 
 
 const LEVEL_TIERS = [
-    { img: progresoA, label: 'Iniciado',  minLevel: 1,  maxLevel: 5  },
-    { img: progresoB, label: 'Aprendiz',  minLevel: 6,  maxLevel: 15 },
-    { img: progresoC, label: 'Experto',   minLevel: 16, maxLevel: 25 },
-    { img: progresoD, label: 'Maestro',   minLevel: 26, maxLevel: 99 },
+    { img: progresoA, label: 'Iniciado',  minLevel: 1,  maxLevel: 29 },
+    { img: progresoB, label: 'Aprendiz',  minLevel: 30, maxLevel: 49 },
+    { img: progresoC, label: 'Experto',   minLevel: 50, maxLevel: 74 },
+    { img: progresoD, label: 'Maestro',   minLevel: 75, maxLevel: Infinity },
 ]
 
 function tierIndex(level: number) {
@@ -90,7 +90,7 @@ function LevelRoadModal({ level, onClose }: { level: number; onClose: () => void
                                         </div>
                                         <div className="lvl-node-info">
                                             <span className="lvl-node-label">{tier.label}</span>
-                                            <span className="lvl-node-range">Niveles {tier.minLevel} – {tier.maxLevel === 99 ? '30' : tier.maxLevel}</span>
+                                            <span className="lvl-node-range">Niveles {tier.minLevel}{tier.maxLevel === Infinity ? '+' : ` – ${tier.maxLevel}`}</span>
                                             {isNow && <span className="lvl-node-here-tag"><FaArrowLeft className="ic" /> Aquí estás</span>}
                                         </div>
                                     </div>
