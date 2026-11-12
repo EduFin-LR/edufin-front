@@ -7,7 +7,7 @@ import { MAX_STARS } from '../../utils/stars'
 
 type Kind = 'lectura' | 'reto' | 'video' | 'final'
 
-const KIND: Record<Lesson['lessonType'], Kind> = { READING: 'lectura', QUIZ: 'reto', VIDEO: 'video', FINAL: 'final' }
+const KIND: Record<Lesson['lessonType'], Kind> = { LESSON: 'lectura', READING: 'lectura', QUIZ: 'reto', VIDEO: 'video', FINAL: 'final' }
 const TAG: Record<Kind, string> = { lectura: '', reto: 'RETO', video: 'VIDEO', final: 'CASO REAL' }
 const FONT = '"Segoe UI", system-ui, sans-serif'
 const MONO = '"JetBrains Mono", Consolas, monospace'
