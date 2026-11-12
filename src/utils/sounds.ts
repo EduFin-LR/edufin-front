@@ -71,6 +71,13 @@ export function playWrong() {
     setTimeout(() => playTone(220, 0.3, 'square', 0.2), 130)
 }
 
+// Cada estrella suena un poco más aguda que la anterior
+export function playStar(index = 0) {
+    const f = 880 * Math.pow(1.26, index)
+    playTone(f, 0.12, 'triangle', 0.3)
+    setTimeout(() => playTone(f * 1.5, 0.18, 'sine', 0.2), 70)
+}
+
 export function playComplete() {
     playTone(523, 0.1, 'sine', 0.4)
     setTimeout(() => playTone(659, 0.1, 'sine', 0.4), 100)

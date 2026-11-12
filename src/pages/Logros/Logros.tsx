@@ -129,7 +129,7 @@ export default function Logros() {
                                 <small>Tu último logro</small>
                                 <b>{latest.name}</b>
                                 <p>{latest.description}</p>
-                                {latest.earnedAt && <span>{fmtDate(latest.earnedAt)}</span>}
+                                {latest.earnedAt && <span className="logros-latest-date">{fmtDate(latest.earnedAt)}</span>}
                             </div>
                         </> : (
                             <div>

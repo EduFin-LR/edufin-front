@@ -9,7 +9,18 @@ export const signUp = (payload: SignUpPayload) =>
 export const signIn = (payload: SignInPayload) =>
     api.post<SignInResponse>('/iam/auth/sign-in', payload)
 
-// ── Pendientes — descomentar cuando el backend los entregue ───────────────────
-// export const forgotPassword = (email: string)                   => api.post('/iam/auth/forgot-password', { email })
-// export const resetPassword  = (token: string, password: string) => api.post('/iam/auth/reset-password',  { token, password })
-// export const logout         = ()                                 => { localStorage.removeItem('token') }
+// POST /iam/auth/forgot-password
+export const forgotPassword = (email: string) =>
+    api.post('/iam/auth/forgot-password', { email })
+
+// POST /iam/auth/reset-password
+export const resetPassword = (email: string, code: string, newPassword: string) =>
+    api.post('/iam/auth/reset-password', { email, code, newPassword })
+
+// POST /iam/auth/verify-email
+export const verifyEmail = (email: string, code: string) =>
+    api.post('/iam/auth/verify-email', { email, code })
+
+// POST /iam/auth/resend-verification
+export const resendVerification = (email: string) =>
+    api.post('/iam/auth/resend-verification', { email })

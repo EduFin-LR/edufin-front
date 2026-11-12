@@ -11,161 +11,327 @@
     font-weight: 900;
     color: var(--color-text);
 }
-
-/* ── Tabs ────────────────────────────────────────── */
-.rank-tabs {
-    display: flex;
-    gap: 0;
-    background: var(--color-border);
-    border-radius: var(--radius-full);
-    padding: 4px;
-    width: fit-content;
-}
-
-.rank-tab {
-    border: none;
-    background: transparent;
-    padding: 8px 32px;
-    border-radius: var(--radius-full);
-    font-size: var(--font-size-base);
-    font-weight: 700;
-    cursor: pointer;
+.rank-sub {
+    margin: 2px 0 0;
+    font-size: var(--font-size-sm);
     color: var(--color-text-muted);
-    transition: background 0.2s ease, color 0.2s ease;
 }
 
-.rank-tab--active {
-    background: var(--color-primary);
-    color: var(--color-white);
-    box-shadow: var(--shadow-sm);
+/* ── Tu posición ─────────────────────────────────── */
+.rank-me-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: 14px 20px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(120deg, var(--color-primary-light), var(--color-surface) 70%);
+    border: 1.5px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+}
+.rank-me-pos {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-right: var(--space-lg);
+    border-right: 1px solid var(--color-border);
+}
+.rank-me-pos-lbl {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+.rank-me-pos strong {
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--color-primary-dark);
+    font-variant-numeric: tabular-nums;
+}
+.rank-me-pos small { font-size: 15px; color: var(--color-text-muted); font-weight: 700; }
+.rank-me-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rank-me-xp { font-size: var(--font-size-lg); font-weight: 900; color: var(--color-text); }
+.rank-me-hint {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    line-height: 1.4;
+}
+.rank-me-hint .ic { color: var(--color-primary-dark); margin-right: 4px; vertical-align: -1px; }
+.rank-me-hint b { color: var(--color-text); }
+
+/* ── Podio ───────────────────────────────────────── */
+.rank-podium {
+    list-style: none;
+    margin: 0;
+    padding: 28px 0 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+    gap: var(--space-md);
+}
+.podium-card {
+    --pd: #9CA3AF;     /* color de la medalla */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 18px 12px 0;
+    border-radius: 20px 20px 14px 14px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pd) 14%, var(--color-surface)) 0%, var(--color-surface) 60%);
+    border: 1.5px solid color-mix(in srgb, var(--pd) 40%, transparent);
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+}
+.podium-card--1 { --pd: #F5B820; padding-top: 26px; box-shadow: 0 18px 40px -18px rgba(245, 184, 32, 0.45); overflow: visible; }
+.podium-card--2 { --pd: #C3CBD6; }
+.podium-card--3 { --pd: #D08A4E; }
+.podium-card.is-me { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+.podium-crown {
+    position: absolute;
+    top: -22px;
+    font-size: 30px;
+    color: #F5B820;
+    filter: drop-shadow(0 3px 6px rgba(180, 120, 0, 0.5));
 }
 
-/* ── List ────────────────────────────────────────── */
+.podium-avatar-wrap { position: relative; }
+.podium-avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--pd);
+    background: var(--color-surface-2);
+    display: block;
+}
+.podium-card--1 .podium-avatar { width: 84px; height: 84px; }
+.podium-medal {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 900;
+    color: #1a1a1a;
+    background: var(--pd);
+    border: 3px solid var(--color-surface);
+}
+
+.podium-name {
+    max-width: 100%;
+    margin-top: 4px;
+    font-size: var(--font-size-md);
+    font-weight: 800;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.podium-name em { font-style: normal; color: var(--color-primary-dark); font-weight: 700; }
+
+.podium-tier {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+.podium-xp {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+}
+.podium-xp small { font-size: 12px; color: var(--color-text-muted); }
+
+/* Escalón del podio: más alto para el primero */
+.podium-step {
+    align-self: stretch;
+    margin: 10px -12px 0;
+    display: grid;
+    place-items: center;
+    height: 44px;
+    font-size: 22px;
+    font-weight: 900;
+    color: color-mix(in srgb, var(--pd) 85%, #fff);
+    background: color-mix(in srgb, var(--pd) 16%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--pd) 35%, transparent);
+}
+.podium-card--1 .podium-step { height: 64px; font-size: 24px; border-radius: 0 0 14px 14px; }
+.podium-card--3 .podium-step { height: 32px; }
+
+/* ── Tabla ───────────────────────────────────────── */
+.rank-table {
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+/* Las mismas columnas en el encabezado y en cada fila */
+.rank-table-head,
+.rank-row {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) 150px 120px;
+    align-items: center;
+    column-gap: var(--space-md);
+    padding: 0 var(--space-lg);
+}
+.rank-table-head {
+    height: 40px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--color-text-faint);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface-2);
+}
+.rank-col-xp { text-align: right; }
+
 .rank-list {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
 }
-
 .rank-row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-lg);
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    padding: var(--space-md) var(--space-xl);
-    border: 2px solid transparent;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.18s ease;
+    min-height: 68px;
+    border-bottom: 1px solid var(--color-border);
+    transition: background 0.15s;
 }
-
-.rank-row:hover {
-    box-shadow: var(--shadow-md);
-}
+.rank-row:last-child { border-bottom: 0; }
+.rank-row:hover { background: rgba(255, 255, 255, 0.025); }
 
 .rank-row--me {
     background: var(--color-primary-light);
-    border-color: var(--color-primary);
+    box-shadow: inset 4px 0 0 var(--color-primary);
 }
-
-/* ── Position ────────────────────────────────────── */
-.rank-pos {
-    width: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.rank-trophy {
-    font-size: 32px;
-    color: #f59e0b;
-    filter: drop-shadow(0 2px 4px rgba(245,158,11,0.4));
-}
+.rank-row--me:hover { background: var(--color-primary-light); }
 
 .rank-num {
-    font-size: 22px;
+    font-size: 17px;
     font-weight: 900;
     color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
 }
+.rank-row--me .rank-num { color: var(--color-primary-dark); }
 
-.rank-row--me .rank-num {
-    color: var(--color-primary-dark);
-}
-
-/* ── Avatar ─────────────────────────────────────── */
+.rank-user { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .rank-avatar {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-full);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--color-primary-light);
+    border: 2px solid var(--color-border);
     flex-shrink: 0;
 }
-
-.rank-row--me .rank-avatar {
-    border-color: var(--color-primary);
-}
-
-/* ── Name ────────────────────────────────────────── */
+.rank-row--me .rank-avatar { border-color: var(--color-primary); }
 .rank-name {
-    flex: 1;
     font-size: var(--font-size-md);
     font-weight: 700;
     color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rank-you {
+    flex-shrink: 0;
+    margin-left: -4px;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 800;
+    color: var(--color-white);
+    background: var(--color-primary);
+    vertical-align: 2px;
 }
 
-/* ── XP ──────────────────────────────────────────── */
+.rank-level { display: flex; align-items: center; gap: 8px; }
+.rank-tier { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-muted); }
+
 .rank-xp {
     font-size: var(--font-size-md);
     font-weight: 900;
     color: var(--color-text);
     white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 }
+.rank-xp small { font-size: 12px; color: var(--color-text-muted); font-weight: 700; }
+.rank-row--me .rank-xp { color: var(--color-primary-dark); }
 
-.rank-row--me .rank-xp {
-    color: var(--color-primary-dark);
-}
-
-/* ── Level badge ─────────────────────────────────── */
+/* ── Insignia de nivel ───────────────────────────── */
 .rank-level-badge {
     position: relative;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-
-.rank-level-img {
-    width: 36px;
-    height: 36px;
-    object-fit: contain;
-}
-
+.rank-level-img { width: 100%; height: 100%; object-fit: contain; }
 .rank-level-num {
     position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 11px;
     font-weight: 900;
-    color: var(--color-primary);
-    text-shadow: 0 1px 2px rgba(26, 49, 37, 0.9);
+    color: #000000;
     line-height: 1;
+    /* el centro de la estrella de la insignia está al 49% de alto */
+    padding-bottom: 2%;
 }
+.podium-tier .rank-level-badge { width: 26px; height: 26px; }
+.podium-tier .rank-level-num { font-size: 9.5px; }
+
+.rank-empty { margin: 0; color: var(--color-text-muted); text-align: center; padding: var(--space-xl) 0; }
 
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 640px) {
-    .rank-row {
-        padding: var(--space-md);
-        gap: var(--space-md);
-    }
+    .rank-me-card { padding: 12px 14px; gap: var(--space-md); }
+    .rank-me-pos { padding-right: var(--space-md); }
+    .rank-me-pos strong { font-size: 24px; }
+    .rank-me-xp { font-size: var(--font-size-md); }
+    .rank-me-hint { font-size: 12px; }
 
-    .rank-avatar { width: 44px; height: 44px; }
-    .rank-name   { font-size: var(--font-size-base); }
-    .rank-xp     { font-size: var(--font-size-base); }
-    .rank-trophy { font-size: 26px; }
-    .rank-num    { font-size: 18px; }
+    .rank-podium { gap: 8px; padding-top: 24px; }
+    .podium-card { padding: 14px 6px 0; }
+    .podium-card--1 { padding-top: 20px; }
+    .podium-avatar { width: 52px; height: 52px; }
+    .podium-card--1 .podium-avatar { width: 64px; height: 64px; }
+    .podium-name { font-size: 13px; }
+    .podium-tier { font-size: 0; gap: 0; }   /* en celular solo la insignia */
+    .podium-xp { font-size: 15px; }
+    .podium-step { margin: 8px -6px 0; height: 34px; font-size: 18px; }
+    .podium-card--1 .podium-step { height: 50px; font-size: 20px; }
+    .podium-card--3 .podium-step { height: 24px; font-size: 15px; }
+    .podium-crown { font-size: 24px; top: -18px; }
+
+    .rank-table-head,
+    .rank-row {
+        grid-template-columns: 26px minmax(0, 1fr) 34px 86px;
+        column-gap: 10px;
+        padding: 0 12px;
+    }
+    .rank-row { min-height: 60px; }
+    .rank-avatar { width: 36px; height: 36px; }
+    .rank-user { gap: 10px; }
+    .rank-name { font-size: var(--font-size-base); }
+    .rank-tier { display: none; }
+    .rank-you { display: none; }   /* la fila resaltada ya indica que eres tú */
+    .rank-xp { font-size: var(--font-size-base); }
+    .rank-num { font-size: 15px; }
 }

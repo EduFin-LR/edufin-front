@@ -65,7 +65,7 @@ export default function Login() {
                             className={`input-field ${errors.username ? 'input-field--error' : ''}`}
                             type="text"
                             name="username"
-                            placeholder="ana.torres"
+                            placeholder="Tu nombre de usuario"
                             value={form.username}
                             onChange={handleChange}
                             autoComplete="username"
@@ -83,7 +83,7 @@ export default function Login() {
                                 className={`input-field ${errors.password ? 'input-field--error' : ''}`}
                                 type={showPass ? 'text' : 'password'}
                                 name="password"
-                                placeholder="Tu contraseña"
+                                placeholder="Contraseña"
                                 value={form.password}
                                 onChange={handleChange}
                                 autoComplete="current-password"

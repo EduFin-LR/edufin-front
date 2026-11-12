@@ -195,3 +195,7 @@ body {
 .link-text:hover {
   color: var(--color-primary);
 }
+
+/* Iconos de react-icons junto a texto */
+.ic { display: inline-block; vertical-align: -0.125em; flex-shrink: 0; }
+.ic-fire { color: #f97316; }

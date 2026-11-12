@@ -60,7 +60,7 @@
 }
 .logros-latest b { display: block; margin-top: 4px; font-size: 19px; color: var(--color-text); }
 .logros-latest p { margin: 4px 0 0; font-size: 14px; color: var(--color-text-muted); line-height: 1.45; }
-.logros-latest span { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 700; color: var(--color-text-muted); }
+.logros-latest-date { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 700; color: var(--color-text-muted); }
 
 /* ── Medalla ─────────────────────────────────────── */
 .logro-medal {

@@ -33,40 +33,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ready:    false,
     })
 
-    // Fetch both services; silently fails (e.g. expired token → interceptor will redirect)
+    // Fetch both services; throws on error so callers can decide what to do
     const fetchRemoteData = useCallback(async (userId: string) => {
-        try {
-            const [profileRes, userRes] = await Promise.all([
-                getMyProfile(),
-                getUserById(userId),
-            ])
-            localStorage.setItem('profile',  JSON.stringify(profileRes.data))
-            localStorage.setItem('userInfo', JSON.stringify(userRes.data))
-            setState(prev => ({ ...prev, profile: profileRes.data, userInfo: userRes.data }))
-        } catch {
-            // token is invalid — interceptor in api.ts handles the redirect
-        }
+        const [profileRes, userRes] = await Promise.all([
+            getMyProfile(),
+            getUserById(userId),
+        ])
+        localStorage.setItem('profile',  JSON.stringify(profileRes.data))
+        localStorage.setItem('userInfo', JSON.stringify(userRes.data))
+        setState(prev => ({ ...prev, profile: profileRes.data, userInfo: userRes.data }))
     }, [])
-
-    // On mount: if there is already a token, refresh profile data from the server
-    useEffect(() => {
-        const userId = localStorage.getItem('userId')
-        if (userId && localStorage.getItem('token')) {
-            fetchRemoteData(userId).finally(() => {
-                setState(prev => ({ ...prev, ready: true }))
-            })
-        } else {
-            setState(prev => ({ ...prev, ready: true }))
-        }
-    }, [fetchRemoteData])
-
-    const login = useCallback(async (token: string, userId: string, username: string) => {
-        localStorage.setItem('token',    token)
-        localStorage.setItem('userId',   userId)
-        localStorage.setItem('username', username)
-        setState(prev => ({ ...prev, token, userId, username }))
-        await fetchRemoteData(userId)
-    }, [fetchRemoteData])
 
     const logout = useCallback(() => {
         localStorage.removeItem('token')
@@ -78,9 +54,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setState({ token: null, userId: null, username: null, profile: null, userInfo: null, ready: true })
     }, [])
 
+    // On mount: validate session — if fetch fails for any reason, clear session and go to login
+    useEffect(() => {
+        const userId = localStorage.getItem('userId')
+        if (userId && localStorage.getItem('token')) {
+            fetchRemoteData(userId)
+                .catch(() => logout())
+                .finally(() => setState(prev => ({ ...prev, ready: true })))
+        } else {
+            setState(prev => ({ ...prev, ready: true }))
+        }
+    }, [fetchRemoteData, logout])
+
+    const login = useCallback(async (token: string, userId: string, username: string) => {
+        localStorage.setItem('token',    token)
+        localStorage.setItem('userId',   userId)
+        localStorage.setItem('username', username)
+        setState(prev => ({ ...prev, token, userId, username }))
+        await fetchRemoteData(userId)
+    }, [fetchRemoteData])
+
     const refreshProfile = useCallback(async () => {
         const userId = localStorage.getItem('userId')
-        if (userId) await fetchRemoteData(userId)
+        if (userId) {
+            try { await fetchRemoteData(userId) } catch { /* ignore mid-session refresh errors */ }
+        }
     }, [fetchRemoteData])
 
     return (

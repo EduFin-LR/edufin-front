@@ -19,28 +19,35 @@ interface Options {
     viewportH: number
     topInset:  number          // alto del encabezado flotante (el mapa no queda debajo)
     focusX:    number | null   // x de la lección actual: la vista inicial la centra
+    focusY?:   number | null   // en la ruta vertical se centra por la y
+    vertical?: boolean         // ruta que baja (celular): se recorre arriba-abajo
 }
 
 export function usePanZoom(ref: RefObject<HTMLDivElement | null>, opts: Options) {
-    const { contentW, contentH, viewportW: vw, viewportH: vh, topInset, focusX } = opts
+    const { contentW, contentH, viewportW: vw, viewportH: vh, topInset, focusX, focusY, vertical = false } = opts
     // Se puede alejar hasta ver la ruta completa (sin bajar de 35%)
-    const minScale = Math.min(1, Math.max(0.35, (vw - MARGIN * 2) / contentW))
+    const fit = vertical ? (vh - topInset - MARGIN) / contentH : (vw - MARGIN * 2) / contentW
+    const minScale = Math.min(1, Math.max(0.35, fit))
+    // En vertical la ruta ocupa el ancho: si cabe, queda centrada sin margen extra
+    const sideMargin = vertical ? 0 : MARGIN
 
     const clamp = useCallback((v: View): View => {
         const s = Math.min(MAX_SCALE, Math.max(minScale, v.s))
         const sw = contentW * s, sh = contentH * s
         const availH = vh - topInset
-        const x = sw <= vw - MARGIN * 2
+        const x = sw <= vw - sideMargin * 2
             ? (vw - sw) / 2
             : Math.min(MARGIN, Math.max(vw - sw - MARGIN, v.x))
         const y = sh <= availH - MARGIN
             ? topInset + (availH - sh) / 2
             : Math.min(topInset + MARGIN, Math.max(vh - sh - MARGIN, v.y))
         return { x, y, s }
-    }, [minScale, contentW, contentH, vw, vh, topInset])
+    }, [minScale, sideMargin, contentW, contentH, vw, vh, topInset])
 
     // Mientras el usuario no mueva nada, la vista sigue a la lección actual
-    const initial: View = { s: 1, x: focusX == null ? MARGIN : vw / 2 - focusX, y: 0 }
+    const initial: View = vertical
+        ? { s: 1, x: (vw - contentW) / 2, y: focusY == null ? topInset : topInset + (vh - topInset) / 2 - focusY }
+        : { s: 1, x: focusX == null ? MARGIN : vw / 2 - focusX, y: 0 }
     const [manual, setManual] = useState<View | null>(null)
     const view = clamp(manual ?? initial)
 

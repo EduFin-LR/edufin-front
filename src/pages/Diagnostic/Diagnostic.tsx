@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { FaClipboardList, FaRegClock, FaBullseye, FaCheckCircle } from 'react-icons/fa'
 import { useAuth } from '../../context/AuthContext'
 import {
     getExperimentalQuestions,
@@ -135,9 +136,9 @@ export default function Diagnostic() {
                         )}
                     </p>
                     <ul className="diag-info-list">
-                        <li><span className="diag-icon">📋</span> {total} preguntas</li>
-                        <li><span className="diag-icon">🕐</span> Aprox. 7 minutos</li>
-                        <li><span className="diag-icon">🎯</span> Selecciona “No lo sé” si no estás seguro</li>
+                        <li><span className="diag-icon"><FaClipboardList /></span> {total} preguntas</li>
+                        <li><span className="diag-icon"><FaRegClock /></span> Aprox. 10 minutos</li>
+                        <li><span className="diag-icon"><FaBullseye /></span> Selecciona “No lo sé” si no estás seguro</li>
                     </ul>
 
                     {loadError && (
@@ -188,14 +189,14 @@ export default function Diagnostic() {
                     <div className="diag-score-card">
                         <span className="diag-score-label">Respuestas registradas</span>
                         <div className="diag-score-val">
-                            <span className="diag-score-icon">📋</span>
+                            <span className="diag-score-icon"><FaClipboardList /></span>
                             <strong>{result?.totalQuestions ?? total}/{total}</strong>
                         </div>
                     </div>
                     <div className="diag-score-card">
                         <span className="diag-score-label">Estado</span>
                         <div className="diag-score-val">
-                            <span className="diag-score-icon">✅</span>
+                            <span className="diag-score-icon diag-score-icon--ok"><FaCheckCircle /></span>
                             <strong>Completado</strong>
                         </div>
                     </div>
@@ -241,7 +242,7 @@ export default function Diagnostic() {
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.25 }}
                             >
-                                <p className="diag-question-text">{q?.questionText}</p>
+                                <p className="diag-question-text">{q?.questionText?.replace(/\\n/g, '\n')}</p>
                                 <div className="diag-options">
                                     {q?.options.map(opt => (
                                         <button

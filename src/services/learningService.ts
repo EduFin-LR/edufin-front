@@ -6,8 +6,10 @@ export interface Lesson {
     content:     string
     videoUrl:    string
     lessonOrder: number
-    lessonType:  'QUIZ' | 'VIDEO' | 'READING' | 'FINAL'
-    status:      'UNLOCKED' | 'LOCKED' | 'COMPLETED'
+    lessonType:  'LESSON' | 'QUIZ' | 'VIDEO' | 'READING' | 'FINAL'
+    status:      'UNLOCKED' | 'LOCKED' | 'IN_PROGRESS' | 'COMPLETED'
+    // Solo QUIZ: 0 sin intento; 1-3 según el mejor puntaje
+    stars?:      number
 }
 
 export interface TopicLessons {

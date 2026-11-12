@@ -1,3 +1,4 @@
+import { FaCheck, FaHandPaper, FaArrowRight, FaFire } from 'react-icons/fa'
 import robotFeliz from '../../assets/images/robotFeliz.png'
 import './AuthHero.css'
 
@@ -38,8 +39,8 @@ function CoinsPlant() {
 function RouteIcon({ kind, state }: { kind: string; state: string }) {
     const done = state === 'done'
     if (kind === 'final') return <span className={`ah-stn ah-stn--final ${state}`} />
-    if (kind === 'quiz')  return <span className={`ah-stn ah-stn--quiz ${state}`}>{done && '✓'}</span>
-    return <span className={`ah-stn ${state}`}>{done && '✓'}</span>
+    if (kind === 'quiz')  return <span className={`ah-stn ah-stn--quiz ${state}`}>{done && <FaCheck />}</span>
+    return <span className={`ah-stn ${state}`}>{done && <FaCheck />}</span>
 }
 
 export default function AuthHero() {
@@ -51,12 +52,12 @@ export default function AuthHero() {
                     <div className="ah-notch" />
                     <div className="ah-screen">
                         <div className="ah-status"><span>9:41</span><span>●●● ▮</span></div>
-                        <p className="ah-hello">Hola, Ana 👋</p>
+                        <p className="ah-hello">Hola, Ana <FaHandPaper className="ic" /></p>
                         <div className="ah-next">
                             <small>Módulo 02 · Ahorro</small>
                             <b>Fondo de emergencia</b>
                             <div className="ah-bar"><i /></div>
-                            <span className="ah-btn">Continuar →</span>
+                            <span className="ah-btn">Continuar <FaArrowRight className="ic" /></span>
                         </div>
                         <p className="ah-sec">Tu ruta</p>
                         <ol className="ah-route">
@@ -72,7 +73,7 @@ export default function AuthHero() {
 
                 {/* Tarjetas flotantes */}
                 <div className="ah-card ah-card--streak">
-                    <span className="ah-emoji">🔥</span>
+                    <span className="ah-emoji"><FaFire className="ic-fire" /></span>
                     <div><b>6 días</b><small>de racha</small></div>
                 </div>
                 <div className="ah-card ah-card--xp">

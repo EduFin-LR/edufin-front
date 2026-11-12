@@ -5,6 +5,7 @@ import Login          from '../pages/Login/Login'
 import Register       from '../pages/Register/Register'
 import ForgotPassword from '../pages/ForgotPassword/ForgotPassword'
 import EmailSent      from '../pages/EmailSent/EmailSent'
+import ResetPassword  from '../pages/ResetPassword/ResetPassword'
 import Dashboard      from '../pages/Dashboard/Dashboard'
 import Learning       from '../pages/Learning/Learning'
 import Quiz           from '../pages/Quiz/Quiz'
@@ -58,6 +59,9 @@ export default function AppRouter() {
                 <Route path="/email-sent" element={
                     <PublicRoute><EmailSent /></PublicRoute>
                 } />
+                <Route path="/reset-password" element={
+                    <PublicRoute><ResetPassword /></PublicRoute>
+                } />
 
                 {/* Diagnostic — private but no test-pending guard */}
                 <Route path="/diagnostic" element={<DiagnosticRoute />} />
@@ -70,6 +74,9 @@ export default function AppRouter() {
                 <Route path="/quiz/:lessonId" element={<PrivateRoute><Quiz /></PrivateRoute>} />
                 <Route path="/ranking"   element={<PrivateRoute><Ranking /></PrivateRoute>} />
                 <Route path="/profile"   element={<PrivateRoute><Profile /></PrivateRoute>} />
+
+                {/* Ruta desconocida: con sesión al dashboard (o al diagnóstico), sin sesión al login */}
+                <Route path="*" element={<PublicRoute><Navigate to="/" replace /></PublicRoute>} />
             </Routes>
         </BrowserRouter>
     )
