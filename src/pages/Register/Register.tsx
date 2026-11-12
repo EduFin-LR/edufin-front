@@ -76,15 +76,17 @@ export default function Register() {
             await signUp({ username: form.username.trim(), email: form.email.trim(), password: form.password, gender })
             setStep(1)
         } catch (err) {
-            // Si el correo ya está registrado (400), ir directo a verificar
-            const errMsg = isAxiosError<{ message?: string }>(err) && err.response?.data?.message || ''
-            if (isAxiosError(err) && (err.response?.status === 409 ||
-                (err.response?.status === 400 && errMsg.toLowerCase().includes('registrado')))) {
-                await resendVerification(form.email.trim()).catch(() => {})
-                setStep(1)
-                return
+            // Un registro rechazado NUNCA debe avanzar a la pantalla de verificación.
+            // Si la cuenta existe pero está pendiente de verificar, el usuario puede
+            // utilizar explícitamente el enlace «Verificar correo» de este formulario.
+            const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) ||
+                'Error al registrarse. Intenta de nuevo.'
+            const normalizedMsg = msg.toLowerCase()
+            if (normalizedMsg.includes('correo') && normalizedMsg.includes('registrado')) {
+                setErrors(prev => ({ ...prev, email: msg }))
+            } else if (normalizedMsg.includes('usuario') && normalizedMsg.includes('registrado')) {
+                setErrors(prev => ({ ...prev, username: msg }))
             }
-            const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) || 'Error al registrarse. Intenta de nuevo.'
             setToast({ message: msg, type: 'error' })
         } finally {
             setLoading(false)
@@ -98,15 +100,25 @@ export default function Register() {
             return
         }
         setLoading(true)
-        await resendVerification(form.email.trim()).catch(() => {})
-        setLoading(false)
-        setStep(1)
+        try {
+            await resendVerification(form.email.trim())
+            setCode('')
+            setCodeError('')
+            setStep(1)
+        } catch (err) {
+            const msg = (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) ||
+                'No se pudo enviar el código. Comprueba tu correo e inténtalo otra vez.'
+            setErrors(prev => ({ ...prev, email: msg }))
+            setToast({ message: msg, type: 'error' })
+        } finally {
+            setLoading(false)
+        }
     }
 
     // Paso 1 → 2: verificar código
     const handleVerify = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!code.trim()) { setCodeError('Ingresa el código que te enviamos.'); return }
+        if (!/^\d{6}$/.test(code.trim())) { setCodeError('Ingresa el código de 6 dígitos que te enviamos.'); return }
         setLoading(true)
         try {
             await verifyEmail(form.email.trim(), code.trim())
@@ -280,7 +292,7 @@ export default function Register() {
                                 value={code}
                                 onChange={e => { setCode(e.target.value); setCodeError('') }}
                                 inputMode="numeric"
-                                maxLength={8}
+                                maxLength={6}
                                 autoComplete="one-time-code"
                                 autoFocus
                             />
