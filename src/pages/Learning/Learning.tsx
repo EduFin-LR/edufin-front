@@ -6,6 +6,8 @@ import Logo from '../../components/Logo/Logo'
 import progresoA  from '../../assets/images/ProgresoA.png'
 import { getTopicLessons } from '../../services/learningService'
 import type { TopicLessons, Lesson } from '../../services/learningService'
+import { getDashboard } from '../../services/dashboardService'
+import type { DashboardLearningPath } from '../../types/auth'
 import { useAuth } from '../../context/AuthContext'
 import { themeForTopic } from './routeThemes'
 import RouteMap, { type StarCelebration } from './RouteMap'
@@ -23,12 +25,13 @@ const NODE_COLORS = {
     QUIZ:    { bg:'#3b82f6', border:'#1d4ed8', glow:'rgba(59,130,246,0.45)', icon:'#fff' },
     VIDEO:   { bg:'#ec4899', border:'#be185d', glow:'rgba(236,72,153,0.45)', icon:'#fff' },
     READING: { bg:'#2db84f', border:'#1a8c3c', glow:'rgba(45,184,79,0.45)',  icon:'#fff' },
+    LESSON:  { bg:'#2db84f', border:'#1a8c3c', glow:'rgba(45,184,79,0.45)',  icon:'#fff' },
     FINAL:   { bg:'#f59e0b', border:'#b45309', glow:'rgba(245,158,11,0.55)', icon:'#fff' },
     LOCKED:  { bg:'#d1d5db', border:'#9ca3af', glow:'rgba(156,163,175,0.2)', icon:'#9ca3af' },
 }
 
 const TYPE_LABEL: Record<Lesson['lessonType'], string> = {
-    READING: 'Lectura', QUIZ: 'Reto', VIDEO: 'Video', FINAL: 'Evaluación final',
+    LESSON: 'Lectura', READING: 'Lectura', QUIZ: 'Reto', VIDEO: 'Video', FINAL: 'Evaluación final',
 }
 // Cualquier tipo que no sea reto, video o final se muestra como lectura (igual que en la ruta)
 const typeLabel = (l: Lesson) => TYPE_LABEL[l.lessonType] ?? TYPE_LABEL.READING
@@ -217,6 +220,7 @@ export default function Learning() {
     const nameHint      = (location.state as { topicName?: string } | null)?.topicName
 
     const [topic,    setTopic]    = useState<TopicLessons | null>(null)
+    const [dashboardProgress, setDashboardProgress] = useState<DashboardLearningPath | null>(null)
     const [selected, setSelected] = useState<Lesson | null>(null)
     const [minElapsed, setMinElapsed] = useState(false)
     const [loadFailed, setLoadFailed] = useState(false)
@@ -294,6 +298,21 @@ export default function Learning() {
             .catch(() => setLoadFailed(true))
     }, [topicId])
 
+    // Misma fuente de progreso que usan Dashboard y Mi perfil.
+    // El backend incluye la evaluación final dentro del total de actividades.
+    useEffect(() => {
+        if (!topicId) return
+        let cancelled = false
+        getDashboard()
+            .then(({ data }) => {
+                if (!cancelled) {
+                    setDashboardProgress(data.learningPath.find(m => m.topicId === topicId) ?? null)
+                }
+            })
+            .catch(() => { /* El mapa sigue disponible aunque falle el resumen */ })
+        return () => { cancelled = true }
+    }, [topicId])
+
     useEffect(() => {
         const t = setTimeout(() => setMinElapsed(true), COVER_MIN_MS)
         return () => clearTimeout(t)
@@ -323,9 +342,11 @@ export default function Learning() {
     const allBaseLessonsCompleted =
         baseLessons.length > 0 &&
         baseLessons.every(l => l.status === 'COMPLETED')
+    const currentDashboardProgress = dashboardProgress?.topicId === topicId ? dashboardProgress : null
+    const finalPassed = currentDashboardProgress?.status === 'COMPLETED'
 
     const virtualFinal: Lesson | null =
-        topicId && !hasPersistedFinal
+        topic && topicId && !hasPersistedFinal
             ? {
                 id: `final-${topicId}`,
                 title: 'Evaluación final',
@@ -337,7 +358,7 @@ export default function Learning() {
                         0
                     ) + 1,
                 lessonType: 'FINAL',
-                status: allBaseLessonsCompleted ? 'UNLOCKED' : 'LOCKED',
+                status: finalPassed ? 'COMPLETED' : allBaseLessonsCompleted ? 'UNLOCKED' : 'LOCKED',
             }
             : null
 
@@ -374,14 +395,13 @@ export default function Learning() {
         vertical,
     })
 
-    // stats del header
-    const completed = baseLessons.filter(
-        l => l.status === 'COMPLETED'
-    ).length
-    const progressPct =
-        baseLessons.length > 0
-            ? Math.round((completed / baseLessons.length) * 100)
-            : 0
+    // El FINAL es una actividad más. Preferimos el conteo oficial del dashboard
+    // para que mapa, perfil y tarjeta principal muestren exactamente el mismo avance.
+    const localCompleted = lessons.filter(l => l.status === 'COMPLETED').length
+    const completed = currentDashboardProgress?.completedLessons ?? localCompleted
+    const totalActivities = currentDashboardProgress?.totalLessons ?? lessons.length
+    const progressPct = currentDashboardProgress?.progressPercentage
+        ?? (totalActivities > 0 ? Math.round((completed / totalActivities) * 100) : 0)
     const level        = profile?.currentLevel ?? 1
     const xp           = profile?.totalPoints  ?? 0
     const xpShown      = xpDisplayed !== null ? xpDisplayed : xp
@@ -452,7 +472,7 @@ export default function Learning() {
                         <div className="learning-progress-bar" role="progressbar" aria-valuenow={progressPct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance del módulo">
                             <div className="learning-progress-fill" style={{ width: `${progressPct}%` }} />
                         </div>
-                        <span className="learning-progress-pct">{completed} de {baseLessons.length} lecciones · {progressPct}%</span>
+                        <span className="learning-progress-pct">{completed} de {totalActivities} actividades · {progressPct}%</span>
                     </div>
                 </div>
 
@@ -523,7 +543,7 @@ export default function Learning() {
                     <ModuleCover
                         theme={theme}
                         topicName={moduleName}
-                        lessonCount={topic ? lessons.length : null}
+                        lessonCount={topic ? baseLessons.filter(l => l.lessonType !== 'FINAL').length : null}
                         hasFinal={lessons.some(l => l.lessonType === 'FINAL')}
                     />
                 )}
